@@ -2,18 +2,10 @@ import 'dotenv/config'
 import { z } from "zod"
 
 const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
-
-  PORT: z.coerce.number().positive().default(3000),
-
+  NODE_ENV: z.enum(["development", "production", "test"]),
+  PORT: z.coerce.number().positive(),
   DATABASE_URL: z.string().startsWith("postgresql://"),
-
-  ALLOWED_ORIGINS: z
-    .string()
-    .default("http://localhost:3000")
-    .transform((val) => val.split(",").map((origin: string) => origin.trim())),
+  ALLOWED_ORIGINS: z.string().transform((val) => val.split(",").map((origin: string) => origin.trim())),
 });
 
 // Parse and validate environment variables

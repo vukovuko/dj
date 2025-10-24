@@ -1,14 +1,14 @@
 services:
-  postgres:
+  db:
     image: postgres:17-alpine
     container_name: dj-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-dj}
+      POSTGRES_USER: djuser
+      POSTGRES_PASSWORD: dj_pass_8291
+      POSTGRES_DB: djcafe
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -19,14 +19,14 @@ services:
     container_name: dj-app
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT}:${PORT}"
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: ${PORT:-3000}
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
       DATABASE_URL: ${DATABASE_URL}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
     depends_on:
-      - postgres
+      - db
 
 volumes:
   postgres_data:
