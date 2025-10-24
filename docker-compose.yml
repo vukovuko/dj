@@ -9,6 +9,11 @@ services:
       POSTGRES_DB: djcafe
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U djuser -d djcafe"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   dj-app:
     build:
@@ -29,7 +34,7 @@ services:
       SEED_STAFF_PASSWORD: ${SEED_STAFF_PASSWORD}
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -21,6 +21,7 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/env.ts ./env.ts
+COPY --from=builder /app/src ./src
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN npm install --omit=dev && npm cache clean --force
