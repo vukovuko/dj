@@ -25,7 +25,7 @@ services:
       - "127.0.0.1:${PORT}:3000"
     environment:
       NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT}
+      PORT: 3000
       DATABASE_URL: ${DATABASE_URL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
