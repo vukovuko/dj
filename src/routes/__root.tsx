@@ -65,9 +65,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
             })();
           `}
         </ScriptOnce>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
         <Scripts />
       </body>
     </html>

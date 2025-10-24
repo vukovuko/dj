@@ -8,7 +8,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build"
+    "build": "vite build",
+    "start": "node .output/server/index.mjs"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/postcss": "^4.1.16",
+    "@tanstack/nitro-v2-vite-plugin": "^1.133.19",
     "@tanstack/react-router": "^1.133.27",
     "@tanstack/react-start": "^1.133.27",
     "class-variance-authority": "^0.7.1",

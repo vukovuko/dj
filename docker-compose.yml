@@ -7,8 +7,6 @@ services:
       POSTGRES_USER: djuser
       POSTGRES_PASSWORD: dj_pass_8291
       POSTGRES_DB: djcafe
-    ports:
-      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -19,10 +17,9 @@ services:
     container_name: dj-app
     restart: unless-stopped
     ports:
-      - "${PORT}:${PORT}"
+      - "127.0.0.1:${PORT}:3000"
     environment:
       NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT}
       DATABASE_URL: ${DATABASE_URL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
     depends_on:
