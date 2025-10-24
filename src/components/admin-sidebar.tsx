@@ -9,6 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarHeader,
   useSidebar,
 } from '~/components/ui/sidebar'
 import {
@@ -18,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
+import { ModeToggle } from '~/components/mode-toggle'
 
 const menuItems = [
   {
@@ -53,7 +55,12 @@ export function AdminSidebar() {
 
   return (
     <Sidebar side="right">
-      <SidebarContent className="pt-6">
+      <SidebarHeader>
+        <div className="flex justify-end">
+          <ModeToggle />
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>

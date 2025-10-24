@@ -6,8 +6,10 @@ import {
   createRootRoute,
   HeadContent,
   Scripts,
+  ScriptOnce,
 } from "@tanstack/react-router";
 import appCss from "@/styles/app.css?url";
+import { ThemeProvider } from "~/components/theme-provider";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -43,12 +45,29 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html>
+    <html suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ScriptOnce>
+          {`
+            (function() {
+              try {
+                const stored = localStorage.getItem('dj-theme') || 'system';
+                const theme = stored === 'system'
+                  ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                  : stored;
+                document.documentElement.classList.add(theme);
+              } catch (e) {
+                document.documentElement.classList.add('light');
+              }
+            })();
+          `}
+        </ScriptOnce>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>
