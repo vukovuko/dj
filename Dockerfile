@@ -23,9 +23,7 @@ COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/env.ts ./env.ts
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
-RUN npm install --omit=dev && \
-    npm install drizzle-kit && \
-    npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 RUN chmod +x ./docker-entrypoint.sh
 
