@@ -1,7 +1,40 @@
+# Build outputs
 .cursor/
 .nitro/
 .output/
 .tanstack/
+dist/
+build/
+
+# Dependencies
 node_modules/
+
+# IDE
 .vscode/
+.idea/
+
+# Docs and notes
 docs/
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# Env files
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temp
+tmp/
+temp/
+.tmp/
