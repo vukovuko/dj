@@ -6,7 +6,7 @@ echo "🔄 Pulling latest changes from GitHub..."
 git pull origin main
 
 echo "🛑 Stopping existing containers..."
-docker-compose down
+docker-compose down --remove-orphans
 
 echo "🧹 Cleaning up unused images..."
 docker image prune -f
