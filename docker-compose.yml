@@ -22,8 +22,13 @@ services:
       NODE_ENV: ${NODE_ENV}
       DATABASE_URL: ${DATABASE_URL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      SEED_STAFF_PASSWORD: ${SEED_STAFF_PASSWORD}
     depends_on:
-      - db
+      db:
+        condition: service_started
 
 volumes:
   postgres_data:

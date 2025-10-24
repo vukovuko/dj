@@ -10,6 +10,8 @@ import {
 } from "@tanstack/react-router";
 import appCss from "@/styles/app.css?url";
 import { ThemeProvider } from "~/components/theme-provider";
+import { NotFound } from "~/components/not-found.tsx";
+import { Toaster } from "~/components/ui/sonner.tsx";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -22,7 +24,11 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "Berza Kafe - DJ & Party Management",
+      },
+      {
+        name: "description",
+        content: "Sistem za upravljanje cenama i proizvodima za DJ i žurke",
       },
     ],
     links: [
@@ -30,9 +36,36 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: appCss,
       },
+      {
+        rel: "icon",
+        type: "image/x-icon",
+        href: "/favicon.ico",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "/favicon-32x32.png",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "/favicon-16x16.png",
+      },
+      {
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        href: "/apple-touch-icon.png",
+      },
+      {
+        rel: "manifest",
+        href: "/site.webmanifest",
+      },
     ],
   }),
   component: RootComponent,
+  notFoundComponent: NotFound,
 });
 
 function RootComponent() {
@@ -66,6 +99,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
           `}
         </ScriptOnce>
         <ThemeProvider>{children}</ThemeProvider>
+        <Toaster />
         <Scripts />
       </body>
     </html>

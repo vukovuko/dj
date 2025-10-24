@@ -6,6 +6,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().positive(),
   DATABASE_URL: z.string().startsWith("postgresql://"),
   ALLOWED_ORIGINS: z.string().transform((val) => val.split(",").map((origin: string) => origin.trim())),
+  BETTER_AUTH_SECRET: z.string().min(32),
+  BETTER_AUTH_URL: z.string().url(),
+  // Seed credentials (optional, only needed for database seeding)
+  SEED_ADMIN_PASSWORD: z.string().min(6).optional(),
+  SEED_STAFF_PASSWORD: z.string().min(6).optional(),
 });
 
 // Parse and validate environment variables
