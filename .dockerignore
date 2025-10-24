@@ -1,0 +1,7 @@
+.cursor/
+.nitro/
+.output/
+.tanstack/
+node_modules/
+.vscode/
+docs/
