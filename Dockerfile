@@ -29,4 +29,4 @@ EXPOSE 3000
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["node", ".output/server/index.mjs"]
+CMD ["node", "dist/server/server.js"]

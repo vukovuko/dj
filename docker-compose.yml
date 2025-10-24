@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  app:
+  dj-app:
     build:
       context: .
       dockerfile: Dockerfile
