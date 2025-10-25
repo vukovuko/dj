@@ -6,6 +6,13 @@ echo "🔄 Pulling latest changes from GitHub..."
 git pull origin main
 
 echo "📁 Setting up videos directory..."
+# Remove old directory if it exists (might be owned by root/docker)
+if [ -d "videos" ]; then
+  echo "  Removing existing videos directory..."
+  sudo rm -rf videos
+fi
+
+# Create fresh directory with proper ownership
 sudo mkdir -p videos/thumbnails
 sudo chown -R $(whoami):$(whoami) videos
 sudo chmod -R 755 videos
