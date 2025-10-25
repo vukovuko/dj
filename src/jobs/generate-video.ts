@@ -104,7 +104,7 @@ const task = async (payload: any, helpers: any) => {
       model: "ray-2",
       aspect_ratio: aspectRatio === "landscape" ? "16:9" : "9:16",
       resolution: "720p", // Options: 540p, 720p, 1080p, 4k
-      duration: "15s", // Options: 5s (default, free tier supports only 5s)
+      duration: "10s", // Options: 5s ($0.25), 9s ($0.45), 10s ($0.50)
     });
 
     console.log(`📝 Luma generation created: ${generation.id}`);
