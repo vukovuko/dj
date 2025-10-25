@@ -32,6 +32,8 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
       SEED_STAFF_PASSWORD: ${SEED_STAFF_PASSWORD}
+    volumes:
+      - ./videos:/app/public/videos  # Persistent video storage
     depends_on:
       db:
         condition: service_healthy

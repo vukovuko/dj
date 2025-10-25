@@ -144,7 +144,12 @@ export const videoGenerationChats = pgTable("videoGenerationChats", {
     .notNull()
     .unique()
     .references(() => user.id, { onDelete: "cascade" }),
-  messages: jsonb("messages").notNull().default("[]"), // [{role, content, timestamp, videoId?}]
+  messages: jsonb("messages").$type<Array<{
+    role: "user" | "assistant"
+    content: string
+    timestamp: string
+    videoId?: string
+  }>>().notNull().default("[]"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })

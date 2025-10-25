@@ -12,7 +12,8 @@ RUN npm run build
 FROM node:24-alpine
 WORKDIR /app
 
-RUN apk add --no-cache dumb-init
+# Install FFmpeg for thumbnail generation
+RUN apk add --no-cache dumb-init ffmpeg
 
 ENV NODE_ENV=production
 
@@ -22,6 +23,7 @@ COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/env.ts ./env.ts
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/worker.ts ./worker.ts
 COPY --from=builder /app/enable-unaccent.js ./enable-unaccent.js
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 

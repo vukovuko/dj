@@ -130,11 +130,33 @@ function VideosPage() {
 
         {/* Toolbar - always visible, changes based on selection */}
         <div className="flex items-center gap-2">
-          {selectedIds.size > 0 ? (
+          {selectedIds.size > 1 ? (
+            // Multiple videos selected - only show delete button
             <>
               <span className="text-sm text-muted-foreground mr-2">
                 Izabrano: {selectedIds.size}
               </span>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete()}
+              >
+                Izbrisi sve
+              </Button>
+            </>
+          ) : selectedIds.size === 1 ? (
+            // Single video selected - show all actions
+            <>
+              <span className="text-sm text-muted-foreground mr-2">
+                Izabrano: 1
+              </span>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete()}
+              >
+                Izbrisi
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -151,6 +173,7 @@ function VideosPage() {
               </Button>
             </>
           ) : (
+            // No selection - show generate button
             <Button onClick={() => navigate({ to: '/admin/videos/generacija' })}>
               Generiši video
             </Button>

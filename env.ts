@@ -11,6 +11,8 @@ const envSchema = z.object({
   // Seed credentials (optional, only needed for database seeding)
   SEED_ADMIN_PASSWORD: z.string().min(6).optional(),
   SEED_STAFF_PASSWORD: z.string().min(6).optional(),
+  // Luma AI (optional, only needed for real video generation)
+  LUMA_API_KEY: z.string().optional(),
 });
 
 // Parse and validate environment variables

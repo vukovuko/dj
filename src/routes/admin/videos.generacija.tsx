@@ -1,90 +1,141 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
-import { GenerationChat } from '~/components/videos/generation-chat'
-import { toast } from 'sonner'
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { GenerationChat } from "~/components/videos/generation-chat";
+import { toast } from "sonner";
 import {
   getUserChatHistory,
   saveChatMessage,
   generateVideo,
   getVideoById,
-} from '~/queries/videos.server'
-import { authClient } from '~/lib/auth-client'
+} from "~/queries/videos.server";
+import { authClient } from "~/lib/auth-client";
 
 // ========== ROUTE ==========
 
-export const Route = createFileRoute('/admin/videos/generacija')({
+export const Route = createFileRoute("/admin/videos/generacija")({
   component: GeneracijaPage,
-})
+});
 
 // ========== TYPES ==========
 
 interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: string
-  videoId?: string
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  videoId?: string;
 }
 
 // ========== COMPONENT ==========
 
 function GeneracijaPage() {
-  const router = useRouter()
-  const { data: session } = authClient.useSession()
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pendingVideoId, setPendingVideoId] = useState<string | null>(null);
 
   // Load chat history on mount
   useEffect(() => {
     const loadChatHistory = async () => {
-      if (!session?.user?.id) return
+      if (!session?.user?.id) return;
 
       try {
         const chatHistory = await getUserChatHistory({
-          data: { userId: session.user.id }
-        })
-        setMessages((chatHistory.messages as ChatMessage[]) || [])
+          data: { userId: session.user.id },
+        });
+        setMessages((chatHistory.messages as ChatMessage[]) || []);
       } catch (error) {
-        console.error('Failed to load chat history:', error)
-        toast.error('Greška pri učitavanju istorije razgovora')
+        console.error("Failed to load chat history:", error);
+        toast.error("Greška pri učitavanju istorije razgovora");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadChatHistory()
-  }, [session?.user?.id])
+    loadChatHistory();
+  }, [session?.user?.id]);
+
+  // Poll for video completion if there's a pending video
+  useEffect(() => {
+    if (!pendingVideoId) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const video = await getVideoById({ data: { id: pendingVideoId } });
+
+        if (video.status === "ready") {
+          // Video is ready! Update the last message
+          const successMessage: ChatMessage = {
+            role: "assistant",
+            content: "Video je uspešno generisan! 🎥",
+            timestamp: new Date().toISOString(),
+            videoId: video.id,
+          };
+
+          // Update the last assistant message
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            // Find the last assistant message and update it
+            for (let i = newMessages.length - 1; i >= 0; i--) {
+              if (newMessages[i].role === "assistant") {
+                newMessages[i] = successMessage;
+                break;
+              }
+            }
+            return newMessages;
+          });
+
+          await saveChatMessage({
+            data: { userId: session!.user!.id, message: successMessage },
+          });
+
+          toast.success("Video je spreman!");
+          setPendingVideoId(null);
+          router.invalidate();
+        } else if (video.status === "failed") {
+          // Video failed
+          toast.error("Video generisanje nije uspelo");
+          setPendingVideoId(null);
+        }
+      } catch (error) {
+        console.error("Failed to poll video status:", error);
+      }
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [pendingVideoId, session, router]);
 
   const handleSendMessage = async (content: string) => {
     if (!session?.user?.id) {
-      toast.error('Niste prijavljeni')
-      return
+      toast.error("Niste prijavljeni");
+      return;
     }
 
-    const userId = session.user.id
+    const userId = session.user.id;
 
     // 1. Create and save user message
     const userMessage: ChatMessage = {
-      role: 'user',
+      role: "user",
       content,
       timestamp: new Date().toISOString(),
-    }
+    };
 
-    setMessages(prev => [...prev, userMessage])
+    setMessages((prev) => [...prev, userMessage]);
 
     try {
       await saveChatMessage({
-        data: { userId, message: userMessage }
-      })
+        data: { userId, message: userMessage },
+      });
     } catch (error) {
-      console.error('Failed to save user message:', error)
-      toast.error('Greška pri čuvanju poruke')
-      return
+      console.error("Failed to save user message:", error);
+      toast.error("Greška pri čuvanju poruke");
+      return;
     }
 
     // 2. Start video generation
-    setIsGenerating(true)
+    setIsGenerating(true);
 
     try {
       // Call generateVideo API
@@ -93,89 +144,72 @@ function GeneracijaPage() {
           userId,
           prompt: content,
           duration: 30, // Default duration
-          aspectRatio: 'landscape', // Default aspect ratio
-        }
-      })
+          aspectRatio: "landscape", // Default aspect ratio
+        },
+      });
 
-      // 3. Show loading message
-      const loadingMessage: ChatMessage = {
-        role: 'assistant',
-        content: 'Generisanje videa u toku...',
+      // 3. Show confirmation message
+      const confirmationMessage: ChatMessage = {
+        role: "assistant",
+        content:
+          "Video je dodat u red za generisanje! Biće spreman za 30-60 sekundi. Možete nastaviti da koristite aplikaciju.",
         timestamp: new Date().toISOString(),
-      }
+      };
 
-      setMessages(prev => [...prev, loadingMessage])
-
-      // 4. Poll for video completion (mock: wait 3.5 seconds)
-      // In production, this would use WebSocket or polling
-      await new Promise(resolve => setTimeout(resolve, 3500))
-
-      // 5. Fetch the completed video
-      const completedVideo = await getVideoById({ data: { id: video.id } })
-
-      // 6. Replace loading message with success
-      const successMessage: ChatMessage = {
-        role: 'assistant',
-        content: completedVideo.status === 'ready'
-          ? 'Video je uspešno generisan! 🎥'
-          : 'Video je u obradi...',
-        timestamp: new Date().toISOString(),
-        videoId: video.id,
-      }
-
-      setMessages(prev => [
-        ...prev.slice(0, -1), // Remove loading message
-        successMessage
-      ])
+      setMessages((prev) => [...prev, confirmationMessage]);
 
       await saveChatMessage({
-        data: { userId, message: successMessage }
-      })
+        data: { userId, message: confirmationMessage },
+      });
+
+      // Start polling for completion
+      setPendingVideoId(video.id);
 
       // Invalidate to refresh video library
-      router.invalidate()
+      router.invalidate();
 
-      if (completedVideo.status === 'ready') {
-        toast.success('Video je spreman!')
-      }
-
+      toast.info("Video se generiše u pozadini...");
     } catch (error) {
-      console.error('Failed to generate video:', error)
+      console.error("Failed to generate video:", error);
 
       // Remove loading message if exists
-      setMessages(prev => {
-        const lastMessage = prev[prev.length - 1]
-        if (lastMessage?.role === 'assistant' && lastMessage.content.includes('Generisanje')) {
-          return prev.slice(0, -1)
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (
+          lastMessage?.role === "assistant" &&
+          lastMessage.content.includes("Generisanje")
+        ) {
+          return prev.slice(0, -1);
         }
-        return prev
-      })
+        return prev;
+      });
 
       // Add error message
       const errorMessage: ChatMessage = {
-        role: 'assistant',
-        content: 'Došlo je do greške pri generisanju videa. Molimo pokušajte ponovo.',
+        role: "assistant",
+        content:
+          "Došlo je do greške pri generisanju videa. Molimo pokušajte ponovo.",
         timestamp: new Date().toISOString(),
-      }
+      };
 
-      setMessages(prev => [...prev, errorMessage])
+      setMessages((prev) => [...prev, errorMessage]);
 
       await saveChatMessage({
-        data: { userId, message: errorMessage }
-      }).catch(console.error)
+        data: { userId, message: errorMessage },
+      }).catch(console.error);
 
-      toast.error('Greška pri generisanju videa')
+      toast.error("Greška pri generisanju videa");
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-muted-foreground">Učitavanje...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -184,5 +218,5 @@ function GeneracijaPage() {
       isGenerating={isGenerating}
       onSendMessage={handleSendMessage}
     />
-  )
+  );
 }

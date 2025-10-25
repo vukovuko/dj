@@ -97,6 +97,14 @@ NOTES.md
 *.db
 data/
 
+# Generated videos (don't commit large files)
+public/videos/*.mp4
+public/videos/*.webm
+public/videos/*.mov
+public/videos/thumbnails/*.jpg
+public/videos/thumbnails/*.png
+public/videos/thumbnails/*.webp
+
 # Temporary files
 tmp/
 temp/

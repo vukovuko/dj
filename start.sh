@@ -5,6 +5,11 @@ set -e
 echo "🔄 Pulling latest changes from GitHub..."
 git pull origin main
 
+echo "📁 Setting up videos directory..."
+mkdir -p videos/thumbnails
+chmod -R 755 videos
+echo "✓ Videos directory ready"
+
 echo "🛑 Stopping existing containers..."
 docker-compose down --remove-orphans
 

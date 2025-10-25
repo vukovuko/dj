@@ -101,7 +101,7 @@ export const saveChatMessage = createServerFn({ method: "POST" })
     return updated
   })
 
-// Generate video (mock implementation for now)
+// Generate video - queues background job for async processing
 export const generateVideo = createServerFn({ method: "POST" })
   .inputValidator((data: {
     userId: string
@@ -110,7 +110,9 @@ export const generateVideo = createServerFn({ method: "POST" })
     aspectRatio: "landscape" | "portrait"
   }) => data)
   .handler(async ({ data }) => {
-    // Create video record with status 'generating'
+    const { getWorkerUtils } = await import('../lib/worker.ts')
+
+    // Create video record with status 'pending'
     const [video] = await db
       .insert(videos)
       .values({
@@ -118,36 +120,75 @@ export const generateVideo = createServerFn({ method: "POST" })
         prompt: data.prompt,
         duration: data.duration,
         aspectRatio: data.aspectRatio,
-        status: "generating",
+        status: "pending",
         createdBy: data.userId,
       })
       .returning()
 
-    // Mock: Simulate video generation with timeout
-    // In production, this would create a Graphile Worker job
-    setTimeout(async () => {
-      await db
-        .update(videos)
-        .set({
-          status: "ready",
-          url: "https://placehold.co/1280x720/1f1f1f/808080?text=Generated+Video",
-          thumbnailUrl: "https://placehold.co/640x360/1f1f1f/808080?text=Video+Thumbnail",
-          updatedAt: new Date(),
-        })
-        .where(eq(videos.id, video.id))
-    }, 3000)
+    // Queue background job for video generation
+    // This returns immediately - user can continue using app!
+    const workerUtils = await getWorkerUtils()
+    await workerUtils.addJob('generate-video', {
+      videoId: video.id,
+      prompt: data.prompt,
+      duration: data.duration,
+      aspectRatio: data.aspectRatio,
+    }, {
+      maxAttempts: 3, // Retry up to 3 times on failure
+    })
+
+    // Release worker utils connection
+    await workerUtils.release()
+
+    console.log(`✅ Video generation job queued: ${video.id}`)
 
     return video
   })
 
-// Delete video(s)
+// Delete video(s) - deletes from both database and disk
 export const deleteVideos = createServerFn({ method: "POST" })
   .inputValidator((data: { ids: string[] }) => data)
   .handler(async ({ data }) => {
+    // Get video records first to know which files to delete
+    const videosToDelete = await db
+      .select()
+      .from(videos)
+      .where(inArray(videos.id, data.ids))
+
+    // Delete from database
     const deleted = await db
       .delete(videos)
       .where(inArray(videos.id, data.ids))
       .returning()
+
+    // Delete video files from disk
+    const fs = await import('fs/promises')
+    const path = await import('path')
+
+    for (const video of videosToDelete) {
+      try {
+        // Delete video file if it exists (not placeholder URL)
+        if (video.url && !video.url.startsWith('http')) {
+          const videoPath = path.join(process.cwd(), 'public', video.url)
+          await fs.unlink(videoPath).catch(() => {
+            console.log(`Video file not found: ${videoPath}`)
+          })
+        }
+
+        // Delete thumbnail file if it exists (not placeholder URL)
+        if (video.thumbnailUrl && !video.thumbnailUrl.startsWith('http')) {
+          const thumbnailPath = path.join(process.cwd(), 'public', video.thumbnailUrl)
+          await fs.unlink(thumbnailPath).catch(() => {
+            console.log(`Thumbnail file not found: ${thumbnailPath}`)
+          })
+        }
+
+        console.log(`🗑️ Deleted video files for: ${video.id}`)
+      } catch (error) {
+        console.error(`Failed to delete files for video ${video.id}:`, error)
+        // Continue with other deletions even if one fails
+      }
+    }
 
     return { count: deleted.length }
   })
