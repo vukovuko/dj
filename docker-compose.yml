@@ -32,6 +32,7 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
       SEED_STAFF_PASSWORD: ${SEED_STAFF_PASSWORD}
+      LUMA_API_KEY: ${LUMA_API_KEY}
     volumes:
       - ./videos:/app/public/videos  # Persistent video storage
     depends_on:

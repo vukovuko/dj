@@ -130,6 +130,7 @@ export const videos = pgTable("videos", {
   aspectRatio: aspectRatioEnum("aspectRatio").notNull(),
   status: videoStatusEnum("status").notNull().default("pending"),
   errorMessage: text("errorMessage"), // if failed
+  externalId: text("externalId"), // Luma AI generation ID for tracking
   createdBy: text("createdBy")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
