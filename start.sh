@@ -6,17 +6,20 @@ echo "🔄 Pulling latest changes from GitHub..."
 git pull origin main
 
 echo "📁 Setting up videos directory..."
-# Remove old directory if it exists (might be owned by root/docker)
-if [ -d "videos" ]; then
-  echo "  Removing existing videos directory..."
-  sudo rm -rf videos
+# Create directory if it doesn't exist
+if [ ! -d "videos" ]; then
+  echo "  Creating videos directory..."
+  sudo mkdir -p videos/thumbnails
+  sudo chown -R $(whoami):$(whoami) videos
+  sudo chmod -R 755 videos
+  echo "✓ Videos directory created"
+else
+  # Fix permissions if needed (but keep existing videos!)
+  echo "  Videos directory exists, checking permissions..."
+  sudo chown -R $(whoami):$(whoami) videos 2>/dev/null || true
+  sudo chmod -R 755 videos 2>/dev/null || true
+  echo "✓ Permissions updated"
 fi
-
-# Create fresh directory with proper ownership
-sudo mkdir -p videos/thumbnails
-sudo chown -R $(whoami):$(whoami) videos
-sudo chmod -R 755 videos
-echo "✓ Videos directory ready"
 
 echo "🛑 Stopping existing containers..."
 docker-compose down --remove-orphans
