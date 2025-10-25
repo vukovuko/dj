@@ -10,8 +10,8 @@ import {
 } from "@tanstack/react-router";
 import appCss from "@/styles/app.css?url";
 import { ThemeProvider } from "~/components/theme-provider";
-import { NotFound } from "~/components/not-found.tsx";
-import { Toaster } from "~/components/ui/sonner.tsx";
+import { NotFound } from "~/components/not-found";
+import { Toaster } from "~/components/ui/sonner";
 
 export const Route = createRootRoute({
   head: () => ({

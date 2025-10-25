@@ -9,6 +9,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarFooter,
   SidebarHeader,
   useSidebar,
@@ -35,7 +38,13 @@ import { ModeToggle } from '~/components/mode-toggle'
 import { authClient } from '~/lib/auth-client.ts'
 import { toast } from 'sonner'
 
-const menuItems = [
+type MenuItem = {
+  title: string
+  url: string
+  items?: { title: string; url: string }[]
+}
+
+const menuItems: MenuItem[] = [
   {
     title: 'Kontrolna tabla',
     url: '/admin',
@@ -51,6 +60,16 @@ const menuItems = [
   {
     title: 'Video',
     url: '/admin/videos',
+    items: [
+      {
+        title: 'Biblioteka',
+        url: '/admin/videos',
+      },
+      {
+        title: 'Generacija',
+        url: '/admin/videos/generacija',
+      },
+    ],
   },
   {
     title: 'Podešavanja',
@@ -145,6 +164,28 @@ export function AdminSidebar() {
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
+                    {item.items?.length ? (
+                      <SidebarMenuSub>
+                        {item.items.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton asChild>
+                              <Link
+                                to={subItem.url}
+                                onClick={handleNavClick}
+                                activeProps={{
+                                  className: 'bg-sidebar-accent text-sidebar-accent-foreground',
+                                }}
+                                activeOptions={{
+                                  exact: true,
+                                }}
+                              >
+                                {subItem.title}
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    ) : null}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
@@ -156,17 +197,17 @@ export function AdminSidebar() {
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton>
-                    <Avatar className="h-6 w-6">
+                  <SidebarMenuButton size="lg" className="h-auto py-2">
+                    <Avatar className="h-7 w-7">
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col items-start flex-1 min-w-0">
-                      <span className="text-sm truncate">{username}</span>
-                      <Badge variant={getRoleBadgeVariant(role)} className="text-xs h-4 px-1">
+                    <div className="flex flex-col items-start flex-1 gap-0.5">
+                      <span className="text-sm font-medium truncate w-full">{username}</span>
+                      <Badge variant={getRoleBadgeVariant(role)} className="text-xs px-2 py-0">
                         {getRoleLabel(role)}
                       </Badge>
                     </div>
-                    <ChevronsUpDown className="ml-auto h-4 w-4" />
+                    <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="end">

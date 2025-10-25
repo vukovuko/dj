@@ -15,6 +15,20 @@
       "when": 1761329960318,
       "tag": "0001_cynical_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761388002479,
+      "tag": "0002_simple_epoch",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1761405541341,
+      "tag": "0003_green_rocket_racer",
+      "breakpoints": true
     }
   ]
 }

@@ -1,17 +1,27 @@
-import { Link } from '@tanstack/react-router'
-import { Button } from '~/components/ui/button.tsx'
+import { useRouter } from '@tanstack/react-router'
+import { Button } from '~/components/ui/button'
 
 export function NotFound() {
+  const router = useRouter()
+
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      window.history.back()
+    } else {
+      router.navigate({ to: '/' })
+    }
+  }
+
   return (
     <div className='grid min-h-screen grid-cols-1 lg:grid-cols-2'>
       <div className='flex flex-col items-center justify-center px-4 py-8 text-center'>
         <h2 className='mb-6 text-5xl font-semibold'>Ups!</h2>
         <h3 className='mb-1.5 text-3xl font-semibold'>Nešto je pošlo po zlu</h3>
         <p className='text-muted-foreground mb-6 max-w-sm'>
-          Stranica koju tražite nije pronađena. Predlažemo da se vratite na početnu stranicu.
+          Stranica koju tražite nije pronađena. Predlažemo da se vratite na prethodnu stranicu.
         </p>
-        <Button asChild size='lg' className='rounded-lg text-base shadow-sm'>
-          <Link to='/'>Nazad na početnu</Link>
+        <Button onClick={handleGoBack} size='lg' className='rounded-lg text-base shadow-sm'>
+          Nazad
         </Button>
       </div>
 

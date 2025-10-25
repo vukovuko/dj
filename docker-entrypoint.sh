@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+echo "🔧 Enabling PostgreSQL extensions..."
+node enable-unaccent.js
+
 echo "🔄 Running database migrations..."
 npx drizzle-kit migrate
 

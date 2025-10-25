@@ -11,13 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminVideosRouteImport } from './routes/admin/videos'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminPricingRouteImport } from './routes/admin/pricing'
+import { Route as AdminVideosIndexRouteImport } from './routes/admin/videos.index'
+import { Route as AdminProductsIndexRouteImport } from './routes/admin/products.index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AdminVideosGeneracijaRouteImport } from './routes/admin/videos.generacija'
+import { Route as AdminProductsNewRouteImport } from './routes/admin/products.new'
+import { Route as AdminProductsIdRouteImport } from './routes/admin/products.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -27,6 +32,11 @@ const LoginRoute = LoginRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,14 +59,19 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminProductsRoute = AdminProductsRouteImport.update({
-  id: '/products',
-  path: '/products',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminPricingRoute = AdminPricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminVideosIndexRoute = AdminVideosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminVideosRoute,
+} as any)
+const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
   getParentRoute: () => AdminRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -64,77 +79,121 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminVideosGeneracijaRoute = AdminVideosGeneracijaRouteImport.update({
+  id: '/generacija',
+  path: '/generacija',
+  getParentRoute: () => AdminVideosRoute,
+} as any)
+const AdminProductsNewRoute = AdminProductsNewRouteImport.update({
+  id: '/products/new',
+  path: '/products/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductsIdRoute = AdminProductsIdRouteImport.update({
+  id: '/products/$id',
+  path: '/products/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/pricing': typeof AdminPricingRoute
-  '/admin/products': typeof AdminProductsRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/videos': typeof AdminVideosRoute
+  '/admin/videos': typeof AdminVideosRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/products': typeof AdminProductsIndexRoute
+  '/admin/videos/': typeof AdminVideosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/login': typeof LoginRoute
   '/admin/pricing': typeof AdminPricingRoute
-  '/admin/products': typeof AdminProductsRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/videos': typeof AdminVideosRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/products': typeof AdminProductsIndexRoute
+  '/admin/videos': typeof AdminVideosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/pricing': typeof AdminPricingRoute
-  '/admin/products': typeof AdminProductsRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/videos': typeof AdminVideosRoute
+  '/admin/videos': typeof AdminVideosRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/videos/': typeof AdminVideosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$'
     | '/admin'
     | '/login'
     | '/admin/pricing'
-    | '/admin/products'
     | '/admin/settings'
     | '/admin/videos'
     | '/admin/'
+    | '/admin/products/$id'
+    | '/admin/products/new'
+    | '/admin/videos/generacija'
     | '/api/auth/$'
+    | '/admin/products'
+    | '/admin/videos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$'
     | '/login'
     | '/admin/pricing'
-    | '/admin/products'
     | '/admin/settings'
-    | '/admin/videos'
     | '/admin'
+    | '/admin/products/$id'
+    | '/admin/products/new'
+    | '/admin/videos/generacija'
     | '/api/auth/$'
+    | '/admin/products'
+    | '/admin/videos'
   id:
     | '__root__'
     | '/'
+    | '/$'
     | '/admin'
     | '/login'
     | '/admin/pricing'
-    | '/admin/products'
     | '/admin/settings'
     | '/admin/videos'
     | '/admin/'
+    | '/admin/products/$id'
+    | '/admin/products/new'
+    | '/admin/videos/generacija'
     | '/api/auth/$'
+    | '/admin/products/'
+    | '/admin/videos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SplatRoute: typeof SplatRoute
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -154,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -184,18 +250,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/products': {
-      id: '/admin/products'
-      path: '/products'
-      fullPath: '/admin/products'
-      preLoaderRoute: typeof AdminProductsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/pricing': {
       id: '/admin/pricing'
       path: '/pricing'
       fullPath: '/admin/pricing'
       preLoaderRoute: typeof AdminPricingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/videos/': {
+      id: '/admin/videos/'
+      path: '/'
+      fullPath: '/admin/videos/'
+      preLoaderRoute: typeof AdminVideosIndexRouteImport
+      parentRoute: typeof AdminVideosRoute
+    }
+    '/admin/products/': {
+      id: '/admin/products/'
+      path: '/products'
+      fullPath: '/admin/products'
+      preLoaderRoute: typeof AdminProductsIndexRouteImport
       parentRoute: typeof AdminRoute
     }
     '/api/auth/$': {
@@ -205,29 +278,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/videos/generacija': {
+      id: '/admin/videos/generacija'
+      path: '/generacija'
+      fullPath: '/admin/videos/generacija'
+      preLoaderRoute: typeof AdminVideosGeneracijaRouteImport
+      parentRoute: typeof AdminVideosRoute
+    }
+    '/admin/products/new': {
+      id: '/admin/products/new'
+      path: '/products/new'
+      fullPath: '/admin/products/new'
+      preLoaderRoute: typeof AdminProductsNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/products/$id': {
+      id: '/admin/products/$id'
+      path: '/products/$id'
+      fullPath: '/admin/products/$id'
+      preLoaderRoute: typeof AdminProductsIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminVideosRouteChildren {
+  AdminVideosGeneracijaRoute: typeof AdminVideosGeneracijaRoute
+  AdminVideosIndexRoute: typeof AdminVideosIndexRoute
+}
+
+const AdminVideosRouteChildren: AdminVideosRouteChildren = {
+  AdminVideosGeneracijaRoute: AdminVideosGeneracijaRoute,
+  AdminVideosIndexRoute: AdminVideosIndexRoute,
+}
+
+const AdminVideosRouteWithChildren = AdminVideosRoute._addFileChildren(
+  AdminVideosRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminPricingRoute: typeof AdminPricingRoute
-  AdminProductsRoute: typeof AdminProductsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
-  AdminVideosRoute: typeof AdminVideosRoute
+  AdminVideosRoute: typeof AdminVideosRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminProductsIdRoute: typeof AdminProductsIdRoute
+  AdminProductsNewRoute: typeof AdminProductsNewRoute
+  AdminProductsIndexRoute: typeof AdminProductsIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminPricingRoute: AdminPricingRoute,
-  AdminProductsRoute: AdminProductsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
-  AdminVideosRoute: AdminVideosRoute,
+  AdminVideosRoute: AdminVideosRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
+  AdminProductsIdRoute: AdminProductsIdRoute,
+  AdminProductsNewRoute: AdminProductsNewRoute,
+  AdminProductsIndexRoute: AdminProductsIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SplatRoute: SplatRoute,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
