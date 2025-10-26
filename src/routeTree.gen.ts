@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as VideosSplatRouteImport } from './routes/videos/$'
 import { Route as AdminVideosRouteImport } from './routes/admin/videos'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminPricingRouteImport } from './routes/admin/pricing'
@@ -48,6 +49,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const VideosSplatRoute = VideosSplatRouteImport.update({
+  id: '/videos/$',
+  path: '/videos/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminVideosRoute = AdminVideosRouteImport.update({
   id: '/videos',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/videos': typeof AdminVideosRouteWithChildren
+  '/videos/$': typeof VideosSplatRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/products/new': typeof AdminProductsNewRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/videos/$': typeof VideosSplatRoute
   '/admin': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/products/new': typeof AdminProductsNewRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/videos': typeof AdminVideosRouteWithChildren
+  '/videos/$': typeof VideosSplatRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/products/new': typeof AdminProductsNewRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin/settings'
     | '/admin/videos'
+    | '/videos/$'
     | '/admin/'
     | '/admin/products/$id'
     | '/admin/products/new'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/pricing'
     | '/admin/settings'
+    | '/videos/$'
     | '/admin'
     | '/admin/products/$id'
     | '/admin/products/new'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin/settings'
     | '/admin/videos'
+    | '/videos/$'
     | '/admin/'
     | '/admin/products/$id'
     | '/admin/products/new'
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
+  VideosSplatRoute: typeof VideosSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -235,6 +248,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/videos/$': {
+      id: '/videos/$'
+      path: '/videos/$'
+      fullPath: '/videos/$'
+      preLoaderRoute: typeof VideosSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/videos': {
       id: '/admin/videos'
@@ -343,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
+  VideosSplatRoute: VideosSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
