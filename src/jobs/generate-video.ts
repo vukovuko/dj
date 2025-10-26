@@ -123,8 +123,8 @@ const task = async (payload: any, helpers: any) => {
       })
       .where(eq(videos.id, videoId));
 
-    // Poll for completion (max 5 minutes)
-    const maxAttempts = 60; // 60 attempts * 5 seconds = 5 minutes
+    // Poll for completion (max 10 minutes - 10s videos take longer than 5s)
+    const maxAttempts = 120; // 120 attempts * 5 seconds = 10 minutes
     let attempts = 0;
     let completed = false;
 
