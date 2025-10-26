@@ -4,20 +4,20 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "~/components/ui/dialog"
-import { useEffect, useRef } from "react"
+} from "~/components/ui/dialog";
+import { useEffect, useRef } from "react";
 
 interface VideoPreviewDialogProps {
   video: {
-    id: string
-    name: string
-    url: string | null
-    prompt: string
-    duration: number
-    aspectRatio: "landscape" | "portrait"
-  } | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
+    id: string;
+    name: string;
+    url: string | null;
+    prompt: string;
+    duration: number;
+    aspectRatio: "landscape" | "portrait";
+  } | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function VideoPreviewDialog({
@@ -25,32 +25,33 @@ export function VideoPreviewDialog({
   open,
   onOpenChange,
 }: VideoPreviewDialogProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Auto-pause when dialog closes
   useEffect(() => {
     if (!open && videoRef.current) {
-      videoRef.current.pause()
+      videoRef.current.pause();
     }
-  }, [open])
+  }, [open]);
 
-  if (!video) return null
+  if (!video) return null;
 
   const formatDuration = (seconds: number) => {
-    return `${seconds}s`
-  }
+    return `${seconds}s`;
+  };
 
   const formatAspectRatio = (ratio: string) => {
-    return ratio === "landscape" ? "Horizontalno" : "Vertikalno"
-  }
+    return ratio === "landscape" ? "Horizontalno" : "Vertikalno";
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent style={{ maxWidth: '90vw', width: '100%' }}>
+      <DialogContent className="sm:max-w-7xl">
         <DialogHeader>
           <DialogTitle>{video.name}</DialogTitle>
           <DialogDescription>
-            {formatDuration(video.duration)} • {formatAspectRatio(video.aspectRatio)}
+            {formatDuration(video.duration)} •{" "}
+            {formatAspectRatio(video.aspectRatio)}
           </DialogDescription>
         </DialogHeader>
 
@@ -82,5 +83,5 @@ export function VideoPreviewDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
