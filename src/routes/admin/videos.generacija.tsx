@@ -9,6 +9,7 @@ import {
   getVideoById,
 } from "~/queries/videos.server";
 import { authClient } from "~/lib/auth-client";
+import { durationToSeconds, type LumaModel, type VideoDuration } from "~/config/luma-models";
 
 // ========== ROUTE ==========
 
@@ -107,7 +108,7 @@ function GeneracijaPage() {
     return () => clearInterval(pollInterval);
   }, [pendingVideoId, session, router]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, model: LumaModel, duration: VideoDuration) => {
     if (!session?.user?.id) {
       toast.error("Niste prijavljeni");
       return;
@@ -143,8 +144,9 @@ function GeneracijaPage() {
         data: {
           userId,
           prompt: content,
-          duration: 30, // Default duration
+          duration: durationToSeconds(duration),
           aspectRatio: "landscape", // Default aspect ratio
+          model, // Pass selected model
         },
       });
 

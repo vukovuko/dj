@@ -108,6 +108,7 @@ export const generateVideo = createServerFn({ method: "POST" })
     prompt: string
     duration: number
     aspectRatio: "landscape" | "portrait"
+    model?: string // Optional for backward compatibility
   }) => data)
   .handler(async ({ data }) => {
     const { getWorkerUtils } = await import('../lib/worker.ts')
@@ -133,6 +134,7 @@ export const generateVideo = createServerFn({ method: "POST" })
       prompt: data.prompt,
       duration: data.duration,
       aspectRatio: data.aspectRatio,
+      model: data.model || "ray-2", // Default to ray-2
     }, {
       maxAttempts: 3, // Retry up to 3 times on failure
     })

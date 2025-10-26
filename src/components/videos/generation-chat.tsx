@@ -17,6 +17,13 @@ import {
   PromptInputSubmit,
 } from "~/components/ui/shadcn-io/ai/prompt-input";
 import { Button } from "~/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Video, Eye } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -27,6 +34,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "~/components/ui/empty";
+import {
+  LUMA_MODELS,
+  DEFAULT_MODEL,
+  DEFAULT_DURATION,
+  getSupportedDurations,
+  type LumaModel,
+  type VideoDuration,
+} from "~/config/luma-models";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -38,7 +53,11 @@ interface ChatMessage {
 interface GenerationChatProps {
   messages: ChatMessage[];
   isGenerating: boolean;
-  onSendMessage: (message: string) => Promise<void>;
+  onSendMessage: (
+    message: string,
+    model: LumaModel,
+    duration: VideoDuration,
+  ) => Promise<void>;
 }
 
 export function GenerationChat({
@@ -48,6 +67,18 @@ export function GenerationChat({
 }: GenerationChatProps) {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
+  const [selectedModel, setSelectedModel] = useState<LumaModel>(DEFAULT_MODEL);
+  const [selectedDuration, setSelectedDuration] =
+    useState<VideoDuration>(DEFAULT_DURATION);
+
+  // Update duration when model changes if current duration not supported
+  const handleModelChange = (model: LumaModel) => {
+    setSelectedModel(model);
+    const supportedDurations = getSupportedDurations(model);
+    if (!supportedDurations.includes(selectedDuration)) {
+      setSelectedDuration(supportedDurations[0]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +86,7 @@ export function GenerationChat({
 
     const message = inputValue.trim();
     setInputValue("");
-    await onSendMessage(message);
+    await onSendMessage(message, selectedModel, selectedDuration);
   };
 
   return (
@@ -91,28 +122,18 @@ export function GenerationChat({
                   <MessageContent>
                     {msg.content}
 
-                    {/* If AI message has video, show thumbnail */}
+                    {/* If AI message has video, show link */}
                     {msg.role === "assistant" && msg.videoId && (
-                      <div className="mt-2 inline-flex items-center gap-3 p-3 border rounded-lg bg-background">
-                        <img
-                          src="https://placehold.co/160x90/1f1f1f/808080?text=Video"
-                          alt="Generated video thumbnail"
-                          className="w-20 h-12 bg-muted rounded overflow-hidden object-cover shrink-0"
-                        />
-                        <div className="flex flex-col gap-1">
-                          <p className="text-xs text-muted-foreground">
-                            Video je generisan
-                          </p>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs"
-                            onClick={() => navigate({ to: "/admin/videos" })}
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            Prikaži
-                          </Button>
-                        </div>
+                      <div className="mt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5"
+                          onClick={() => navigate({ to: "/admin/videos" })}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Prikaži u biblioteci
+                        </Button>
                       </div>
                     )}
                   </MessageContent>
@@ -134,9 +155,49 @@ export function GenerationChat({
           />
           <PromptInputToolbar>
             <PromptInputTools>
-              <div className="text-xs text-muted-foreground">
-                Enter za slanje, Shift+Enter za novi red
-              </div>
+              <Select value={selectedModel} onValueChange={handleModelChange}>
+                <SelectTrigger className="w-32 h-8 text-xs">
+                  <SelectValue>
+                    {LUMA_MODELS.find(m => m.id === selectedModel)?.name}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {LUMA_MODELS.map((model) => (
+                    <SelectItem
+                      key={model.id}
+                      value={model.id}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-medium">{model.name}</span>
+                        <span className="text-xs text-muted-foreground">{model.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={selectedDuration}
+                onValueChange={(val) =>
+                  setSelectedDuration(val as VideoDuration)
+                }
+              >
+                <SelectTrigger className="w-20 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {getSupportedDurations(selectedModel).map((duration) => (
+                    <SelectItem
+                      key={duration}
+                      value={duration}
+                      className="text-xs"
+                    >
+                      {duration}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </PromptInputTools>
             <PromptInputSubmit
               disabled={isGenerating || !inputValue.trim()}

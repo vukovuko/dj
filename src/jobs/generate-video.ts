@@ -12,6 +12,7 @@ interface GenerateVideoPayload {
   prompt: string;
   duration: number;
   aspectRatio: "landscape" | "portrait";
+  model?: string; // Luma AI model: ray-2, ray-flash-2, ray-1-6
 }
 
 /**
@@ -57,10 +58,10 @@ async function generateThumbnail(
  * - Client polling detects ready status (every 5s)
  */
 const task = async (payload: any, helpers: any) => {
-  const { videoId, prompt, duration, aspectRatio } =
+  const { videoId, prompt, duration, aspectRatio, model = "ray-2" } =
     payload as GenerateVideoPayload;
 
-  helpers.logger.info(`Starting video generation for ${videoId}`);
+  helpers.logger.info(`Starting video generation for ${videoId} with model ${model}`);
 
   try {
     // Update status to generating
@@ -98,10 +99,10 @@ const task = async (payload: any, helpers: any) => {
     // Create generation
     const generation = await luma.generations.create({
       prompt,
-      model: "ray-2",
+      model: model as any, // Use selected model (ray-2, ray-flash-2, ray-1-6)
       aspect_ratio: aspectRatio === "landscape" ? "16:9" : "9:16",
       resolution: "720p", // Options: 540p, 720p, 1080p, 4k
-      duration: "5s", // Options: 5s ($0.25), 9s ($0.45), 10s ($0.50)
+      duration: `${duration}s` as any, // Dynamic duration (5s, 9s, 10s)
     });
 
     // Ensure generation ID exists
