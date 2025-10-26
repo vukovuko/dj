@@ -15,7 +15,17 @@ export default defineConfig({
     tanstackStart({
       srcDirectory: "src",
     }),
-    nitroV2Plugin({ preset: "node-server" }),
+    nitroV2Plugin({
+      preset: "node-server",
+      // Configure Nitro to serve static files from public/ in production
+      publicAssets: [
+        {
+          baseURL: "/",
+          dir: "public",
+          maxAge: 60 * 60 * 24 * 7, // 7 days cache for static assets
+        },
+      ],
+    }),
     // react's vite plugin must come after start's vite plugin
     viteReact(),
   ],
