@@ -9,18 +9,12 @@ export const Route = createFileRoute("/videos/$")({
         const path = params._splat || "";
         const videoPath = join(process.cwd(), "public", "videos", path);
 
-        console.log(`📂 Serving video file: /videos/${path}`);
-        console.log(`   🗂️  Full path: ${videoPath}`);
-
         try {
           const stats = statSync(videoPath);
 
           if (!stats.isFile()) {
-            console.log(`   ❌ Not a file`);
             return new Response("Not Found", { status: 404 });
           }
-
-          console.log(`   ✓ File found, size: ${(stats.size / 1024 / 1024).toFixed(2)}MB`);
 
           const ext = path.split(".").pop()?.toLowerCase();
           const contentType =
@@ -29,8 +23,6 @@ export const Route = createFileRoute("/videos/$")({
               : ext === "jpg" || ext === "jpeg"
                 ? "image/jpeg"
                 : "application/octet-stream";
-
-          console.log(`   📤 Streaming with Content-Type: ${contentType}`);
 
           // Create a readable stream from the file
           const stream = createReadStream(videoPath);
@@ -56,7 +48,6 @@ export const Route = createFileRoute("/videos/$")({
             },
           });
         } catch (error) {
-          console.error(`   ❌ File not found or error:`, error);
           return new Response("Not Found", { status: 404 });
         }
       },

@@ -118,7 +118,7 @@ function VideosPage() {
 
   return (
     <div className="h-full overflow-auto">
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-6 max-w-7xl pb-24 md:pb-6">
       {/* Header with always-visible toolbar */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -128,8 +128,8 @@ function VideosPage() {
           </p>
         </div>
 
-        {/* Toolbar - always visible, changes based on selection */}
-        <div className="flex items-center gap-2">
+        {/* Toolbar - desktop only */}
+        <div className="hidden md:flex items-center gap-2">
           {selectedIds.size > 1 ? (
             // Multiple videos selected - only show delete button
             <>
@@ -189,6 +189,46 @@ function VideosPage() {
         onPreview={handlePreview}
         onDelete={handleDelete}
       />
+
+      {/* Mobile Sticky Toolbar - always visible on mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-50">
+        {selectedIds.size > 0 ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground mr-2">
+              Izabrano: {selectedIds.size}
+            </span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => handleDelete()}
+            >
+              Izbrisi
+            </Button>
+            {selectedIds.size === 1 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePreview()}
+                >
+                  Pregled
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePlayOnTV}
+                >
+                  Pusti na TV
+                </Button>
+              </>
+            )}
+          </div>
+        ) : (
+          <Button className="w-full" onClick={() => navigate({ to: '/admin/videos/generacija' })}>
+            Generiši video
+          </Button>
+        )}
+      </div>
 
       {/* Preview Dialog */}
       <VideoPreviewDialog

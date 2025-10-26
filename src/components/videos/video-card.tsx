@@ -62,10 +62,22 @@ export function VideoCard({
 
   const canInteract = video.status === "ready"
 
+  const handleCardClick = () => {
+    if (canInteract) {
+      onPreview(video.id)
+    }
+  }
+
   return (
-    <Card className="relative overflow-hidden group">
+    <Card
+      className="relative overflow-hidden group cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Checkbox - top left */}
-      <div className="absolute top-3 left-3 z-10">
+      <div
+        className="absolute top-3 left-3 z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="bg-background/80 backdrop-blur-sm rounded p-1">
           <Checkbox
             checked={isSelected}
@@ -136,6 +148,7 @@ export function VideoCard({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 -mt-1"
+                onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical className="h-4 w-4" />
                 <span className="sr-only">Otvori meni</span>

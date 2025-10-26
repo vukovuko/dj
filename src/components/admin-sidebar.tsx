@@ -62,10 +62,6 @@ const menuItems: MenuItem[] = [
     url: '/admin/videos',
     items: [
       {
-        title: 'Biblioteka',
-        url: '/admin/videos',
-      },
-      {
         title: 'Generacija',
         url: '/admin/videos/generacija',
       },
@@ -158,7 +154,7 @@ export function AdminSidebar() {
                           className: 'bg-sidebar-accent text-sidebar-accent-foreground font-medium',
                         }}
                         activeOptions={{
-                          exact: item.url === '/admin',
+                          exact: true,
                         }}
                       >
                         <span>{item.title}</span>

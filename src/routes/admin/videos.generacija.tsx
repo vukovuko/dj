@@ -152,8 +152,9 @@ function GeneracijaPage() {
       const confirmationMessage: ChatMessage = {
         role: "assistant",
         content:
-          "Video je dodat u red za generisanje! Biće spreman za 30-60 sekundi. Možete nastaviti da koristite aplikaciju.",
+          "Video je dodat u red za generisanje! Biće spreman za 30-60 sekundi. Pogledajte stranicu Video da vidite napredak.",
         timestamp: new Date().toISOString(),
+        videoId: video.id,
       };
 
       setMessages((prev) => [...prev, confirmationMessage]);

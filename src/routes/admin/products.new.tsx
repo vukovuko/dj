@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { ProductForm, type ProductFormData } from "~/components/products/product-form"
+import { ProductForm, type ProductFormData } from "~/components/products/product-form.tsx"
 import { ProductPageHeader } from "~/components/products/product-page-header"
 import { toast } from "sonner"
 import { createProduct, getCategories } from "~/queries/products.server"
