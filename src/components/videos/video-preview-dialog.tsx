@@ -34,6 +34,14 @@ export function VideoPreviewDialog({
     }
   }, [open])
 
+  // Debug video loading
+  useEffect(() => {
+    if (video?.url && open) {
+      console.log(`🎥 Preview opened for video: ${video.id}`)
+      console.log(`   📹 Video URL: ${video.url}`)
+    }
+  }, [video?.id, video?.url, open])
+
   if (!video) return null
 
   const formatDuration = (seconds: number) => {

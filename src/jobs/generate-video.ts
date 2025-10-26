@@ -61,10 +61,14 @@ const task = async (payload: any, helpers: any) => {
     payload as GenerateVideoPayload;
 
   console.log(`🎬 Generating video: ${videoId}`);
+  console.log(
+    `   📋 Payload: prompt="${prompt.slice(0, 50)}...", duration=${duration}, aspect=${aspectRatio}`,
+  );
   helpers.logger.info(`Starting video generation for ${videoId}`);
 
   try {
     // Update status to generating
+    console.log(`   💾 Updating DB status to 'generating'...`);
     await db
       .update(videos)
       .set({
@@ -72,6 +76,7 @@ const task = async (payload: any, helpers: any) => {
         updatedAt: new Date(),
       })
       .where(eq(videos.id, videoId));
+    console.log(`   ✓ DB updated successfully`);
 
     // Check if Luma AI key is configured
     if (!env.LUMA_API_KEY) {
@@ -99,14 +104,17 @@ const task = async (payload: any, helpers: any) => {
 
     // Create generation
     console.log(`📡 Calling Luma AI for ${videoId}...`);
+    console.log(`   🔧 Settings: model=ray-2, resolution=720p, duration=5s, aspect=${aspectRatio === "landscape" ? "16:9" : "9:16"}`);
+
     const generation = await luma.generations.create({
       prompt,
       model: "ray-2",
       aspect_ratio: aspectRatio === "landscape" ? "16:9" : "9:16",
       resolution: "720p", // Options: 540p, 720p, 1080p, 4k
-      duration: "9s", // Options: 5s ($0.25), 9s ($0.45), 10s ($0.50)
+      duration: "5s", // Options: 5s ($0.25), 9s ($0.45), 10s ($0.50)
     });
 
+    console.log(`   ✓ Luma API responded successfully`);
     console.log(`📝 Luma generation created: ${generation.id}`);
 
     // Ensure generation ID exists
@@ -147,8 +155,12 @@ const task = async (payload: any, helpers: any) => {
         console.log(`📥 Downloading video: ${videoUrl}`);
 
         // Download video file
+        console.log(`   ⬇️  Fetching video from Luma CDN...`);
         const videoResponse = await fetch(videoUrl);
+        console.log(`   ✓ Fetch complete, status: ${videoResponse.status}`);
+
         const videoBuffer = await videoResponse.arrayBuffer();
+        console.log(`   ✓ Buffer size: ${(videoBuffer.byteLength / 1024 / 1024).toFixed(2)}MB`);
 
         // Save to public/videos
         const videoFileName = `${videoId}.mp4`;
@@ -158,8 +170,11 @@ const task = async (payload: any, helpers: any) => {
           "videos",
           videoFileName,
         );
+
+        console.log(`   💾 Writing to: ${videoPath}`);
         await fs.writeFile(videoPath, Buffer.from(videoBuffer));
 
+        console.log(`   ✓ Video file saved successfully`);
         console.log(`💾 Video saved: ${videoPath}`);
 
         // Generate thumbnail from video
@@ -173,18 +188,27 @@ const task = async (payload: any, helpers: any) => {
           thumbnailFileName,
         );
 
-        // Ensure thumbnails directory exists
+        console.log(`   📁 Ensuring thumbnails dir exists...`);
         await fs.mkdir(path.dirname(thumbnailPath), { recursive: true });
 
+        console.log(`   🎞️  Extracting frame with FFmpeg...`);
         const thumbnailGenerated = await generateThumbnail(
           videoPath,
           thumbnailPath,
         );
+
+        if (thumbnailGenerated) {
+          console.log(`   ✓ Thumbnail saved to: ${thumbnailPath}`);
+        } else {
+          console.log(`   ⚠️  FFmpeg failed, using placeholder`);
+        }
+
         const thumbnailUrl = thumbnailGenerated
           ? `/videos/thumbnails/${thumbnailFileName}`
           : `https://placehold.co/640x360/1f1f1f/808080?text=Video+Thumbnail`;
 
         // Update database
+        console.log(`   💾 Updating DB to 'ready' status...`);
         await db
           .update(videos)
           .set({
@@ -195,6 +219,7 @@ const task = async (payload: any, helpers: any) => {
           })
           .where(eq(videos.id, videoId));
 
+        console.log(`   ✓ DB updated - Video is ready!`);
         console.log(`✅ Video generation complete: ${videoId}`);
         helpers.logger.info(
           `Video ${videoId} generation completed successfully`,
@@ -215,10 +240,19 @@ const task = async (payload: any, helpers: any) => {
       throw new Error("Video generation timed out after 5 minutes");
     }
   } catch (error) {
-    console.error(`❌ Video generation failed for ${videoId}:`, error);
+    console.error(`❌ Video generation failed for ${videoId}`);
+    console.error(`   🔴 Error type: ${error instanceof Error ? error.constructor.name : typeof error}`);
+    console.error(`   🔴 Error message: ${error instanceof Error ? error.message : String(error)}`);
+
+    if (error instanceof Error && error.stack) {
+      console.error(`   🔴 Stack trace:`);
+      console.error(error.stack);
+    }
+
     helpers.logger.error(`Video ${videoId} generation failed`, { error });
 
     // Update status to failed
+    console.log(`   💾 Updating DB to 'failed' status...`);
     await db
       .update(videos)
       .set({

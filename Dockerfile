@@ -29,6 +29,12 @@ COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN npm install --omit=dev && npm cache clean --force
 
+# Create symlink for videos to be served by Nitro
+# .output/public/videos -> /app/public/videos
+RUN mkdir -p /app/public/videos/thumbnails && \
+    mkdir -p /app/.output/public && \
+    ln -sf /app/public/videos /app/.output/public/videos
+
 RUN chmod +x ./docker-entrypoint.sh
 
 EXPOSE 3000
