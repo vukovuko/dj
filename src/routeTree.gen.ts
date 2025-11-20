@@ -19,9 +19,12 @@ import { Route as AdminVideosRouteImport } from './routes/admin/videos'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminPricingRouteImport } from './routes/admin/pricing'
 import { Route as AdminVideosIndexRouteImport } from './routes/admin/videos.index'
+import { Route as AdminTablesIndexRouteImport } from './routes/admin/tables.index'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin/products.index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AdminVideosGeneracijaRouteImport } from './routes/admin/videos.generacija'
+import { Route as AdminTablesNewRouteImport } from './routes/admin/tables.new'
+import { Route as AdminTablesIdRouteImport } from './routes/admin/tables.$id'
 import { Route as AdminProductsNewRouteImport } from './routes/admin/products.new'
 import { Route as AdminProductsIdRouteImport } from './routes/admin/products.$id'
 
@@ -75,6 +78,11 @@ const AdminVideosIndexRoute = AdminVideosIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminVideosRoute,
 } as any)
+const AdminTablesIndexRoute = AdminTablesIndexRouteImport.update({
+  id: '/tables/',
+  path: '/tables/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
@@ -89,6 +97,16 @@ const AdminVideosGeneracijaRoute = AdminVideosGeneracijaRouteImport.update({
   id: '/generacija',
   path: '/generacija',
   getParentRoute: () => AdminVideosRoute,
+} as any)
+const AdminTablesNewRoute = AdminTablesNewRouteImport.update({
+  id: '/tables/new',
+  path: '/tables/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTablesIdRoute = AdminTablesIdRouteImport.update({
+  id: '/tables/$id',
+  path: '/tables/$id',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminProductsNewRoute = AdminProductsNewRouteImport.update({
   id: '/products/new',
@@ -113,9 +131,12 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/tables/$id': typeof AdminTablesIdRoute
+  '/admin/tables/new': typeof AdminTablesNewRoute
   '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/admin/products': typeof AdminProductsIndexRoute
+  '/admin/tables': typeof AdminTablesIndexRoute
   '/admin/videos/': typeof AdminVideosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -128,9 +149,12 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/tables/$id': typeof AdminTablesIdRoute
+  '/admin/tables/new': typeof AdminTablesNewRoute
   '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/admin/products': typeof AdminProductsIndexRoute
+  '/admin/tables': typeof AdminTablesIndexRoute
   '/admin/videos': typeof AdminVideosIndexRoute
 }
 export interface FileRoutesById {
@@ -146,9 +170,12 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/tables/$id': typeof AdminTablesIdRoute
+  '/admin/tables/new': typeof AdminTablesNewRoute
   '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/tables/': typeof AdminTablesIndexRoute
   '/admin/videos/': typeof AdminVideosIndexRoute
 }
 export interface FileRouteTypes {
@@ -165,9 +192,12 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/products/$id'
     | '/admin/products/new'
+    | '/admin/tables/$id'
+    | '/admin/tables/new'
     | '/admin/videos/generacija'
     | '/api/auth/$'
     | '/admin/products'
+    | '/admin/tables'
     | '/admin/videos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -180,9 +210,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/products/$id'
     | '/admin/products/new'
+    | '/admin/tables/$id'
+    | '/admin/tables/new'
     | '/admin/videos/generacija'
     | '/api/auth/$'
     | '/admin/products'
+    | '/admin/tables'
     | '/admin/videos'
   id:
     | '__root__'
@@ -197,9 +230,12 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/products/$id'
     | '/admin/products/new'
+    | '/admin/tables/$id'
+    | '/admin/tables/new'
     | '/admin/videos/generacija'
     | '/api/auth/$'
     | '/admin/products/'
+    | '/admin/tables/'
     | '/admin/videos/'
   fileRoutesById: FileRoutesById
 }
@@ -284,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVideosIndexRouteImport
       parentRoute: typeof AdminVideosRoute
     }
+    '/admin/tables/': {
+      id: '/admin/tables/'
+      path: '/tables'
+      fullPath: '/admin/tables'
+      preLoaderRoute: typeof AdminTablesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/products/': {
       id: '/admin/products/'
       path: '/products'
@@ -304,6 +347,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/videos/generacija'
       preLoaderRoute: typeof AdminVideosGeneracijaRouteImport
       parentRoute: typeof AdminVideosRoute
+    }
+    '/admin/tables/new': {
+      id: '/admin/tables/new'
+      path: '/tables/new'
+      fullPath: '/admin/tables/new'
+      preLoaderRoute: typeof AdminTablesNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tables/$id': {
+      id: '/admin/tables/$id'
+      path: '/tables/$id'
+      fullPath: '/admin/tables/$id'
+      preLoaderRoute: typeof AdminTablesIdRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/products/new': {
       id: '/admin/products/new'
@@ -343,7 +400,10 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminProductsIdRoute: typeof AdminProductsIdRoute
   AdminProductsNewRoute: typeof AdminProductsNewRoute
+  AdminTablesIdRoute: typeof AdminTablesIdRoute
+  AdminTablesNewRoute: typeof AdminTablesNewRoute
   AdminProductsIndexRoute: typeof AdminProductsIndexRoute
+  AdminTablesIndexRoute: typeof AdminTablesIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -353,7 +413,10 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminProductsIdRoute: AdminProductsIdRoute,
   AdminProductsNewRoute: AdminProductsNewRoute,
+  AdminTablesIdRoute: AdminTablesIdRoute,
+  AdminTablesNewRoute: AdminTablesNewRoute,
   AdminProductsIndexRoute: AdminProductsIndexRoute,
+  AdminTablesIndexRoute: AdminTablesIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

@@ -54,6 +54,10 @@ const menuItems: MenuItem[] = [
     url: '/admin/products',
   },
   {
+    title: 'Stolovi',
+    url: '/admin/tables',
+  },
+  {
     title: 'Cene',
     url: '/admin/pricing',
   },

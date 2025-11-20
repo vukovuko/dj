@@ -133,7 +133,7 @@ export const createProduct = createServerFn({ method: "POST" })
         minPrice: data.minPrice.toString(),
         maxPrice: data.maxPrice.toString(),
         currentPrice: data.basePrice.toString(),
-        startingPrice: data.basePrice.toString(),
+        previousPrice: data.basePrice.toString(),
         salesCount: 0,
         trend: "down",
         status: data.status,

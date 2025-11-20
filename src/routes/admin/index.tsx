@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Package, Tag, Video, WandSparkles, Settings } from "lucide-react";
+import { Package, Tag, Video, WandSparkles, Settings, Coffee } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -11,6 +11,12 @@ const navigationCards = [
     description: "Upravljajte proizvodima, cenama i kategorijama",
     icon: Package,
     url: "/admin/products",
+  },
+  {
+    title: "Stolovi",
+    description: "Upravljajte stolovima i narudžbinama",
+    icon: Coffee,
+    url: "/admin/tables",
   },
   {
     title: "Cene",

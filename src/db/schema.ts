@@ -15,6 +15,12 @@ export const videoStatusEnum = pgEnum("video_status", ["pending", "generating", 
 // Video aspect ratio enum
 export const aspectRatioEnum = pgEnum("aspect_ratio", ["landscape", "portrait"])
 
+// Table status enum
+export const tableStatusEnum = pgEnum("table_status", ["active", "inactive"])
+
+// Order/Payment status enum
+export const orderStatusEnum = pgEnum("order_status", ["paid", "unpaid"])
+
 // User table - Better Auth core schema + custom role field + username plugin fields
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -96,7 +102,7 @@ export const products = pgTable("products", {
   minPrice: numeric("minPrice", { precision: 10, scale: 2 }).notNull(),
   maxPrice: numeric("maxPrice", { precision: 10, scale: 2 }).notNull(),
   currentPrice: numeric("currentPrice", { precision: 10, scale: 2 }).notNull(),
-  startingPrice: numeric("startingPrice", { precision: 10, scale: 2 }).notNull(),
+  previousPrice: numeric("previousPrice", { precision: 10, scale: 2 }).notNull(),
 
   // Sales tracking
   salesCount: integer("salesCount").notNull().default(0),
@@ -150,7 +156,32 @@ export const videoGenerationChats = pgTable("videoGenerationChats", {
     content: string
     timestamp: string
     videoId?: string
-  }>>().notNull().default("[]"),
+  }>>().notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+})
+
+// Tables table - restaurant/bar tables
+export const tables = pgTable("tables", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  number: integer("number").notNull().unique(),
+  status: tableStatusEnum("status").notNull().default("active"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+})
+
+// Table orders - tracks products ordered for each table
+export const tableOrders = pgTable("tableOrders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tableId: uuid("tableId")
+    .notNull()
+    .references(() => tables.id, { onDelete: "cascade" }),
+  productId: uuid("productId")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  quantity: integer("quantity").notNull(),
+  orderedPrice: numeric("orderedPrice", { precision: 10, scale: 2 }).notNull(),
+  paymentStatus: orderStatusEnum("paymentStatus").notNull().default("unpaid"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })
