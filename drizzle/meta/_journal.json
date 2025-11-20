@@ -40,48 +40,6 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1763668174594,
-      "tag": "0005_deep_kabuki",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1763668176000,
-      "tag": "0006_rename_starting_price",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1763668177000,
-      "tag": "0007_drop_capacity",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1763668178000,
-      "tag": "0008_enable_unaccent",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1763668179000,
-      "tag": "0009_add_ordered_price",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1763672105678,
-      "tag": "0010_romantic_lilandra",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
       "when": 1763672232026,
       "tag": "0011_overjoyed_shen",
       "breakpoints": true
