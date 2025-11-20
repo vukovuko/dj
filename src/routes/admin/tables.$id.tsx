@@ -87,6 +87,7 @@ function TableDetailPage() {
   const [showDeleteTableDialog, setShowDeleteTableDialog] = useState(false);
   const [showClearOrdersDialog, setShowClearOrdersDialog] = useState(false);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Search products
   useEffect(() => {
@@ -97,7 +98,8 @@ function TableDetailPage() {
     }
 
     const timer = setTimeout(async () => {
-      if (searchInput.length > 0) {
+      // Show all products when focused but empty, or search when there's input
+      if (isSearchFocused || searchInput.length > 0) {
         try {
           const results = await getActiveProducts({
             data: { search: searchInput },
@@ -111,7 +113,7 @@ function TableDetailPage() {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchInput, selectedProductId]);
+  }, [searchInput, selectedProductId, isSearchFocused]);
 
   const handleUpdateTable = async () => {
     try {
@@ -340,6 +342,11 @@ function TableDetailPage() {
                 placeholder="Pretraži proizvod..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => {
+                  // Delay closing dropdown to allow click on items
+                  setTimeout(() => setIsSearchFocused(false), 200);
+                }}
                 className="pl-9"
                 autoComplete="off"
               />
@@ -347,14 +354,17 @@ function TableDetailPage() {
 
             {/* Search Results Dropdown */}
             {searchResults.length > 0 && (
-              <div className="border rounded-md bg-background absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto z-50">
+              <div className="border rounded-md bg-background absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
                 {searchResults.map((product) => (
                   <button
                     key={product.id}
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      // Use onMouseDown to prevent blur from firing first
+                      e.preventDefault();
                       setSelectedProductId(product.id);
                       setSearchInput(product.name);
                       setSearchResults([]);
+                      setIsSearchFocused(false);
                     }}
                     className="w-full text-left px-3 py-2 hover:bg-muted transition-colors text-sm"
                   >

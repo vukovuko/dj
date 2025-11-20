@@ -163,11 +163,15 @@ export const addProductToTable = createServerFn({ method: 'POST' })
       throw new Error('Product not found')
     }
 
-    // Check if product already exists for this table
+    // Check if product with same price already exists for this table
     const [existing] = await db
       .select()
       .from(tableOrders)
-      .where(and(eq(tableOrders.tableId, data.tableId), eq(tableOrders.productId, data.productId)))
+      .where(and(
+        eq(tableOrders.tableId, data.tableId),
+        eq(tableOrders.productId, data.productId),
+        eq(tableOrders.orderedPrice, product.currentPrice)
+      ))
       .limit(1)
 
     if (existing) {
