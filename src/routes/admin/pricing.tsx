@@ -93,6 +93,10 @@ function PricingPage() {
     }
   }
 
+  const handleCancel = () => {
+    setChanges({})
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       {/* Header */}
@@ -111,6 +115,14 @@ function PricingPage() {
           >
             {isUpdatingPrices ? 'Ažuriranje...' : 'Promeni cene sada'}
           </Button>
+          {hasChanges && (
+            <Button
+              onClick={handleCancel}
+              variant="outline"
+            >
+              Otkazi
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             disabled={!hasChanges || isSaving}

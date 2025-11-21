@@ -1,9 +1,7 @@
-import {
-  createFileRoute,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Button } from "~/components/ui/button";
+import { NumberInput } from "~/components/ui/number-input";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Badge } from "~/components/ui/badge";
@@ -71,14 +69,14 @@ function TableDetailPage() {
   const [isEditingTable, setIsEditingTable] = useState(false);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
   const [tableFormData, setTableFormData] = useState({
-    number: table.number,
+    number: Number(table.number),
     status: table.status,
   });
 
   const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedProductId, setSelectedProductId] = useState("");
-  const [productQuantity, setProductQuantity] = useState("1");
+  const [productQuantity, setProductQuantity] = useState<number | undefined>(1);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(
     new Set(),
@@ -172,7 +170,7 @@ function TableDetailPage() {
 
       setSearchInput("");
       setSelectedProductId("");
-      setProductQuantity("1");
+      setProductQuantity(1);
       toast.success("Proizvod je dodat!");
     } catch (error) {
       console.error(error);
@@ -301,7 +299,7 @@ function TableDetailPage() {
       toast.success(
         status === "paid"
           ? "Sve stavke označene kao plaćene!"
-          : "Sve stavke označene kao neplaćene!"
+          : "Sve stavke označene kao neplaćene!",
       );
     } catch (error) {
       console.error(error);
@@ -311,12 +309,15 @@ function TableDetailPage() {
     }
   };
 
-  const selectedProduct = searchResults.find(p => p.id === selectedProductId);
+  const selectedProduct = searchResults.find((p) => p.id === selectedProductId);
 
   return (
     <div className="container mx-auto p-6 max-w-3xl relative">
       <div className="flex items-center justify-between mb-6">
-        <TablePageHeader title={`Sto #${table.number}`} onBack={() => navigate({ to: "/admin/tables" })} />
+        <TablePageHeader
+          title={`Sto #${table.number}`}
+          onBack={() => navigate({ to: "/admin/tables" })}
+        />
 
         {/* Floating delete button - mobile only */}
         <Button
@@ -370,7 +371,8 @@ function TableDetailPage() {
                   >
                     <div className="font-medium">{product.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {product.categoryName} - {parseFloat(product.currentPrice).toFixed(2)} дин
+                      {product.categoryName} -{" "}
+                      {parseFloat(product.currentPrice).toFixed(2)} дин
                     </div>
                   </button>
                 ))}
@@ -380,12 +382,12 @@ function TableDetailPage() {
 
           <div className="space-y-2">
             <Label htmlFor="product-quantity">Količina</Label>
-            <Input
-              id="product-quantity"
-              type="number"
-              min="1"
+            <NumberInput
+              stepper={1}
+              min={1}
+              decimalScale={0}
               value={productQuantity}
-              onChange={(e) => setProductQuantity(e.target.value)}
+              onValueChange={(value) => setProductQuantity(value)}
             />
           </div>
 
@@ -463,10 +465,13 @@ function TableDetailPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {new Date(order.createdAt).toLocaleTimeString('sr-RS', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {new Date(order.createdAt).toLocaleTimeString(
+                            "sr-RS",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
                         </TableCell>
                         <TableCell>{price.toFixed(2)} дин</TableCell>
                         <TableCell>
@@ -625,7 +630,9 @@ function TableDetailPage() {
             {/* Bottom action buttons - mark all as paid/unpaid */}
             {selectedOrderIds.size === 0 && (
               <div className="flex items-center justify-end gap-2 pt-4 border-t">
-                <span className="text-xs text-muted-foreground mr-2">Označi sve kao:</span>
+                <span className="text-xs text-muted-foreground mr-2">
+                  Označi sve kao:
+                </span>
                 <Button
                   size="sm"
                   variant="outline"
@@ -690,14 +697,15 @@ function TableDetailPage() {
           <div className="space-y-4 border-t pt-4">
             <div className="space-y-2">
               <Label htmlFor="table-number">Broj stola</Label>
-              <Input
-                id="table-number"
-                type="number"
+              <NumberInput
+                stepper={1}
+                min={1}
+                decimalScale={0}
                 value={tableFormData.number}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   setTableFormData({
                     ...tableFormData,
-                    number: Number(e.target.value),
+                    number: value || tableFormData.number,
                   })
                 }
               />
@@ -759,7 +767,7 @@ function TableDetailPage() {
                   .reduce(
                     (sum, order) =>
                       sum + parseFloat(order.orderedPrice) * order.quantity,
-                    0
+                    0,
                   )
                   .toFixed(2)}{" "}
                 дин
@@ -773,7 +781,7 @@ function TableDetailPage() {
                   .reduce(
                     (sum, order) =>
                       sum + parseFloat(order.orderedPrice) * order.quantity,
-                    0
+                    0,
                   )
                   .toFixed(2)}{" "}
                 дин
@@ -787,7 +795,7 @@ function TableDetailPage() {
                   .reduce(
                     (sum, order) =>
                       sum + parseFloat(order.orderedPrice) * order.quantity,
-                    0
+                    0,
                   )
                   .toFixed(2)}{" "}
                 дин
@@ -798,12 +806,17 @@ function TableDetailPage() {
       )}
 
       {/* Delete Table Dialog */}
-      <Dialog open={showDeleteTableDialog} onOpenChange={setShowDeleteTableDialog}>
+      <Dialog
+        open={showDeleteTableDialog}
+        onOpenChange={setShowDeleteTableDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Obriši sto</DialogTitle>
             <DialogDescription>
-              Da li ste sigurni da želite da obrišete sto #{table.number}? Ovo će obrisati i sve narudžbine za ovaj sto. Ova akcija se ne može poništiti.
+              Da li ste sigurni da želite da obrišete sto #{table.number}? Ovo
+              će obrisati i sve narudžbine za ovaj sto. Ova akcija se ne može
+              poništiti.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -828,12 +841,16 @@ function TableDetailPage() {
       </Dialog>
 
       {/* Clear Orders Dialog */}
-      <Dialog open={showClearOrdersDialog} onOpenChange={setShowClearOrdersDialog}>
+      <Dialog
+        open={showClearOrdersDialog}
+        onOpenChange={setShowClearOrdersDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Obriši sve narudžbine</DialogTitle>
             <DialogDescription>
-              Da li ste sigurni da želite da obrišete sve narudžbine za ovaj sto? Ova akcija se ne može poništiti.
+              Da li ste sigurni da želite da obrišete sve narudžbine za ovaj
+              sto? Ova akcija se ne može poništiti.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -859,12 +876,16 @@ function TableDetailPage() {
 
       {/* Delete Order Dialog */}
       {deleteOrderId && (
-        <Dialog open={!!deleteOrderId} onOpenChange={() => setDeleteOrderId(null)}>
+        <Dialog
+          open={!!deleteOrderId}
+          onOpenChange={() => setDeleteOrderId(null)}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Obriši stavku</DialogTitle>
               <DialogDescription>
-                Da li ste sigurni da želite da obrišete ovu stavku iz narudžbine? Ova akcija se ne može poništiti.
+                Da li ste sigurni da želite da obrišete ovu stavku iz
+                narudžbine? Ova akcija se ne može poništiti.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

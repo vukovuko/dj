@@ -3,6 +3,27 @@ const { run, makeWorkerUtils } = pkg
 import env from '../../env.ts'
 import generateVideoTask from '../jobs/generate-video.ts'
 import updatePricesTask from '../jobs/update-prices.ts'
+import { db } from '../db/index.ts'
+import { settings } from '../db/schema.ts'
+import { eq } from 'drizzle-orm'
+
+// ========== CONFIGURATION ==========
+// Get price update interval from database or use default
+async function getPriceUpdateIntervalMs(): Promise<number> {
+  try {
+    const result = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, 'priceUpdateIntervalMinutes'))
+      .limit(1)
+
+    const minutes = result[0]?.value?.minutes ?? 1
+    return minutes * 60 * 1000
+  } catch (error) {
+    console.error('Failed to get price update interval from database, using default 1 minute:', error)
+    return 1 * 60 * 1000
+  }
+}
 
 // Worker configuration with inline task list (TypeScript support)
 const workerOptions = {
@@ -25,9 +46,6 @@ export async function startWorker() {
 
   console.log('✅ Graphile Worker started with tasks:', Object.keys(workerOptions.taskList).join(', '))
 
-  // Schedule recurring price update job (every 10 minutes = 600,000 ms)
-  const PRICE_UPDATE_INTERVAL = 10 * 60 * 1000 // 10 minutes
-
   try {
     const utils = await getWorkerUtils()
 
@@ -35,7 +53,11 @@ export async function startWorker() {
     await utils.addJob('update-prices', {}, { runAt: new Date() })
     console.log('📊 Scheduled price update job to run immediately')
 
-    // Set up recurring schedule (every 10 minutes)
+    // Set up recurring schedule - get interval from database
+    const intervalMs = await getPriceUpdateIntervalMs()
+    const intervalMinutes = intervalMs / (60 * 1000)
+    console.log(`⏰ Price update interval set to ${intervalMinutes} minute(s)`)
+
     setInterval(async () => {
       try {
         await utils.addJob('update-prices', {}, { runAt: new Date() })
@@ -43,7 +65,14 @@ export async function startWorker() {
       } catch (error) {
         console.error('❌ Failed to schedule price update job:', error)
       }
-    }, PRICE_UPDATE_INTERVAL)
+    }, intervalMs)
+
+    // Reload interval every 30 minutes in case it was changed in admin panel
+    setInterval(async () => {
+      const newIntervalMs = await getPriceUpdateIntervalMs()
+      const newIntervalMinutes = newIntervalMs / (60 * 1000)
+      console.log(`⏰ Price update interval reloaded from database: ${newIntervalMinutes} minute(s)`)
+    }, 30 * 60 * 1000)
 
     await utils.release()
   } catch (error) {

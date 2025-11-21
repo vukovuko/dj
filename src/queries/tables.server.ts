@@ -283,6 +283,7 @@ export const getActiveProducts = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const search = data.search || ''
 
+    // Build where condition with unaccent for smart search (ä → a, ö → o, etc.)
     let whereCondition = eq(products.status, 'active')
     if (search) {
       whereCondition = and(
@@ -301,7 +302,7 @@ export const getActiveProducts = createServerFn({ method: 'GET' })
       .from(products)
       .innerJoin(categories, eq(products.categoryId, categories.id))
       .where(whereCondition)
-      .orderBy(sql`unaccent(${products.name})`)
+      .orderBy(products.name)
 
     return result
   })

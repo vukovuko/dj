@@ -11,22 +11,29 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { toast } from 'sonner'
-import { getPricingStatus, updatePricingConfig } from '~/queries/products.server'
+import { getPricingStatus, updatePricingConfig, getPriceUpdateInterval, setPriceUpdateInterval } from '~/queries/products.server'
 
 export const Route = createFileRoute('/admin/settings')({
   component: SettingsPage,
   loader: async () => {
-    return await getPricingStatus()
+    const [pricingStatus, interval] = await Promise.all([
+      getPricingStatus(),
+      getPriceUpdateInterval(),
+    ])
+    return { pricingStatus, interval }
   },
 })
 
 function SettingsPage() {
   const router = useRouter()
-  const products = Route.useLoaderData()
+  const { pricingStatus, interval } = Route.useLoaderData()
   const [isSaving, setIsSaving] = useState(false)
+  const [priceUpdateIntervalMinutes, setPriceUpdateIntervalMinutes] = useState<string>(
+    interval.minutes.toString()
+  )
 
   // Get first product to get current settings (all products share same settings)
-  const firstProduct = products[0]
+  const firstProduct = pricingStatus[0]
 
   const [pricingMode, setPricingMode] = useState<string>(
     firstProduct?.pricingMode || 'full'
@@ -57,6 +64,7 @@ function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true)
     try {
+      // Update pricing config
       const result = await updatePricingConfig({
         data: {
           pricingMode,
@@ -65,6 +73,11 @@ function SettingsPage() {
           priceDecreasePercent: parseFloat(priceDecreasePercent),
           priceDecreaseRandomPercent: parseFloat(priceDecreaseRandomPercent),
         },
+      })
+
+      // Update price update interval
+      await setPriceUpdateInterval({
+        minutes: parseInt(priceUpdateIntervalMinutes),
       })
 
       toast.success(`Podešavanja ažurirana za ${result.updatedCount} proizvod(a)`)
@@ -108,6 +121,30 @@ function SettingsPage() {
           {pricingMode === 'up' && 'Cene se samo povećavaju na osnovu prodaje'}
           {pricingMode === 'down' && 'Cene se samo snižavaju kada nema prodaje'}
           {pricingMode === 'full' && 'Cene se povećavaju ili snižavaju zavisno od prodaje'}
+        </p>
+      </div>
+
+      {/* Update Interval Section */}
+      <div className="mb-8 p-6 border rounded-lg">
+        <Label htmlFor="interval" className="text-base font-semibold mb-4 block">
+          Učestalost ažuriranja cena
+        </Label>
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <Input
+              id="interval"
+              type="number"
+              min="1"
+              max="60"
+              value={priceUpdateIntervalMinutes}
+              onChange={(e) => setPriceUpdateIntervalMinutes(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <span className="text-sm text-muted-foreground pb-2">minuta</span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Cene će se automatski ažurirati svakih {priceUpdateIntervalMinutes} minuta (1-60 min)
         </p>
       </div>
 

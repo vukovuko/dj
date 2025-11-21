@@ -1,14 +1,14 @@
 /**
  * Background job: Update all product prices
  *
- * This job runs every 10 minutes and:
+ * This job runs every 1 minute and:
  * 1. Counts sales for each product since lastPriceUpdate
  * 2. Calculates new price based on pricing algorithm
  * 3. Records price change in priceHistory
  * 4. Updates product currentPrice and trend
  *
  * Triggered by:
- * - Automatic scheduler (every 10 minutes)
+ * - Automatic scheduler (every 1 minute)
  * - Manual "Promeni cene sada" button click
  */
 

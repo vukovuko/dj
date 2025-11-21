@@ -1,7 +1,7 @@
 // Server-only queries for products
 import { createServerFn } from "@tanstack/react-start"
 import { db } from "~/db"
-import { products, categories, tableOrders, priceHistory } from "~/db/schema"
+import { products, categories, tableOrders, priceHistory, settings } from "~/db/schema"
 import { eq, ilike, sql, desc, inArray, gte } from "drizzle-orm"
 import { calculatePrice } from "~/lib/pricing"
 
@@ -512,4 +512,84 @@ export const getPriceHistoryForProduct = createServerFn({
 
     // Return in chronological order (oldest first)
     return results.reverse()
+  })
+
+/**
+ * Get products for TV display
+ * Returns all active products grouped by category
+ */
+export const getTVDisplayProducts = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const results = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        categoryName: categories.name,
+        currentPrice: products.currentPrice,
+        trend: products.trend,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(eq(products.status, "active"))
+      .orderBy(products.name)
+
+    return results
+  })
+
+// ============================================================================
+// PRICE UPDATE INTERVAL SETTINGS
+// ============================================================================
+
+/**
+ * Get the current price update interval in minutes
+ */
+export const getPriceUpdateInterval = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const result = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, "priceUpdateIntervalMinutes"))
+      .limit(1)
+
+    // Default to 1 minute if not set
+    const minutes = result[0]?.value?.minutes ?? 1
+    return { minutes }
+  })
+
+/**
+ * Update the price update interval in minutes
+ */
+export const setPriceUpdateInterval = createServerFn({ method: "POST" })
+  .inputValidator((data: { minutes: number }) => data)
+  .handler(async ({ data }) => {
+    const { minutes } = data
+
+    // Validate: minimum 1 minute, maximum 60 minutes
+    if (minutes < 1 || minutes > 60) {
+      throw new Error("Interval must be between 1 and 60 minutes")
+    }
+
+    // Upsert the setting
+    const existing = await db
+      .select({ id: settings.id })
+      .from(settings)
+      .where(eq(settings.key, "priceUpdateIntervalMinutes"))
+      .limit(1)
+
+    if (existing.length > 0) {
+      await db
+        .update(settings)
+        .set({
+          value: { minutes },
+          updatedAt: new Date(),
+        })
+        .where(eq(settings.key, "priceUpdateIntervalMinutes"))
+    } else {
+      await db.insert(settings).values({
+        key: "priceUpdateIntervalMinutes",
+        value: { minutes },
+      })
+    }
+
+    return { minutes }
   })

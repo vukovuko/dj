@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table"
-import { Input } from "~/components/ui/input"
+import { NumberInput } from "~/components/ui/number-input"
 import { ArrowUp, ArrowDown } from "lucide-react"
 import { useState, useEffect } from "react"
 
@@ -45,11 +45,9 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
     onChangesUpdate(changes)
   }, [changes, onChangesUpdate])
 
-  const handlePriceChange = (productId: string, field: "basePrice" | "minPrice" | "maxPrice" | "salesCount", value: string) => {
-    const numValue = field === "salesCount" ? parseInt(value) : parseFloat(value)
-
+  const handlePriceChange = (productId: string, field: "basePrice" | "minPrice" | "maxPrice" | "salesCount", value: number | undefined) => {
     // If value is empty or invalid, remove from changes
-    if (value === "" || isNaN(numValue)) {
+    if (value === undefined) {
       setChanges((prev) => {
         const newChanges = { ...prev }
         if (newChanges[productId]) {
@@ -66,10 +64,10 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
     setChanges((prev) => ({
       ...prev,
       [productId]: {
-        basePrice: field === "basePrice" ? numValue : prev[productId]?.basePrice ?? parseFloat(product.basePrice),
-        minPrice: field === "minPrice" ? numValue : prev[productId]?.minPrice ?? parseFloat(product.minPrice),
-        maxPrice: field === "maxPrice" ? numValue : prev[productId]?.maxPrice ?? parseFloat(product.maxPrice),
-        salesCount: field === "salesCount" ? numValue : prev[productId]?.salesCount ?? (product.salesCount || 0),
+        basePrice: field === "basePrice" ? value : prev[productId]?.basePrice ?? parseInt(product.basePrice),
+        minPrice: field === "minPrice" ? value : prev[productId]?.minPrice ?? parseInt(product.minPrice),
+        maxPrice: field === "maxPrice" ? value : prev[productId]?.maxPrice ?? parseInt(product.maxPrice),
+        salesCount: field === "salesCount" ? value : prev[productId]?.salesCount ?? (product.salesCount || 0),
       },
     }))
   }
@@ -77,9 +75,9 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
   const getCurrentValue = (product: PricingProduct, field: "basePrice" | "minPrice" | "maxPrice") => {
     const changedValue = changes[product.id]?.[field]
     if (changedValue !== undefined) {
-      return changedValue.toFixed(2)
+      return changedValue
     }
-    return parseFloat(product[field]).toFixed(2)
+    return parseInt(product[field])
   }
 
   const getCurrentSalesCount = (product: PricingProduct) => {
@@ -126,43 +124,39 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
                   <span className="text-sm text-muted-foreground">{parseFloat(product.previousPrice)} RSD</span>
                 </TableCell>
                 <TableCell>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
+                  <NumberInput
+                    stepper={1}
+                    min={0}
+                    decimalScale={0}
                     value={getCurrentValue(product, "basePrice")}
-                    onChange={(e) => handlePriceChange(product.id, "basePrice", e.target.value)}
-                    className="w-24 h-8 text-sm"
+                    onValueChange={(value: number | undefined) => handlePriceChange(product.id, "basePrice", value)}
                   />
                 </TableCell>
                 <TableCell>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
+                  <NumberInput
+                    stepper={1}
+                    min={0}
+                    decimalScale={0}
                     value={getCurrentValue(product, "minPrice")}
-                    onChange={(e) => handlePriceChange(product.id, "minPrice", e.target.value)}
-                    className="w-24 h-8 text-sm"
+                    onValueChange={(value: number | undefined) => handlePriceChange(product.id, "minPrice", value)}
                   />
                 </TableCell>
                 <TableCell>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
+                  <NumberInput
+                    stepper={1}
+                    min={0}
+                    decimalScale={0}
                     value={getCurrentValue(product, "maxPrice")}
-                    onChange={(e) => handlePriceChange(product.id, "maxPrice", e.target.value)}
-                    className="w-24 h-8 text-sm"
+                    onValueChange={(value: number | undefined) => handlePriceChange(product.id, "maxPrice", value)}
                   />
                 </TableCell>
                 <TableCell>
-                  <Input
-                    type="number"
-                    step="1"
-                    min="0"
-                    value={getCurrentSalesCount(product)}
-                    onChange={(e) => handlePriceChange(product.id, "salesCount", e.target.value)}
-                    className="w-20 h-8 text-sm"
+                  <NumberInput
+                    stepper={1}
+                    min={0}
+                    decimalScale={0}
+                    value={parseInt(getCurrentSalesCount(product))}
+                    onValueChange={(value: number | undefined) => handlePriceChange(product.id, "salesCount", value)}
                   />
                 </TableCell>
                 <TableCell>

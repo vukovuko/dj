@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
+import { NumberInput } from '~/components/ui/number-input'
 import { Label } from '~/components/ui/label'
 import { Card } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
@@ -17,17 +17,15 @@ function CreateTablePage() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    number: '',
+    number: undefined as number | undefined,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.number) {
+    if (formData.number === undefined) {
       newErrors.number = 'Broj stola je obavestan'
-    } else if (isNaN(Number(formData.number))) {
-      newErrors.number = 'Broj stola mora biti broj'
     }
 
     setErrors(newErrors)
@@ -45,7 +43,7 @@ function CreateTablePage() {
       setIsLoading(true)
       await createTable({
         data: {
-          number: Number(formData.number),
+          number: formData.number!,
         },
       })
       toast.success('Sto je kreiran!')
@@ -80,13 +78,13 @@ function CreateTablePage() {
             <Label htmlFor="number">
               Broj stola <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="number"
-              type="number"
+            <NumberInput
+              stepper={1}
+              min={1}
+              decimalScale={0}
               placeholder="1, 2, 3..."
               value={formData.number}
-              onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-              className={errors.number ? 'border-destructive' : ''}
+              onValueChange={(value) => setFormData({ ...formData, number: value })}
             />
             {errors.number && <p className="text-sm text-destructive">{errors.number}</p>}
           </div>
