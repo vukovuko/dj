@@ -44,18 +44,26 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     )
 
     const handleIncrement = useCallback(() => {
-      setValue((prev) =>
-        prev === undefined ? stepper ?? 1 : Math.min(prev + (stepper ?? 1), max)
-      )
-    }, [stepper, max])
+      setValue((prev) => {
+        const newValue = prev === undefined ? stepper ?? 1 : Math.min(prev + (stepper ?? 1), max)
+        if (onValueChange) {
+          onValueChange(newValue)
+        }
+        return newValue
+      })
+    }, [stepper, max, onValueChange])
 
     const handleDecrement = useCallback(() => {
-      setValue((prev) =>
-        prev === undefined
+      setValue((prev) => {
+        const newValue = prev === undefined
           ? -(stepper ?? 1)
           : Math.max(prev - (stepper ?? 1), min)
-      )
-    }, [stepper, min])
+        if (onValueChange) {
+          onValueChange(newValue)
+        }
+        return newValue
+      })
+    }, [stepper, min, onValueChange])
 
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -134,6 +142,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
         <div className="flex flex-col">
           <Button
+            type="button"
             aria-label="Increase value"
             className="px-2 h-4 rounded-l-none rounded-br-none border-input border-l-0 border-b-[0.5px]"
             size="sm"
@@ -144,6 +153,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             <ChevronUp size={14} className="text-primary" />
           </Button>
           <Button
+            type="button"
             aria-label="Decrease value"
             className="px-2 h-4 rounded-l-none rounded-tr-none border-input border-l-0 border-t-[0.5px]"
             size="sm"

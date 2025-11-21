@@ -196,6 +196,8 @@ function ProductsPage() {
             currentPage={loaderData.currentPage}
             totalPages={loaderData.totalPages}
             total={loaderData.total}
+            limit={25}
+            itemType="proizvoda"
             onPageChange={handlePageChange}
           />
         </div>

@@ -284,6 +284,8 @@ function TablesPage() {
             currentPage={loaderData.currentPage}
             totalPages={loaderData.totalPages}
             total={loaderData.total}
+            limit={25}
+            itemType="stolova"
             onPageChange={(page) =>
               navigate({
                 to: '.',

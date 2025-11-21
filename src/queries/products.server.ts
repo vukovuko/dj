@@ -9,7 +9,7 @@ export const getProductsWithPagination = createServerFn({ method: "GET" })
   .inputValidator((data: { search?: string; page: number }) => data)
   .handler(async ({ data }) => {
     const { search, page } = data
-    const limit = 50
+    const limit = 25
     const offset = (page - 1) * limit
 
     // Build where condition with unaccent for smart search (ä → a, ö → o, etc.)

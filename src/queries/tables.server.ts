@@ -9,7 +9,7 @@ export const getTablesWithPagination = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const search = data.search || ''
     const page = data.page || 1
-    const limit = 10
+    const limit = 25
     const offset = (page - 1) * limit
 
     const whereCondition = search
@@ -104,6 +104,17 @@ export const getTableById = createServerFn({ method: 'GET' })
 export const createTable = createServerFn({ method: 'POST' })
   .inputValidator((data: { number: number }) => data)
   .handler(async ({ data }) => {
+    // Check if table with this number already exists
+    const [existing] = await db
+      .select()
+      .from(tables)
+      .where(eq(tables.number, data.number))
+      .limit(1)
+
+    if (existing) {
+      throw new Error(`Sto broj ${data.number} već postoji`)
+    }
+
     const [created] = await db
       .insert(tables)
       .values({
@@ -119,6 +130,21 @@ export const createTable = createServerFn({ method: 'POST' })
 export const updateTable = createServerFn({ method: 'POST' })
   .inputValidator((data: { id: string; number: number; status: 'active' | 'inactive' }) => data)
   .handler(async ({ data }) => {
+    // Check if another table with this number already exists
+    const [existing] = await db
+      .select()
+      .from(tables)
+      .where(and(
+        eq(tables.number, data.number),
+        // Exclude the current table being updated
+        sql`${tables.id} != ${data.id}`
+      ))
+      .limit(1)
+
+    if (existing) {
+      throw new Error(`Sto broj ${data.number} već postoji`)
+    }
+
     const [updated] = await db
       .update(tables)
       .set({

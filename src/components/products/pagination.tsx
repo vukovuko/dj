@@ -13,11 +13,13 @@ interface ProductsPaginationProps {
   totalPages: number
   total: number
   onPageChange: (page: number) => void
+  limit?: number
+  itemType?: string
 }
 
-export function ProductsPagination({ currentPage, totalPages, total, onPageChange }: ProductsPaginationProps) {
-  const startItem = (currentPage - 1) * 50 + 1
-  const endItem = Math.min(currentPage * 50, total)
+export function ProductsPagination({ currentPage, totalPages, total, onPageChange, limit = 25, itemType = 'proizvoda' }: ProductsPaginationProps) {
+  const startItem = (currentPage - 1) * limit + 1
+  const endItem = Math.min(currentPage * limit, total)
 
   // Generate page numbers to show
   const getPageNumbers = () => {
@@ -57,7 +59,7 @@ export function ProductsPagination({ currentPage, totalPages, total, onPageChang
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
       <div className="text-sm text-muted-foreground">
-        Prikazuje {startItem}-{endItem} od {total} proizvoda
+        Prikazuje {startItem}-{endItem} od {total} {itemType}
       </div>
 
       <Pagination>

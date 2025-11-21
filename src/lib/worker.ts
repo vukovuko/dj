@@ -48,8 +48,9 @@ export async function startWorker() {
 
   try {
     // Schedule first job to run immediately
-    const utils = await getWorkerUtils()
-    await utils.addJob('update-prices', {}, { runAt: new Date() })
+    const firstUtils = await getWorkerUtils()
+    await firstUtils.addJob('update-prices', {}, { runAt: new Date() })
+    await firstUtils.release()
     console.log('📊 Scheduled price update job to run immediately')
 
     // Set up recurring schedule - get interval from database
@@ -59,7 +60,9 @@ export async function startWorker() {
 
     setInterval(async () => {
       try {
+        const utils = await getWorkerUtils()
         await utils.addJob('update-prices', {}, { runAt: new Date() })
+        await utils.release()
         console.log('📊 Scheduled next price update job')
       } catch (error) {
         console.error('❌ Failed to schedule price update job:', error)

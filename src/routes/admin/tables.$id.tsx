@@ -72,6 +72,7 @@ function TableDetailPage() {
     number: Number(table.number),
     status: table.status,
   });
+  const [tableFormErrors, setTableFormErrors] = useState<Record<string, string>>({});
 
   const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -116,6 +117,7 @@ function TableDetailPage() {
   const handleUpdateTable = async () => {
     try {
       setIsLoadingTable(true);
+      setTableFormErrors({});
       const updated = await updateTable({
         data: {
           id,
@@ -127,8 +129,14 @@ function TableDetailPage() {
       setIsEditingTable(false);
       toast.success("Sto je ažuriran!");
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Greška pri ažuriranju stola";
+
+      if (message.includes("već postoji")) {
+        setTableFormErrors({ number: message });
+      } else {
+        toast.error(message);
+      }
       console.error(error);
-      toast.error("Greška pri ažuriranju stola");
     } finally {
       setIsLoadingTable(false);
     }
@@ -686,7 +694,12 @@ function TableDetailPage() {
           </div>
           <Button
             variant="outline"
-            onClick={() => setIsEditingTable(!isEditingTable)}
+            onClick={() => {
+              setIsEditingTable(!isEditingTable);
+              if (isEditingTable) {
+                setTableFormErrors({});
+              }
+            }}
             className="hidden md:inline-flex"
           >
             {isEditingTable ? "Otkaži" : "Uredi"}
@@ -709,6 +722,9 @@ function TableDetailPage() {
                   })
                 }
               />
+              {tableFormErrors.number && (
+                <p className="text-sm text-destructive">{tableFormErrors.number}</p>
+              )}
             </div>
 
             <div className="space-y-2">
