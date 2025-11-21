@@ -47,9 +47,8 @@ export async function startWorker() {
   console.log('✅ Graphile Worker started with tasks:', Object.keys(workerOptions.taskList).join(', '))
 
   try {
-    const utils = await getWorkerUtils()
-
     // Schedule first job to run immediately
+    const utils = await getWorkerUtils()
     await utils.addJob('update-prices', {}, { runAt: new Date() })
     console.log('📊 Scheduled price update job to run immediately')
 
@@ -73,8 +72,6 @@ export async function startWorker() {
       const newIntervalMinutes = newIntervalMs / (60 * 1000)
       console.log(`⏰ Price update interval reloaded from database: ${newIntervalMinutes} minute(s)`)
     }, 30 * 60 * 1000)
-
-    await utils.release()
   } catch (error) {
     console.error('⚠️ Failed to schedule recurring price update:', error)
   }
