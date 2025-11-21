@@ -113,6 +113,20 @@ export const products = pgTable("products", {
   // Status
   status: productStatusEnum("status").notNull().default("active"),
 
+  // Dynamic pricing - mode control
+  pricingMode: text("pricingMode").notNull().default("full"), // 'off' | 'up' | 'down' | 'full'
+
+  // Dynamic pricing - increase percentages
+  priceIncreasePercent: numeric("priceIncreasePercent", { precision: 5, scale: 2 }).notNull().default("2.00"),
+  priceIncreaseRandomPercent: numeric("priceIncreaseRandomPercent", { precision: 5, scale: 2 }).notNull().default("1.00"),
+
+  // Dynamic pricing - decrease percentages
+  priceDecreasePercent: numeric("priceDecreasePercent", { precision: 5, scale: 2 }).notNull().default("1.00"),
+  priceDecreaseRandomPercent: numeric("priceDecreaseRandomPercent", { precision: 5, scale: 2 }).notNull().default("0.00"),
+
+  // Dynamic pricing - metadata
+  lastPriceUpdate: timestamp("lastPriceUpdate").notNull().defaultNow(),
+
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })
@@ -184,4 +198,15 @@ export const tableOrders = pgTable("tableOrders", {
   paymentStatus: orderStatusEnum("paymentStatus").notNull().default("unpaid"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+})
+
+// Price history - tracks all price changes for products
+export const priceHistory = pgTable("priceHistory", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  productId: uuid("productId")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
 })
