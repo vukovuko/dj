@@ -24,9 +24,12 @@ export const getTablesWithPagination = createServerFn({ method: 'GET' })
           number: tables.number,
           status: tables.status,
           createdAt: tables.createdAt,
+          kupljeno: sql<number>`COALESCE(SUM(${tableOrders.quantity}), 0)`,
         })
         .from(tables)
+        .leftJoin(tableOrders, eq(tables.id, tableOrders.tableId))
         .where(whereCondition)
+        .groupBy(tables.id, tables.number, tables.status, tables.createdAt)
         .orderBy(desc(tables.number))
         .limit(limit)
         .offset(offset),

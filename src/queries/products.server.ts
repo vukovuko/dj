@@ -1,8 +1,9 @@
 // Server-only queries for products
 import { createServerFn } from "@tanstack/react-start"
 import { db } from "~/db"
-import { products, categories } from "~/db/schema"
-import { eq, ilike, sql, desc, inArray } from "drizzle-orm"
+import { products, categories, tableOrders, priceHistory } from "~/db/schema"
+import { eq, ilike, sql, desc, inArray, gte } from "drizzle-orm"
+import { calculatePrice } from "~/lib/pricing"
 
 export const getProductsWithPagination = createServerFn({ method: "GET" })
   .inputValidator((data: { search?: string; page: number }) => data)
@@ -280,4 +281,235 @@ export const bulkUpdatePrices = createServerFn({ method: "POST" })
 
     const results = await Promise.all(updatePromises)
     return { count: results.length }
+  })
+
+// ============================================================================
+// DYNAMIC PRICING SYSTEM - Phase 2 Implementation
+// ============================================================================
+
+/**
+ * Update all product prices based on sales since lastPriceUpdate
+ * This is called every 10 minutes or manually via "Change prices now" button
+ */
+export const updateAllPrices = createServerFn({ method: "POST" })
+  .handler(async () => {
+    // Get all active products
+    const allProducts = await db
+      .select()
+      .from(products)
+      .where(eq(products.status, "active"))
+
+    let updatedCount = 0
+
+    for (const product of allProducts) {
+      // Get sales count since last price update
+      const [salesResult] = await db
+        .select({
+          totalQuantity: sql<number>`coalesce(sum(${tableOrders.quantity}), 0)::int`,
+        })
+        .from(tableOrders)
+        .where(gte(tableOrders.createdAt, product.lastPriceUpdate))
+
+      const salesThisWindow = salesResult?.totalQuantity || 0
+
+      // Calculate new price
+      const newPrice = calculatePrice(
+        {
+          currentPrice: parseFloat(product.currentPrice),
+          minPrice: parseFloat(product.minPrice),
+          maxPrice: parseFloat(product.maxPrice),
+          pricingMode: product.pricingMode,
+          priceIncreasePercent: parseFloat(
+            product.priceIncreasePercent
+          ),
+          priceIncreaseRandomPercent: parseFloat(
+            product.priceIncreaseRandomPercent
+          ),
+          priceDecreasePercent: parseFloat(
+            product.priceDecreasePercent
+          ),
+          priceDecreaseRandomPercent: parseFloat(
+            product.priceDecreaseRandomPercent
+          ),
+        },
+        salesThisWindow
+      )
+
+      // Only update if price changed
+      if (newPrice !== parseFloat(product.currentPrice)) {
+        // Record previous price before updating
+        const previousPrice = parseFloat(product.currentPrice)
+
+        // Update product with new price
+        await db
+          .update(products)
+          .set({
+            previousPrice: previousPrice.toString(),
+            currentPrice: newPrice.toString(),
+            lastPriceUpdate: new Date(),
+            // Update trend indicator
+            trend: newPrice > previousPrice ? "up" : "down",
+            updatedAt: new Date(),
+          })
+          .where(eq(products.id, product.id))
+
+        // Record in price history
+        await db.insert(priceHistory).values({
+          productId: product.id,
+          price: newPrice.toString(),
+          timestamp: new Date(),
+        })
+
+        updatedCount++
+      }
+    }
+
+    return {
+      success: true,
+      updatedCount,
+    }
+  })
+
+/**
+ * Reset session by updating lastPriceUpdate to NOW
+ * This resets the counting window for next price update
+ * Note: Does NOT change settings, does NOT change salesCount
+ */
+export const resetSessionQuantities = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const result = await db
+      .update(products)
+      .set({
+        lastPriceUpdate: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(products.status, "active"))
+
+    return {
+      success: true,
+      resetCount: result.rowCount || 0,
+    }
+  })
+
+/**
+ * Update global pricing configuration for all products
+ * Changes mode and percentage settings
+ */
+export const updatePricingConfig = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: {
+      pricingMode: string
+      priceIncreasePercent: number
+      priceIncreaseRandomPercent: number
+      priceDecreasePercent: number
+      priceDecreaseRandomPercent: number
+    }) => data
+  )
+  .handler(async ({ data }) => {
+    // Validate inputs
+    if (
+      !["off", "up", "down", "full"].includes(data.pricingMode)
+    ) {
+      throw new Error("Invalid pricingMode")
+    }
+    if (data.priceIncreasePercent < 0.1 || data.priceIncreasePercent > 10) {
+      throw new Error("priceIncreasePercent must be between 0.1 and 10")
+    }
+    if (
+      data.priceIncreaseRandomPercent < 0 ||
+      data.priceIncreaseRandomPercent > 5
+    ) {
+      throw new Error(
+        "priceIncreaseRandomPercent must be between 0 and 5"
+      )
+    }
+    if (data.priceDecreasePercent < 0.1 || data.priceDecreasePercent > 10) {
+      throw new Error("priceDecreasePercent must be between 0.1 and 10")
+    }
+    if (
+      data.priceDecreaseRandomPercent < 0 ||
+      data.priceDecreaseRandomPercent > 5
+    ) {
+      throw new Error(
+        "priceDecreaseRandomPercent must be between 0 and 5"
+      )
+    }
+
+    // Update all active products
+    const result = await db
+      .update(products)
+      .set({
+        pricingMode: data.pricingMode,
+        priceIncreasePercent: data.priceIncreasePercent.toString(),
+        priceIncreaseRandomPercent:
+          data.priceIncreaseRandomPercent.toString(),
+        priceDecreasePercent: data.priceDecreasePercent.toString(),
+        priceDecreaseRandomPercent:
+          data.priceDecreaseRandomPercent.toString(),
+        updatedAt: new Date(),
+      })
+      .where(eq(products.status, "active"))
+
+    return {
+      success: true,
+      updatedCount: result.rowCount || 0,
+    }
+  })
+
+/**
+ * Get pricing status for all products - used by pricing page
+ * Includes: current price, trend, min/max, mode, percentages
+ */
+export const getPricingStatus = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const results = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        categoryName: categories.name,
+        currentPrice: products.currentPrice,
+        previousPrice: products.previousPrice,
+        basePrice: products.basePrice,
+        minPrice: products.minPrice,
+        maxPrice: products.maxPrice,
+        trend: products.trend,
+        pricingMode: products.pricingMode,
+        priceIncreasePercent: products.priceIncreasePercent,
+        priceIncreaseRandomPercent: products.priceIncreaseRandomPercent,
+        priceDecreasePercent: products.priceDecreasePercent,
+        priceDecreaseRandomPercent: products.priceDecreaseRandomPercent,
+        lastPriceUpdate: products.lastPriceUpdate,
+        status: products.status,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(eq(products.status, "active"))
+      .orderBy(products.name)
+
+    return results
+  })
+
+/**
+ * Get price history for a specific product - for charts/ticker
+ * Returns last N price changes with timestamps
+ */
+export const getPriceHistoryForProduct = createServerFn({
+  method: "GET",
+})
+  .inputValidator((data: { productId: string; limit?: number }) => data)
+  .handler(async ({ data }) => {
+    const limit = data.limit || 10
+
+    const results = await db
+      .select({
+        price: priceHistory.price,
+        timestamp: priceHistory.timestamp,
+      })
+      .from(priceHistory)
+      .where(eq(priceHistory.productId, data.productId))
+      .orderBy(desc(priceHistory.timestamp))
+      .limit(limit)
+
+    // Return in chronological order (oldest first)
+    return results.reverse()
   })

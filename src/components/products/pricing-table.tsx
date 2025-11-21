@@ -8,11 +8,19 @@ interface PricingProduct {
   name: string
   categoryName: string | null
   currentPrice: string
+  previousPrice: string
   basePrice: string
   minPrice: string
   maxPrice: string
-  salesCount: number
+  salesCount?: number
   trend: "up" | "down"
+  pricingMode?: string
+  priceIncreasePercent?: string
+  priceIncreaseRandomPercent?: string
+  priceDecreasePercent?: string
+  priceDecreaseRandomPercent?: string
+  lastPriceUpdate?: Date | string
+  status?: string
 }
 
 interface PriceChanges {
@@ -61,7 +69,7 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
         basePrice: field === "basePrice" ? numValue : prev[productId]?.basePrice ?? parseFloat(product.basePrice),
         minPrice: field === "minPrice" ? numValue : prev[productId]?.minPrice ?? parseFloat(product.minPrice),
         maxPrice: field === "maxPrice" ? numValue : prev[productId]?.maxPrice ?? parseFloat(product.maxPrice),
-        salesCount: field === "salesCount" ? numValue : prev[productId]?.salesCount ?? product.salesCount,
+        salesCount: field === "salesCount" ? numValue : prev[productId]?.salesCount ?? (product.salesCount || 0),
       },
     }))
   }
@@ -75,7 +83,7 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
   }
 
   const getCurrentSalesCount = (product: PricingProduct) => {
-    return changes[product.id]?.salesCount?.toString() ?? product.salesCount.toString()
+    return changes[product.id]?.salesCount?.toString() ?? (product.salesCount || 0).toString()
   }
 
   const isChanged = (productId: string) => {
@@ -83,22 +91,24 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
   }
 
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-lg overflow-x-auto">
       <Table className="compact-table">
         <TableHeader>
           <TableRow>
             <TableHead>Proizvod</TableHead>
-            <TableHead>Trenutna cena</TableHead>
-            <TableHead>Osnovna cena</TableHead>
-            <TableHead>Minimalna cena</TableHead>
-            <TableHead>Maksimalna cena</TableHead>
+            <TableHead>Trenutna</TableHead>
+            <TableHead>Prethodna</TableHead>
+            <TableHead>Osnovna</TableHead>
+            <TableHead>Min</TableHead>
+            <TableHead>Max</TableHead>
             <TableHead>Kupljeno</TableHead>
+            <TableHead>Trend</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                 Nema aktivnih proizvoda
               </TableCell>
             </TableRow>
@@ -110,14 +120,10 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
               >
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <span>{parseFloat(product.currentPrice).toFixed(2)} RSD</span>
-                    {product.trend === "up" ? (
-                      <ArrowUp className="h-3.5 w-3.5 text-red-500" />
-                    ) : (
-                      <ArrowDown className="h-3.5 w-3.5 text-green-500" />
-                    )}
-                  </div>
+                  <span className="text-sm">{parseFloat(product.currentPrice)} RSD</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-muted-foreground">{parseFloat(product.previousPrice)} RSD</span>
                 </TableCell>
                 <TableCell>
                   <Input
@@ -126,7 +132,7 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
                     min="0"
                     value={getCurrentValue(product, "basePrice")}
                     onChange={(e) => handlePriceChange(product.id, "basePrice", e.target.value)}
-                    className="w-28 h-8 text-sm"
+                    className="w-24 h-8 text-sm"
                   />
                 </TableCell>
                 <TableCell>
@@ -136,7 +142,7 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
                     min="0"
                     value={getCurrentValue(product, "minPrice")}
                     onChange={(e) => handlePriceChange(product.id, "minPrice", e.target.value)}
-                    className="w-28 h-8 text-sm"
+                    className="w-24 h-8 text-sm"
                   />
                 </TableCell>
                 <TableCell>
@@ -146,7 +152,7 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
                     min="0"
                     value={getCurrentValue(product, "maxPrice")}
                     onChange={(e) => handlePriceChange(product.id, "maxPrice", e.target.value)}
-                    className="w-28 h-8 text-sm"
+                    className="w-24 h-8 text-sm"
                   />
                 </TableCell>
                 <TableCell>
@@ -156,8 +162,23 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
                     min="0"
                     value={getCurrentSalesCount(product)}
                     onChange={(e) => handlePriceChange(product.id, "salesCount", e.target.value)}
-                    className="w-24 h-8 text-sm"
+                    className="w-20 h-8 text-sm"
                   />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    {product.trend === "up" ? (
+                      <>
+                        <ArrowUp className="h-4 w-4 text-green-500" />
+                        <span className="text-sm text-green-600">↑</span>
+                      </>
+                    ) : (
+                      <>
+                        <ArrowDown className="h-4 w-4 text-red-500" />
+                        <span className="text-sm text-red-600">↓</span>
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))

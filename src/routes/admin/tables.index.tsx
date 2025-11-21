@@ -136,6 +136,7 @@ function TablesPage() {
                 />
               </TableHead>
               <TableHead>Broj stola</TableHead>
+              <TableHead>Kupljeno</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
@@ -161,6 +162,12 @@ function TablesPage() {
                     onClick={() => navigate({ to: `/admin/tables/${table.id}` })}
                   >
                     #{table.number}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer text-sm text-muted-foreground"
+                    onClick={() => navigate({ to: `/admin/tables/${table.id}` })}
+                  >
+                    {(table as any).kupljeno || 0} kom.
                   </TableCell>
                   <TableCell
                     className="cursor-pointer"

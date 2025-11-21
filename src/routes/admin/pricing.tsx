@@ -3,14 +3,14 @@ import { useState, useCallback } from 'react'
 import { Button } from '~/components/ui/button'
 import { PricingTable } from '~/components/products/pricing-table'
 import { toast } from 'sonner'
-import { getProductsForPricing, bulkUpdatePrices } from '~/queries/products.server'
+import { getPricingStatus, updateAllPrices, bulkUpdatePrices } from '~/queries/products.server'
 
 // ========== ROUTE ==========
 
 export const Route = createFileRoute('/admin/pricing')({
   component: PricingPage,
   loader: async () => {
-    return await getProductsForPricing()
+    return await getPricingStatus()
   },
 })
 
@@ -30,6 +30,7 @@ function PricingPage() {
   const products = Route.useLoaderData()
   const [changes, setChanges] = useState<PriceChanges>({})
   const [isSaving, setIsSaving] = useState(false)
+  const [isUpdatingPrices, setIsUpdatingPrices] = useState(false)
 
   const hasChanges = Object.keys(changes).length > 0
 
@@ -78,6 +79,20 @@ function PricingPage() {
     }
   }
 
+  const handleUpdatePricesNow = async () => {
+    setIsUpdatingPrices(true)
+    try {
+      const result = await updateAllPrices()
+      toast.success(`Cene ažurirane: ${result.updatedCount} proizvod(a) promenjeno`)
+      router.invalidate()
+    } catch (error) {
+      console.error('Failed to update prices:', error)
+      toast.error('Greška pri ažuriranju cena')
+    } finally {
+      setIsUpdatingPrices(false)
+    }
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       {/* Header */}
@@ -88,12 +103,21 @@ function PricingPage() {
             Upravljajte cenama proizvoda
           </p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges || isSaving}
-        >
-          {isSaving ? 'Čuvanje...' : 'Sačuvaj'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleUpdatePricesNow}
+            disabled={isUpdatingPrices}
+            variant="outline"
+          >
+            {isUpdatingPrices ? 'Ažuriranje...' : 'Promeni cene sada'}
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+          >
+            {isSaving ? 'Čuvanje...' : 'Sačuvaj'}
+          </Button>
+        </div>
       </div>
 
       {/* Pricing Table */}
