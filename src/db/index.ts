@@ -4,7 +4,7 @@ import env from "../../env.ts"
 import * as schema from "./schema.ts"
 
 // Create PostgreSQL connection pool
-const pool = new Pool({
+export const pool = new Pool({
   connectionString: env.DATABASE_URL,
 })
 

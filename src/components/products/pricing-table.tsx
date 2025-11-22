@@ -13,6 +13,7 @@ interface PricingProduct {
   minPrice: string
   maxPrice: string
   salesCount?: number
+  manualSalesAdjustment?: number
   trend: "up" | "down"
   pricingMode?: string
   priceIncreasePercent?: string
@@ -28,7 +29,7 @@ interface PriceChanges {
     basePrice: number
     minPrice: number
     maxPrice: number
-    salesCount: number
+    totalSalesCount: number
   }
 }
 
@@ -45,7 +46,7 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
     onChangesUpdate(changes)
   }, [changes, onChangesUpdate])
 
-  const handlePriceChange = (productId: string, field: "basePrice" | "minPrice" | "maxPrice" | "salesCount", value: number | undefined) => {
+  const handlePriceChange = (productId: string, field: "basePrice" | "minPrice" | "maxPrice" | "totalSalesCount", value: number | undefined) => {
     // If value is empty or invalid, remove from changes
     if (value === undefined) {
       setChanges((prev) => {
@@ -61,13 +62,16 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
     const product = products.find((p) => p.id === productId)
     if (!product) return
 
+    // Calculate total sales (salesCount + manualSalesAdjustment)
+    const currentTotal = (product.salesCount || 0) + (product.manualSalesAdjustment || 0)
+
     setChanges((prev) => ({
       ...prev,
       [productId]: {
         basePrice: field === "basePrice" ? value : prev[productId]?.basePrice ?? parseInt(product.basePrice),
         minPrice: field === "minPrice" ? value : prev[productId]?.minPrice ?? parseInt(product.minPrice),
         maxPrice: field === "maxPrice" ? value : prev[productId]?.maxPrice ?? parseInt(product.maxPrice),
-        salesCount: field === "salesCount" ? value : prev[productId]?.salesCount ?? (product.salesCount || 0),
+        totalSalesCount: field === "totalSalesCount" ? value : prev[productId]?.totalSalesCount ?? currentTotal,
       },
     }))
   }
@@ -80,8 +84,12 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
     return parseInt(product[field])
   }
 
-  const getCurrentSalesCount = (product: PricingProduct) => {
-    return changes[product.id]?.salesCount?.toString() ?? (product.salesCount || 0).toString()
+  const getTotalSalesCount = (product: PricingProduct) => {
+    const changed = changes[product.id]?.totalSalesCount
+    if (changed !== undefined) {
+      return changed
+    }
+    return (product.salesCount || 0) + (product.manualSalesAdjustment || 0)
   }
 
   const isChanged = (productId: string) => {
@@ -151,13 +159,18 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
                   />
                 </TableCell>
                 <TableCell>
-                  <NumberInput
-                    stepper={1}
-                    min={0}
-                    decimalScale={0}
-                    value={parseInt(getCurrentSalesCount(product))}
-                    onValueChange={(value: number | undefined) => handlePriceChange(product.id, "salesCount", value)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <NumberInput
+                      stepper={1}
+                      min={0}
+                      decimalScale={0}
+                      value={getTotalSalesCount(product)}
+                      onValueChange={(value: number | undefined) => handlePriceChange(product.id, "totalSalesCount", value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      ({product.salesCount || 0})
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">

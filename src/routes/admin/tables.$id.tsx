@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { NumberInput } from "~/components/ui/number-input";
@@ -61,6 +61,7 @@ export const Route = createFileRoute("/admin/tables/$id")({
 function TableDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const router = useRouter();
   const loaderData = Route.useLoaderData();
 
   const [table, setTable] = useState(loaderData.table);
@@ -175,6 +176,9 @@ function TableDetailPage() {
       // Refetch and update local state
       const updated = await getTableById({ data: { id } });
       setOrders(updated.orders);
+
+      // Invalidate router cache so navigation back will refetch
+      router.invalidate();
 
       setSearchInput("");
       setSelectedProductId("");

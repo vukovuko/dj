@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "salesCountAtLastUpdate" integer DEFAULT 0 NOT NULL;

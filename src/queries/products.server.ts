@@ -1,9 +1,10 @@
 // Server-only queries for products
 import { createServerFn } from "@tanstack/react-start"
-import { db } from "~/db"
+import { db, pool } from "~/db"
 import { products, categories, tableOrders, priceHistory, settings } from "~/db/schema"
-import { eq, ilike, sql, desc, inArray, gte } from "drizzle-orm"
+import { eq, ilike, sql, desc, inArray, gte, and } from "drizzle-orm"
 import { calculatePrice } from "~/lib/pricing"
+import { initializePriceListener, addClient, removeClient } from "~/lib/price-notifications"
 
 export const getProductsWithPagination = createServerFn({ method: "GET" })
   .inputValidator((data: { search?: string; page: number }) => data)
@@ -247,7 +248,7 @@ export const bulkUpdatePrices = createServerFn({ method: "POST" })
       basePrice: number
       minPrice: number
       maxPrice: number
-      salesCount: number
+      totalSalesCount: number  // Total = salesCount + manualSalesAdjustment
     }>
   }) => data)
   .handler(async ({ data }) => {
@@ -259,25 +260,39 @@ export const bulkUpdatePrices = createServerFn({ method: "POST" })
       if (update.minPrice <= 0 || update.maxPrice <= 0 || update.basePrice <= 0) {
         throw new Error("Sve cene moraju biti veće od 0")
       }
-      if (update.salesCount < 0) {
+      if (update.totalSalesCount < 0) {
         throw new Error("Broj prodatih jedinica ne može biti negativan")
       }
     }
 
     // Update each product
-    const updatePromises = data.updates.map(update =>
-      db
+    const updatePromises = data.updates.map(async update => {
+      // Fetch current product to get real salesCount
+      const [currentProduct] = await db
+        .select({ salesCount: products.salesCount })
+        .from(products)
+        .where(eq(products.id, update.id))
+        .limit(1)
+
+      if (!currentProduct) {
+        throw new Error("Product not found")
+      }
+
+      // Calculate manual adjustment: total - realSales
+      const manualSalesAdjustment = update.totalSalesCount - currentProduct.salesCount
+
+      return db
         .update(products)
         .set({
           basePrice: update.basePrice.toString(),
           minPrice: update.minPrice.toString(),
           maxPrice: update.maxPrice.toString(),
-          salesCount: update.salesCount,
+          manualSalesAdjustment, // Update adjustment, NOT salesCount
           updatedAt: new Date(),
         })
         .where(eq(products.id, update.id))
         .returning()
-    )
+    })
 
     const results = await Promise.all(updatePromises)
     return { count: results.length }
@@ -302,15 +317,11 @@ export const updateAllPrices = createServerFn({ method: "POST" })
     let updatedCount = 0
 
     for (const product of allProducts) {
-      // Get sales count since last price update
-      const [salesResult] = await db
-        .select({
-          totalQuantity: sql<number>`coalesce(sum(${tableOrders.quantity}), 0)::int`,
-        })
-        .from(tableOrders)
-        .where(gte(tableOrders.createdAt, product.lastPriceUpdate))
-
-      const salesThisWindow = salesResult?.totalQuantity || 0
+      // Calculate sales since last price update based on salesCount delta + manual adjustment
+      // This works for:
+      // - Table orders (increment salesCount when created)
+      // - Manual adjustments (manualSalesAdjustment field controlled from pricing page)
+      const salesThisWindow = (product.salesCount + product.manualSalesAdjustment) - product.salesCountAtLastUpdate
 
       // Calculate new price
       const newPrice = calculatePrice(
@@ -347,6 +358,7 @@ export const updateAllPrices = createServerFn({ method: "POST" })
             previousPrice: previousPrice.toString(),
             currentPrice: newPrice.toString(),
             lastPriceUpdate: new Date(),
+            salesCountAtLastUpdate: product.salesCount, // Save current salesCount for next delta calculation
             // Update trend indicator
             trend: newPrice > previousPrice ? "up" : "down",
             updatedAt: new Date(),
@@ -361,6 +373,20 @@ export const updateAllPrices = createServerFn({ method: "POST" })
         })
 
         updatedCount++
+      }
+    }
+
+    // Notify all connected clients that prices have been updated
+    if (updatedCount > 0) {
+      const payload = JSON.stringify({ count: updatedCount, timestamp: new Date().toISOString() })
+      // Use raw pg client for NOTIFY (doesn't support parameterization)
+      const client = await pool.connect()
+      try {
+        // Use PostgreSQL's built-in literal escaping for safety
+        const escapedPayload = client.escapeLiteral(payload)
+        await client.query(`NOTIFY price_update, ${escapedPayload}`)
+      } finally {
+        client.release()
       }
     }
 
@@ -388,6 +414,49 @@ export const resetSessionQuantities = createServerFn({ method: "POST" })
     return {
       success: true,
       resetCount: result.rowCount || 0,
+    }
+  })
+
+/**
+ * Sync salesCount with actual tableOrders data
+ * This is needed to populate salesCount from existing orders
+ */
+export const syncSalesCount = createServerFn({ method: "POST" })
+  .handler(async () => {
+    // Get all products
+    const allProducts = await db
+      .select({ id: products.id })
+      .from(products)
+
+    let syncedCount = 0
+
+    for (const product of allProducts) {
+      // Calculate total quantity from tableOrders
+      const [result] = await db
+        .select({
+          total: sql<number>`coalesce(sum(${tableOrders.quantity}), 0)::int`,
+        })
+        .from(tableOrders)
+        .where(eq(tableOrders.productId, product.id))
+
+      const totalSales = result?.total || 0
+
+      // Update salesCount and salesCountAtLastUpdate
+      await db
+        .update(products)
+        .set({
+          salesCount: totalSales,
+          salesCountAtLastUpdate: totalSales,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, product.id))
+
+      syncedCount++
+    }
+
+    return {
+      success: true,
+      syncedCount,
     }
   })
 
@@ -472,6 +541,8 @@ export const getPricingStatus = createServerFn({ method: "GET" })
         basePrice: products.basePrice,
         minPrice: products.minPrice,
         maxPrice: products.maxPrice,
+        salesCount: products.salesCount,
+        manualSalesAdjustment: products.manualSalesAdjustment,
         trend: products.trend,
         pricingMode: products.pricingMode,
         priceIncreasePercent: products.priceIncreasePercent,
@@ -592,4 +663,62 @@ export const setPriceUpdateInterval = createServerFn({ method: "POST" })
     }
 
     return { minutes }
+  })
+
+// ============================================================================
+// REAL-TIME PRICE UPDATE NOTIFICATIONS (SSE)
+// ============================================================================
+
+/**
+ * Server-Sent Events stream for real-time price update notifications
+ * Clients connect to this endpoint and receive instant updates when prices change
+ */
+export const subscribeToPriceUpdates = createServerFn({ method: "GET" })
+  .handler(async ({ request }) => {
+    // Initialize PostgreSQL LISTEN if not already done
+    await initializePriceListener()
+
+    // Create SSE stream
+    const stream = new ReadableStream({
+      start(controller) {
+        // Add this client to the broadcast list
+        addClient(controller)
+
+        // Send initial connection message
+        const welcome = `data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`
+        controller.enqueue(new TextEncoder().encode(welcome))
+
+        // Send keepalive ping every 30 seconds to prevent connection timeout
+        const pingInterval = setInterval(() => {
+          try {
+            controller.enqueue(new TextEncoder().encode(': ping\n\n'))
+          } catch (error) {
+            // Client disconnected, clean up
+            clearInterval(pingInterval)
+            removeClient(controller)
+          }
+        }, 30000)
+
+        // Store interval ID so we can clear it on cancel
+        ;(controller as any).pingInterval = pingInterval
+      },
+      cancel(controller) {
+        // Client disconnected, clean up
+        const pingInterval = (controller as any).pingInterval
+        if (pingInterval) {
+          clearInterval(pingInterval)
+        }
+        removeClient(controller)
+      }
+    })
+
+    // Return SSE response
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no', // Disable nginx buffering
+      }
+    })
   })

@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react'
 import { Button } from '~/components/ui/button'
 import { PricingTable } from '~/components/products/pricing-table'
 import { toast } from 'sonner'
-import { getPricingStatus, updateAllPrices, bulkUpdatePrices } from '~/queries/products.server'
+import { getPricingStatus, updateAllPrices, bulkUpdatePrices, syncSalesCount } from '~/queries/products.server'
 
 // ========== ROUTE ==========
 
@@ -21,7 +21,7 @@ interface PriceChanges {
     basePrice: number
     minPrice: number
     maxPrice: number
-    salesCount: number
+    totalSalesCount: number
   }
 }
 
@@ -31,6 +31,7 @@ function PricingPage() {
   const [changes, setChanges] = useState<PriceChanges>({})
   const [isSaving, setIsSaving] = useState(false)
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const hasChanges = Object.keys(changes).length > 0
 
@@ -51,7 +52,7 @@ function PricingPage() {
         toast.error(`Greška: Sve cene moraju biti veće od 0`)
         return
       }
-      if (priceData.salesCount < 0) {
+      if (priceData.totalSalesCount < 0) {
         toast.error(`Greška: Broj prodatih jedinica ne može biti negativan`)
         return
       }
@@ -93,6 +94,20 @@ function PricingPage() {
     }
   }
 
+  const handleSyncSalesCount = async () => {
+    setIsSyncing(true)
+    try {
+      const result = await syncSalesCount()
+      toast.success(`Sinhronizovano ${result.syncedCount} proizvod(a)`)
+      router.invalidate()
+    } catch (error) {
+      console.error('Failed to sync sales count:', error)
+      toast.error('Greška pri sinhronizaciji')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
   const handleCancel = () => {
     setChanges({})
   }
@@ -108,6 +123,13 @@ function PricingPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            onClick={handleSyncSalesCount}
+            disabled={isSyncing}
+            variant="outline"
+          >
+            {isSyncing ? 'Sinhronizacija...' : 'Sinhronizuj kupljeno'}
+          </Button>
           <Button
             onClick={handleUpdatePricesNow}
             disabled={isUpdatingPrices}

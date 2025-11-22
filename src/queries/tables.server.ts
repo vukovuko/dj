@@ -213,6 +213,16 @@ export const addProductToTable = createServerFn({ method: 'POST' })
         })
         .where(eq(tableOrders.id, existing.id))
         .returning()
+
+      // Increment product salesCount
+      await db
+        .update(products)
+        .set({
+          salesCount: sql`${products.salesCount} + ${data.quantity}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, data.productId))
+
       return updated
     } else {
       // Create new order with current product price
@@ -226,6 +236,16 @@ export const addProductToTable = createServerFn({ method: 'POST' })
           paymentStatus: 'unpaid',
         })
         .returning()
+
+      // Increment product salesCount
+      await db
+        .update(products)
+        .set({
+          salesCount: sql`${products.salesCount} + ${data.quantity}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, data.productId))
+
       return created
     }
   })
@@ -234,9 +254,32 @@ export const addProductToTable = createServerFn({ method: 'POST' })
 export const updateOrderQuantity = createServerFn({ method: 'POST' })
   .inputValidator((data: { orderId: string; quantity: number }) => data)
   .handler(async ({ data }) => {
+    // Get the existing order to know the old quantity and productId
+    const [existingOrder] = await db
+      .select()
+      .from(tableOrders)
+      .where(eq(tableOrders.id, data.orderId))
+      .limit(1)
+
+    if (!existingOrder) {
+      throw new Error('Order not found')
+    }
+
+    const quantityDelta = data.quantity - existingOrder.quantity
+
     if (data.quantity <= 0) {
       // Delete if quantity is 0 or less
       const result = await db.delete(tableOrders).where(eq(tableOrders.id, data.orderId)).returning()
+
+      // Decrement product salesCount by the old quantity
+      await db
+        .update(products)
+        .set({
+          salesCount: sql`${products.salesCount} - ${existingOrder.quantity}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, existingOrder.productId))
+
       return result[0]
     }
 
@@ -248,6 +291,17 @@ export const updateOrderQuantity = createServerFn({ method: 'POST' })
       })
       .where(eq(tableOrders.id, data.orderId))
       .returning()
+
+    // Update product salesCount by the delta
+    if (quantityDelta !== 0) {
+      await db
+        .update(products)
+        .set({
+          salesCount: sql`${products.salesCount} + ${quantityDelta}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, existingOrder.productId))
+    }
 
     return updated
   })
@@ -288,7 +342,28 @@ export const bulkToggleOrderPaymentStatus = createServerFn({ method: 'POST' })
 export const deleteTableOrder = createServerFn({ method: 'POST' })
   .inputValidator((data: { orderId: string }) => data)
   .handler(async ({ data }) => {
+    // Get the order to know the productId and quantity
+    const [order] = await db
+      .select()
+      .from(tableOrders)
+      .where(eq(tableOrders.id, data.orderId))
+      .limit(1)
+
+    if (!order) {
+      throw new Error('Order not found')
+    }
+
     const result = await db.delete(tableOrders).where(eq(tableOrders.id, data.orderId)).returning()
+
+    // Decrement product salesCount
+    await db
+      .update(products)
+      .set({
+        salesCount: sql`${products.salesCount} - ${order.quantity}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(products.id, order.productId))
+
     return result[0]
   })
 
@@ -296,10 +371,29 @@ export const deleteTableOrder = createServerFn({ method: 'POST' })
 export const clearTableOrders = createServerFn({ method: 'POST' })
   .inputValidator((data: { tableId: string }) => data)
   .handler(async ({ data }) => {
+    // Get all orders for this table to update salesCount
+    const orders = await db
+      .select()
+      .from(tableOrders)
+      .where(eq(tableOrders.tableId, data.tableId))
+
+    // Delete all orders
     const result = await db
       .delete(tableOrders)
       .where(eq(tableOrders.tableId, data.tableId))
       .returning()
+
+    // Decrement salesCount for each product
+    for (const order of orders) {
+      await db
+        .update(products)
+        .set({
+          salesCount: sql`${products.salesCount} - ${order.quantity}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, order.productId))
+    }
+
     return result
   })
 

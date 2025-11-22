@@ -12,7 +12,7 @@
  * - Manual "Promeni cene sada" button click
  */
 
-import { db } from "../db/index.ts"
+import { db, pool } from "../db/index.ts"
 import { products, tableOrders, priceHistory } from "../db/schema.ts"
 import { eq, and, gte } from "drizzle-orm"
 import { calculatePrice } from "../lib/pricing.ts"
@@ -45,22 +45,11 @@ const task = async (payload: any, helpers: any) => {
 
     // Process each product
     for (const product of activeProducts) {
-      // Count sales since lastPriceUpdate
-      const salesSinceLastUpdate = await db
-        .select()
-        .from(tableOrders)
-        .where(
-          and(
-            eq(tableOrders.productId, product.id),
-            gte(tableOrders.createdAt, product.lastPriceUpdate),
-          ),
-        )
-
-      // Sum quantities from all matching orders
-      const salesThisWindow = salesSinceLastUpdate.reduce(
-        (sum, order) => sum + order.quantity,
-        0,
-      )
+      // Calculate sales since last price update based on salesCount delta + manual adjustment
+      // This works for:
+      // - Table orders (increment salesCount when created)
+      // - Manual adjustments (manualSalesAdjustment field controlled from pricing page)
+      const salesThisWindow = (product.salesCount + product.manualSalesAdjustment) - product.salesCountAtLastUpdate
 
       // Calculate new price
       const newPrice = calculatePrice(
@@ -96,6 +85,7 @@ const task = async (payload: any, helpers: any) => {
             previousPrice: product.currentPrice,
             trend,
             lastPriceUpdate: now,
+            salesCountAtLastUpdate: product.salesCount, // Save current salesCount for next delta calculation
             updatedAt: now,
           })
           .where(eq(products.id, product.id))
@@ -116,6 +106,21 @@ const task = async (payload: any, helpers: any) => {
     helpers.logger.info(
       `${logPrefix} Price update complete: ${updatedCount} updated, ${unchangedCount} unchanged`,
     )
+
+    // Notify all connected clients that prices have been updated
+    if (updatedCount > 0) {
+      const payload = JSON.stringify({ count: updatedCount, timestamp: now.toISOString() })
+      // Use raw pg client for NOTIFY (doesn't support parameterization)
+      const client = await pool.connect()
+      try {
+        // Use PostgreSQL's built-in literal escaping for safety
+        const escapedPayload = client.escapeLiteral(payload)
+        await client.query(`NOTIFY price_update, ${escapedPayload}`)
+        helpers.logger.info(`${logPrefix} Sent NOTIFY price_update (${updatedCount} products)`)
+      } finally {
+        client.release()
+      }
+    }
   } catch (error) {
     helpers.logger.error(`${logPrefix} Price update failed`, { error })
     // Rethrow to mark job as failed (Graphile Worker will handle retries)

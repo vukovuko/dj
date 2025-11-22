@@ -106,6 +106,8 @@ export const products = pgTable("products", {
 
   // Sales tracking
   salesCount: integer("salesCount").notNull().default(0),
+  salesCountAtLastUpdate: integer("salesCountAtLastUpdate").notNull().default(0),
+  manualSalesAdjustment: integer("manualSalesAdjustment").notNull().default(0),
 
   // UI indicators
   trend: trendEnum("trend").notNull().default("down"),
