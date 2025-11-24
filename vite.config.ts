@@ -17,6 +17,10 @@ export default defineConfig({
     }),
     nitroV2Plugin({ preset: "node-server" }),
     // react's vite plugin must come after start's vite plugin
-    viteReact(),
+    viteReact({
+      babel: {
+        plugins: ["babel-plugin-react-compiler"],
+      },
+    }),
   ],
 });
