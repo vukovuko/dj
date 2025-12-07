@@ -32,9 +32,10 @@ import {
 import { VideoGrid } from '~/components/videos/video-grid'
 import { VideosToolbar } from '~/components/videos/videos-toolbar'
 import { VideoPreviewDialog } from '~/components/videos/video-preview-dialog'
+import { CampaignDialog } from '~/components/campaigns/campaign-dialog'
 import { toast } from 'sonner'
 import { Upload, FileVideo } from 'lucide-react'
-import { getVideos, deleteVideos, playVideoOnTV, uploadVideo } from '~/queries/videos.server'
+import { getVideos, deleteVideos, uploadVideo } from '~/queries/videos.server'
 import { authClient } from '~/lib/auth-client'
 
 // ========== ROUTE ==========
@@ -66,6 +67,10 @@ function VideosPage() {
   const [uploadAspectRatio, setUploadAspectRatio] = useState<'landscape' | 'portrait'>('landscape')
   const [isUploading, setIsUploading] = useState(false)
 
+  // Campaign dialog state
+  const [campaignDialogOpen, setCampaignDialogOpen] = useState(false)
+  const [campaignVideoId, setCampaignVideoId] = useState<string | undefined>(undefined)
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
     if (file) {
@@ -76,9 +81,15 @@ function VideosPage() {
     }
   }, [uploadName])
 
-  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'video/*': [] },
+    accept: {
+      'video/mp4': [],
+      'video/quicktime': [],
+      'video/x-msvideo': [],
+      'video/x-matroska': [],
+      'video/webm': [],
+    },
     maxFiles: 1,
   })
 
@@ -185,7 +196,7 @@ function VideosPage() {
     }
   }
 
-  const handlePlayOnTV = async () => {
+  const handlePlayOnTV = () => {
     const videoId = Array.from(selectedIds)[0]
     const video = videos.find(v => v.id === videoId)
 
@@ -199,13 +210,9 @@ function VideosPage() {
       return
     }
 
-    try {
-      await playVideoOnTV({ data: { videoId } })
-      toast.success('Video se prikazuje na TV-u')
-    } catch (error) {
-      console.error('Failed to play video on TV:', error)
-      toast.error('Greška pri prikazivanju videa na TV-u')
-    }
+    // Open campaign dialog with preselected video
+    setCampaignVideoId(videoId)
+    setCampaignDialogOpen(true)
   }
 
   return (
@@ -383,20 +390,18 @@ function VideosPage() {
                 {...getRootProps()}
                 className={`
                   border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                  ${isDragReject
-                    ? 'border-red-500 bg-red-500/5'
-                    : isDragAccept
-                      ? 'border-green-500 bg-green-500/5'
-                      : uploadFile
-                        ? 'border-green-500 bg-green-500/5'
-                        : 'border-muted-foreground/25 hover:border-primary/50'
+                  ${isDragActive
+                    ? 'border-muted-foreground bg-accent'
+                    : uploadFile
+                      ? 'border-muted-foreground bg-accent/50'
+                      : 'border-muted-foreground/25 hover:border-muted-foreground/50'
                   }
                 `}
               >
                 <input {...getInputProps()} />
-                {uploadFile ? (
+                {uploadFile && !isDragActive ? (
                   <div className="space-y-2">
-                    <FileVideo className="h-10 w-10 mx-auto text-green-500" />
+                    <FileVideo className="h-10 w-10 mx-auto text-foreground" />
                     <p className="font-medium">{uploadFile.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {(uploadFile.size / 1024 / 1024).toFixed(2)} MB
@@ -405,15 +410,10 @@ function VideosPage() {
                       Kliknite ili prevucite da zamenite
                     </p>
                   </div>
-                ) : isDragReject ? (
+                ) : isDragActive ? (
                   <div className="space-y-2">
-                    <Upload className="h-10 w-10 mx-auto text-red-500" />
-                    <p className="text-red-500 font-medium">Samo video fajlovi!</p>
-                  </div>
-                ) : isDragAccept ? (
-                  <div className="space-y-2">
-                    <Upload className="h-10 w-10 mx-auto text-green-500 animate-bounce" />
-                    <p className="text-green-500 font-medium">Pustite video ovde...</p>
+                    <Upload className="h-10 w-10 mx-auto text-foreground animate-bounce" />
+                    <p className="font-medium">Pustite video ovde...</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -458,6 +458,27 @@ function VideosPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Campaign Dialog */}
+      <CampaignDialog
+        open={campaignDialogOpen}
+        onOpenChange={(open) => {
+          setCampaignDialogOpen(open)
+          if (!open) setCampaignVideoId(undefined)
+        }}
+        videos={videos.filter(v => v.status === 'ready').map(v => ({
+          id: v.id,
+          name: v.name,
+          thumbnailUrl: v.thumbnailUrl,
+          duration: v.duration,
+        }))}
+        preselectedVideoId={campaignVideoId}
+        onSuccess={() => {
+          setCampaignDialogOpen(false)
+          setCampaignVideoId(undefined)
+          setSelectedIds(new Set())
+        }}
+      />
       </div>
     </div>
   )

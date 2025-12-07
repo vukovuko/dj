@@ -12,6 +12,9 @@ export const trendEnum = pgEnum("trend", ["up", "down"])
 // Video status enum
 export const videoStatusEnum = pgEnum("video_status", ["pending", "generating", "ready", "failed"])
 
+// Video campaign status enum
+export const videoCampaignStatusEnum = pgEnum("video_campaign_status", ["scheduled", "countdown", "playing", "completed", "cancelled"])
+
 // Video aspect ratio enum
 export const aspectRatioEnum = pgEnum("aspect_ratio", ["landscape", "portrait"])
 
@@ -211,4 +214,22 @@ export const priceHistory = pgTable("priceHistory", {
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
+})
+
+// Video campaigns - scheduled video playback on TV
+export const videoCampaigns = pgTable("videoCampaigns", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  videoId: uuid("videoId")
+    .notNull()
+    .references(() => videos.id, { onDelete: "cascade" }),
+  scheduledAt: timestamp("scheduledAt").notNull(), // When to start countdown
+  countdownSeconds: integer("countdownSeconds").notNull().default(60), // Countdown duration before video plays
+  status: videoCampaignStatusEnum("status").notNull().default("scheduled"),
+  startedAt: timestamp("startedAt"), // When countdown actually started
+  completedAt: timestamp("completedAt"), // When video finished playing
+  createdBy: text("createdBy")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })

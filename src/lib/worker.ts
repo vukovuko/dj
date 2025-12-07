@@ -3,6 +3,7 @@ const { run, makeWorkerUtils } = pkg
 import env from '../../env.ts'
 import generateVideoTask from '../jobs/generate-video.ts'
 import updatePricesTask from '../jobs/update-prices.ts'
+import processCampaignsTask from '../jobs/process-campaigns.ts'
 import { db } from '../db/index.ts'
 import { settings } from '../db/schema.ts'
 import { eq } from 'drizzle-orm'
@@ -35,6 +36,7 @@ const workerOptions = {
   taskList: {
     'generate-video': generateVideoTask,
     'update-prices': updatePricesTask,
+    'process-campaigns': processCampaignsTask,
   },
 }
 
@@ -75,6 +77,21 @@ export async function startWorker() {
       const newIntervalMinutes = newIntervalMs / (60 * 1000)
       console.log(`⏰ Price update interval reloaded from database: ${newIntervalMinutes} minute(s)`)
     }, 30 * 60 * 1000)
+
+    // Campaign processor - runs every 5 seconds to check for campaigns to start/advance
+    setInterval(async () => {
+      try {
+        const utils = await getWorkerUtils()
+        await utils.addJob('process-campaigns', {}, {
+          runAt: new Date(),
+          jobKey: 'process-campaigns', // Prevents duplicate jobs
+        })
+        await utils.release()
+      } catch (error) {
+        console.error('❌ Failed to schedule campaign processor:', error)
+      }
+    }, 5000)
+    console.log('📺 Campaign processor scheduled (every 5 seconds)')
   } catch (error) {
     console.error('⚠️ Failed to schedule recurring price update:', error)
   }

@@ -1,10 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   getTVDisplayProducts,
   subscribeToPriceUpdates,
 } from "~/queries/products.server";
+import {
+  getActiveCampaign,
+  subscribeToCampaignUpdates,
+} from "~/queries/campaigns.server";
 import { ArrowUp, ArrowDown } from "lucide-react";
+import { CountdownOverlay } from "~/components/tv/countdown-overlay";
+import { VideoPlayerOverlay } from "~/components/tv/video-player-overlay";
 
 interface Product {
   id: string;
@@ -12,6 +18,21 @@ interface Product {
   categoryName: string | null;
   currentPrice: string;
   trend: "up" | "down";
+}
+
+interface CampaignState {
+  status: "idle" | "countdown" | "playing";
+  campaign: {
+    id: string;
+    videoId: string;
+    videoName: string | null;
+    videoUrl: string | null;
+    videoThumbnailUrl: string | null;
+    videoDuration: number | null;
+    countdownSeconds: number;
+    startedAt: Date | null;
+  } | null;
+  countdownRemaining: number;
 }
 
 export const Route = createFileRoute("/")({
@@ -29,6 +50,15 @@ function TVDisplay() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fallbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Campaign state
+  const [campaignState, setCampaignState] = useState<CampaignState>({
+    status: "idle",
+    campaign: null,
+    countdownRemaining: 0,
+  });
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const campaignReconnectRef = useRef<NodeJS.Timeout | null>(null);
 
   // Refresh product data
   const refreshProducts = async () => {
@@ -119,6 +149,193 @@ function TVDisplay() {
       }
     };
   }, []);
+
+  // Calculate remaining countdown seconds
+  const calculateCountdownRemaining = useCallback(
+    (startedAt: Date | string, countdownSeconds: number) => {
+      const started = new Date(startedAt);
+      const elapsed = Math.floor((Date.now() - started.getTime()) / 1000);
+      return Math.max(0, countdownSeconds - elapsed);
+    },
+    []
+  );
+
+  // Handle video end - reset to idle
+  const handleVideoEnded = useCallback(() => {
+    console.log("📺 Video ended, returning to idle");
+    setCampaignState({
+      status: "idle",
+      campaign: null,
+      countdownRemaining: 0,
+    });
+  }, []);
+
+  // Campaign subscription
+  useEffect(() => {
+    const connectCampaignSSE = async () => {
+      try {
+        // First, check if there's an active campaign
+        const activeCampaign = await getActiveCampaign();
+        if (activeCampaign) {
+          console.log("📺 Found active campaign:", activeCampaign.status);
+          if (activeCampaign.status === "countdown" && activeCampaign.startedAt) {
+            const remaining = calculateCountdownRemaining(
+              activeCampaign.startedAt,
+              activeCampaign.countdownSeconds
+            );
+            setCampaignState({
+              status: "countdown",
+              campaign: {
+                id: activeCampaign.id,
+                videoId: activeCampaign.videoId,
+                videoName: activeCampaign.videoName,
+                videoUrl: activeCampaign.videoUrl,
+                videoThumbnailUrl: activeCampaign.videoThumbnailUrl,
+                videoDuration: activeCampaign.videoDuration,
+                countdownSeconds: activeCampaign.countdownSeconds,
+                startedAt: new Date(activeCampaign.startedAt),
+              },
+              countdownRemaining: remaining,
+            });
+          } else if (activeCampaign.status === "playing") {
+            setCampaignState({
+              status: "playing",
+              campaign: {
+                id: activeCampaign.id,
+                videoId: activeCampaign.videoId,
+                videoName: activeCampaign.videoName,
+                videoUrl: activeCampaign.videoUrl,
+                videoThumbnailUrl: activeCampaign.videoThumbnailUrl,
+                videoDuration: activeCampaign.videoDuration,
+                countdownSeconds: activeCampaign.countdownSeconds,
+                startedAt: activeCampaign.startedAt ? new Date(activeCampaign.startedAt) : null,
+              },
+              countdownRemaining: 0,
+            });
+          }
+        }
+
+        // Subscribe to campaign updates via SSE
+        const response = await subscribeToCampaignUpdates();
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          console.error("❌ No reader available for campaign SSE stream");
+          return;
+        }
+
+        console.log("📺 Connected to campaign update stream");
+
+        // Read SSE stream
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              try {
+                const parsed = JSON.parse(data);
+                console.log("📺 Campaign event received:", parsed.type);
+
+                if (parsed.type === "COUNTDOWN_START") {
+                  const campaign = parsed.campaign;
+                  setCampaignState({
+                    status: "countdown",
+                    campaign: {
+                      id: campaign.id,
+                      videoId: campaign.videoId,
+                      videoName: campaign.videoName,
+                      videoUrl: campaign.videoUrl,
+                      videoThumbnailUrl: campaign.videoThumbnailUrl,
+                      videoDuration: campaign.videoDuration,
+                      countdownSeconds: campaign.countdownSeconds,
+                      startedAt: new Date(),
+                    },
+                    countdownRemaining: campaign.countdownSeconds,
+                  });
+                } else if (parsed.type === "VIDEO_PLAY") {
+                  const campaign = parsed.campaign;
+                  setCampaignState((prev) => ({
+                    status: "playing",
+                    campaign: prev.campaign || {
+                      id: campaign.id,
+                      videoId: campaign.videoId,
+                      videoName: campaign.videoName,
+                      videoUrl: campaign.videoUrl,
+                      videoThumbnailUrl: campaign.videoThumbnailUrl,
+                      videoDuration: campaign.videoDuration,
+                      countdownSeconds: campaign.countdownSeconds,
+                      startedAt: null,
+                    },
+                    countdownRemaining: 0,
+                  }));
+                } else if (parsed.type === "VIDEO_END" || parsed.type === "CANCELLED") {
+                  setCampaignState({
+                    status: "idle",
+                    campaign: null,
+                    countdownRemaining: 0,
+                  });
+                }
+              } catch (e) {
+                // Ignore parse errors
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("❌ Campaign SSE connection error:", error);
+
+        // Attempt to reconnect after 5 seconds
+        campaignReconnectRef.current = setTimeout(() => {
+          console.log("🔄 Reconnecting to campaign update stream...");
+          connectCampaignSSE();
+        }, 5000);
+      }
+    };
+
+    // Start campaign SSE connection
+    connectCampaignSSE();
+
+    // Cleanup
+    return () => {
+      if (campaignReconnectRef.current) {
+        clearTimeout(campaignReconnectRef.current);
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, [calculateCountdownRemaining]);
+
+  // Countdown timer interval
+  useEffect(() => {
+    if (campaignState.status === "countdown" && campaignState.countdownRemaining > 0) {
+      countdownIntervalRef.current = setInterval(() => {
+        setCampaignState((prev) => {
+          const newRemaining = prev.countdownRemaining - 1;
+          if (newRemaining <= 0) {
+            // Countdown finished - the server will send VIDEO_PLAY event
+            return prev;
+          }
+          return {
+            ...prev,
+            countdownRemaining: newRemaining,
+          };
+        });
+      }, 1000);
+
+      return () => {
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+      };
+    }
+  }, [campaignState.status, campaignState.countdownRemaining > 0]);
 
   // Group products by category
   const grouped = products.reduce(
@@ -242,6 +459,24 @@ function TVDisplay() {
           </div>
         )}
       </div>
+
+      {/* Campaign Overlays */}
+      {campaignState.status === "countdown" && campaignState.campaign && (
+        <CountdownOverlay
+          secondsRemaining={campaignState.countdownRemaining}
+          totalSeconds={campaignState.campaign.countdownSeconds}
+          videoName={campaignState.campaign.videoName || "Video"}
+          videoThumbnail={campaignState.campaign.videoThumbnailUrl}
+        />
+      )}
+
+      {campaignState.status === "playing" && campaignState.campaign?.videoUrl && (
+        <VideoPlayerOverlay
+          videoUrl={campaignState.campaign.videoUrl}
+          videoName={campaignState.campaign.videoName || "Video"}
+          onEnded={handleVideoEnded}
+        />
+      )}
     </div>
   );
 }
