@@ -1,6 +1,9 @@
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { useDropzone } from 'react-dropzone'
 import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,11 +14,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select'
 import { VideoGrid } from '~/components/videos/video-grid'
 import { VideosToolbar } from '~/components/videos/videos-toolbar'
 import { VideoPreviewDialog } from '~/components/videos/video-preview-dialog'
 import { toast } from 'sonner'
-import { getVideos, deleteVideos, playVideoOnTV } from '~/queries/videos.server'
+import { Upload, FileVideo } from 'lucide-react'
+import { getVideos, deleteVideos, playVideoOnTV, uploadVideo } from '~/queries/videos.server'
+import { authClient } from '~/lib/auth-client'
 
 // ========== ROUTE ==========
 
@@ -32,11 +52,83 @@ function VideosPage() {
   const navigate = useNavigate()
   const router = useRouter()
   const videos = Route.useLoaderData()
+  const { data: session } = authClient.useSession()
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [previewVideo, setPreviewVideo] = useState<typeof videos[0] | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Upload state
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadName, setUploadName] = useState('')
+  const [uploadAspectRatio, setUploadAspectRatio] = useState<'landscape' | 'portrait'>('landscape')
+  const [isUploading, setIsUploading] = useState(false)
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]
+    if (file) {
+      setUploadFile(file)
+      if (!uploadName) {
+        setUploadName(file.name.replace(/\.[^/.]+$/, ''))
+      }
+    }
+  }, [uploadName])
+
+  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
+    onDrop,
+    accept: { 'video/*': [] },
+    maxFiles: 1,
+  })
+
+  const handleUpload = async () => {
+    if (!uploadFile || !uploadName || !session?.user?.id) {
+      toast.error('Molimo popunite sva polja')
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      // Read file as base64
+      const reader = new FileReader()
+      const fileBase64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(uploadFile)
+      })
+
+      // Get video duration
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      const duration = await new Promise<number>((resolve) => {
+        video.onloadedmetadata = () => resolve(Math.round(video.duration))
+        video.src = URL.createObjectURL(uploadFile)
+      })
+
+      await uploadVideo({
+        data: {
+          userId: session.user.id,
+          name: uploadName,
+          duration,
+          aspectRatio: uploadAspectRatio,
+          fileBase64,
+          fileName: uploadFile.name,
+        }
+      })
+
+      toast.success('Video uspešno otpremljen!')
+      setUploadDialogOpen(false)
+      setUploadFile(null)
+      setUploadName('')
+      router.invalidate()
+    } catch (error) {
+      console.error('Upload failed:', error)
+      toast.error('Greška pri otpremanju videa')
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const handleSelectVideo = (id: string, checked: boolean) => {
     const newSelected = new Set(selectedIds)
@@ -173,10 +265,16 @@ function VideosPage() {
               </Button>
             </>
           ) : (
-            // No selection - show generate button
-            <Button onClick={() => navigate({ to: '/admin/videos/generacija' })}>
-              Generiši video
-            </Button>
+            // No selection - show generate and upload buttons
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+                <Upload className="h-4 w-4 mr-2" />
+                Otpremi
+              </Button>
+              <Button onClick={() => navigate({ to: '/admin/videos/generacija' })}>
+                Generiši video
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -224,9 +322,15 @@ function VideosPage() {
             )}
           </div>
         ) : (
-          <Button className="w-full" onClick={() => navigate({ to: '/admin/videos/generacija' })}>
-            Generiši video
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setUploadDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Otpremi
+            </Button>
+            <Button className="flex-1" onClick={() => navigate({ to: '/admin/videos/generacija' })}>
+              Generiši video
+            </Button>
+          </div>
         )}
       </div>
 
@@ -262,6 +366,98 @@ function VideosPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Otpremi video</DialogTitle>
+            <DialogDescription>
+              Izaberite video fajl sa vašeg računara
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Video fajl</Label>
+              <div
+                {...getRootProps()}
+                className={`
+                  border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                  ${isDragReject
+                    ? 'border-red-500 bg-red-500/5'
+                    : isDragAccept
+                      ? 'border-green-500 bg-green-500/5'
+                      : uploadFile
+                        ? 'border-green-500 bg-green-500/5'
+                        : 'border-muted-foreground/25 hover:border-primary/50'
+                  }
+                `}
+              >
+                <input {...getInputProps()} />
+                {uploadFile ? (
+                  <div className="space-y-2">
+                    <FileVideo className="h-10 w-10 mx-auto text-green-500" />
+                    <p className="font-medium">{uploadFile.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(uploadFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Kliknite ili prevucite da zamenite
+                    </p>
+                  </div>
+                ) : isDragReject ? (
+                  <div className="space-y-2">
+                    <Upload className="h-10 w-10 mx-auto text-red-500" />
+                    <p className="text-red-500 font-medium">Samo video fajlovi!</p>
+                  </div>
+                ) : isDragAccept ? (
+                  <div className="space-y-2">
+                    <Upload className="h-10 w-10 mx-auto text-green-500 animate-bounce" />
+                    <p className="text-green-500 font-medium">Pustite video ovde...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="h-10 w-10 mx-auto text-muted-foreground" />
+                    <p className="font-medium">Prevucite video ovde</p>
+                    <p className="text-sm text-muted-foreground">
+                      ili kliknite da izaberete fajl
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="video-name">Naziv</Label>
+              <Input
+                id="video-name"
+                value={uploadName}
+                onChange={(e) => setUploadName(e.target.value)}
+                placeholder="Unesite naziv videa"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Orijentacija</Label>
+              <Select value={uploadAspectRatio} onValueChange={(v) => setUploadAspectRatio(v as 'landscape' | 'portrait')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="landscape">Horizontalno (16:9)</SelectItem>
+                  <SelectItem value="portrait">Vertikalno (9:16)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isUploading}>
+              Otkaži
+            </Button>
+            <Button onClick={handleUpload} disabled={!uploadFile || !uploadName || isUploading}>
+              {isUploading ? 'Otpremanje...' : 'Otpremi'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   )

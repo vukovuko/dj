@@ -212,6 +212,102 @@ export const getVideoById = createServerFn({ method: "GET" })
     return video
   })
 
+// Upload video - saves file to disk and creates database record
+export const uploadVideo = createServerFn({ method: "POST" })
+  .inputValidator((data: {
+    userId: string
+    name: string
+    duration: number
+    aspectRatio: "landscape" | "portrait"
+    fileBase64: string // Base64 encoded video file
+    fileName: string
+  }) => data)
+  .handler(async ({ data }) => {
+    const fs = await import('fs/promises')
+    const path = await import('path')
+    const { spawn } = await import('child_process')
+
+    // Create video record first to get ID
+    const [video] = await db
+      .insert(videos)
+      .values({
+        name: data.name,
+        prompt: "Uploaded video", // Mark as uploaded
+        duration: data.duration,
+        aspectRatio: data.aspectRatio,
+        status: "generating", // Will change to ready after processing
+        createdBy: data.userId,
+      })
+      .returning()
+
+    try {
+      // Ensure directories exist
+      const videosDir = path.join(process.cwd(), 'public', 'videos')
+      const thumbnailsDir = path.join(videosDir, 'thumbnails')
+      await fs.mkdir(videosDir, { recursive: true })
+      await fs.mkdir(thumbnailsDir, { recursive: true })
+
+      // Decode base64 and save video file
+      const base64Data = data.fileBase64.replace(/^data:video\/\w+;base64,/, '')
+      const videoBuffer = Buffer.from(base64Data, 'base64')
+      const videoPath = path.join(videosDir, `${video.id}.mp4`)
+      await fs.writeFile(videoPath, videoBuffer)
+
+      // Generate thumbnail using FFmpeg (optional - skip if FFmpeg not installed)
+      const thumbnailPath = path.join(thumbnailsDir, `${video.id}.jpg`)
+      let thumbnailUrl: string | null = null
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const ffmpeg = spawn('ffmpeg', [
+            '-i', videoPath,
+            '-ss', '00:00:01', // 1 second in
+            '-vframes', '1',
+            '-vf', 'scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2',
+            '-y',
+            thumbnailPath
+          ])
+
+          ffmpeg.on('close', (code) => {
+            if (code === 0) resolve()
+            else reject(new Error(`FFmpeg exited with code ${code}`))
+          })
+          ffmpeg.on('error', reject)
+        })
+        thumbnailUrl = `/videos/thumbnails/${video.id}.jpg`
+      } catch (ffmpegError) {
+        console.log(`⚠️ FFmpeg not available, skipping thumbnail generation for ${video.id}`)
+      }
+
+      // Update database with file URLs
+      const [updated] = await db
+        .update(videos)
+        .set({
+          url: `/videos/${video.id}.mp4`,
+          thumbnailUrl,
+          status: "ready",
+          updatedAt: new Date(),
+        })
+        .where(eq(videos.id, video.id))
+        .returning()
+
+      console.log(`✅ Video uploaded: ${video.id}`)
+      return updated
+    } catch (error) {
+      // Mark as failed if something goes wrong
+      await db
+        .update(videos)
+        .set({
+          status: "failed",
+          errorMessage: error instanceof Error ? error.message : "Upload failed",
+          updatedAt: new Date(),
+        })
+        .where(eq(videos.id, video.id))
+
+      throw error
+    }
+  })
+
 // Play video on TV (WebSocket broadcast - future)
 export const playVideoOnTV = createServerFn({ method: "POST" })
   .inputValidator((data: { videoId: string }) => data)
