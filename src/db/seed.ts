@@ -1,25 +1,27 @@
-import { auth } from "../lib/auth.ts"
-import { db } from "./index.ts"
-import { user, categories, products, settings } from "./schema.ts"
-import { eq } from "drizzle-orm"
-import env from "../../env.ts"
+import { eq } from "drizzle-orm";
+import env from "../../env.ts";
+import { auth } from "../lib/auth.ts";
+import { db } from "./index.ts";
+import { categories, products, settings, user } from "./schema.ts";
 
 async function seed() {
-  console.log("🌱 Seeding database...")
+  console.log("🌱 Seeding database...");
 
   // Validate seed passwords are provided
   if (!env.SEED_ADMIN_PASSWORD || !env.SEED_STAFF_PASSWORD) {
-    console.error("❌ Missing seed passwords in environment variables")
-    console.error("Please set SEED_ADMIN_PASSWORD and SEED_STAFF_PASSWORD in .env")
-    process.exit(1)
+    console.error("❌ Missing seed passwords in environment variables");
+    console.error(
+      "Please set SEED_ADMIN_PASSWORD and SEED_STAFF_PASSWORD in .env",
+    );
+    process.exit(1);
   }
 
   try {
     // ========== SEED USERS ==========
-    const existingUsers = await db.select().from(user)
+    const existingUsers = await db.select().from(user);
 
     if (existingUsers.length === 0) {
-      console.log("Creating superadmin user...")
+      console.log("Creating superadmin user...");
       await auth.api.signUpEmail({
         body: {
           email: "admin@djcafe.local",
@@ -27,16 +29,16 @@ async function seed() {
           password: env.SEED_ADMIN_PASSWORD,
           username: "admin",
         },
-      })
+      });
 
       await db
         .update(user)
         .set({ role: "superadmin" })
-        .where(eq(user.name, "admin"))
+        .where(eq(user.name, "admin"));
 
-      console.log("✓ Created superadmin user: admin")
+      console.log("✓ Created superadmin user: admin");
 
-      console.log("Creating staff user...")
+      console.log("Creating staff user...");
       await auth.api.signUpEmail({
         body: {
           email: "staff@djcafe.local",
@@ -44,21 +46,21 @@ async function seed() {
           password: env.SEED_STAFF_PASSWORD,
           username: "staff",
         },
-      })
+      });
 
-      console.log("✓ Created staff user: staff")
+      console.log("✓ Created staff user: staff");
     } else {
-      console.log("✓ Users already seeded, skipping...")
+      console.log("✓ Users already seeded, skipping...");
     }
 
     // ========== SEED CATEGORIES ==========
-    const existingCategories = await db.select().from(categories)
+    const existingCategories = await db.select().from(categories);
 
-    let cocktailsCategoryId: string
-    let shotsCategoryId: string
+    let cocktailsCategoryId: string;
+    let shotsCategoryId: string;
 
     if (existingCategories.length === 0) {
-      console.log("Creating categories...")
+      console.log("Creating categories...");
 
       const [cocktailsCategory] = await db
         .insert(categories)
@@ -66,7 +68,7 @@ async function seed() {
           name: "Cocktails",
           slug: "cocktails",
         })
-        .returning()
+        .returning();
 
       const [shotsCategory] = await db
         .insert(categories)
@@ -74,25 +76,27 @@ async function seed() {
           name: "Shots",
           slug: "shots",
         })
-        .returning()
+        .returning();
 
-      cocktailsCategoryId = cocktailsCategory.id
-      shotsCategoryId = shotsCategory.id
+      cocktailsCategoryId = cocktailsCategory.id;
+      shotsCategoryId = shotsCategory.id;
 
-      console.log("✓ Created categories: Cocktails, Shots")
+      console.log("✓ Created categories: Cocktails, Shots");
     } else {
-      console.log("✓ Categories already seeded, skipping...")
-      const cocktailsCat = existingCategories.find((c) => c.slug === "cocktails")
-      const shotsCat = existingCategories.find((c) => c.slug === "shots")
-      cocktailsCategoryId = cocktailsCat!.id
-      shotsCategoryId = shotsCat!.id
+      console.log("✓ Categories already seeded, skipping...");
+      const cocktailsCat = existingCategories.find(
+        (c) => c.slug === "cocktails",
+      );
+      const shotsCat = existingCategories.find((c) => c.slug === "shots");
+      cocktailsCategoryId = cocktailsCat!.id;
+      shotsCategoryId = shotsCat!.id;
     }
 
     // ========== SEED PRODUCTS ==========
-    const existingProducts = await db.select().from(products)
+    const existingProducts = await db.select().from(products);
 
     if (existingProducts.length === 0) {
-      console.log("Creating products...")
+      console.log("Creating products...");
 
       // Cocktails
       const cocktailsData = [
@@ -102,7 +106,7 @@ async function seed() {
         { name: "Pina Colada", price: "450", min: "340", max: "680" },
         { name: "Sex on the Beach", price: "400", min: "300", max: "600" },
         { name: "Tequila Sunrise", price: "400", min: "300", max: "600" },
-      ]
+      ];
 
       for (const cocktail of cocktailsData) {
         await db.insert(products).values({
@@ -116,7 +120,7 @@ async function seed() {
           salesCount: 0,
           trend: "down",
           status: "active",
-        })
+        });
       }
 
       // Shots
@@ -128,7 +132,7 @@ async function seed() {
         { name: "Absolut Vodka", price: "370", min: "280", max: "555" },
         { name: "Ballantine's", price: "400", min: "300", max: "600" },
         { name: "Jägermeister", price: "320", min: "240", max: "480" },
-      ]
+      ];
 
       for (const shot of shotsData) {
         await db.insert(products).values({
@@ -142,19 +146,19 @@ async function seed() {
           salesCount: 0,
           trend: "down",
           status: "active",
-        })
+        });
       }
 
-      console.log("✓ Created 13 products (6 cocktails, 7 shots)")
+      console.log("✓ Created 13 products (6 cocktails, 7 shots)");
     } else {
-      console.log("✓ Products already seeded, skipping...")
+      console.log("✓ Products already seeded, skipping...");
     }
 
     // ========== SEED SETTINGS ==========
-    const existingSettings = await db.select().from(settings)
+    const existingSettings = await db.select().from(settings);
 
     if (existingSettings.length === 0) {
-      console.log("Creating settings...")
+      console.log("Creating settings...");
 
       await db.insert(settings).values([
         {
@@ -170,25 +174,25 @@ async function seed() {
           key: "priceUpdateIntervalMinutes",
           value: { minutes: 1 },
         },
-      ])
+      ]);
 
-      console.log("✓ Created pricing config settings")
+      console.log("✓ Created pricing config settings");
     } else {
-      console.log("✓ Settings already seeded, skipping...")
+      console.log("✓ Settings already seeded, skipping...");
     }
 
-    console.log("\n🎉 Seeding completed successfully!")
-    console.log("\nInitial data:")
-    console.log("  Users: 2 (admin, staff)")
-    console.log("  Categories: 2 (Cocktails, Shots)")
-    console.log("  Products: 13 (6 cocktails, 7 shots)")
-    console.log("  Settings: pricing_config")
+    console.log("\n🎉 Seeding completed successfully!");
+    console.log("\nInitial data:");
+    console.log("  Users: 2 (admin, staff)");
+    console.log("  Categories: 2 (Cocktails, Shots)");
+    console.log("  Products: 13 (6 cocktails, 7 shots)");
+    console.log("  Settings: pricing_config");
   } catch (error) {
-    console.error("❌ Seeding failed:", error)
-    process.exit(1)
+    console.error("❌ Seeding failed:", error);
+    process.exit(1);
   }
 
-  process.exit(0)
+  process.exit(0);
 }
 
-seed()
+seed();

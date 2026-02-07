@@ -99,7 +99,7 @@ export async function sendCampaignNotification(
     videoName?: string | null;
     videoDuration?: number | null;
     countdownSeconds?: number;
-  }
+  },
 ) {
   const payload = JSON.stringify({
     type,
@@ -114,7 +114,9 @@ export async function sendCampaignNotification(
   if (listenerPool) {
     try {
       const client = await listenerPool.connect();
-      await client.query(`NOTIFY campaign_update, '${payload.replace(/'/g, "''")}'`);
+      await client.query(
+        `NOTIFY campaign_update, '${payload.replace(/'/g, "''")}'`,
+      );
       client.release();
     } catch (error) {
       console.error("Failed to send NOTIFY:", error);

@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,32 +9,32 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog'
+} from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
-import { Link } from '@tanstack/react-router'
-import { toast } from 'sonner'
-import { createCampaign } from '~/queries/campaigns.server'
-import { authClient } from '~/lib/auth-client'
+} from "~/components/ui/select";
+import { authClient } from "~/lib/auth-client";
+import { createCampaign } from "~/queries/campaigns.server";
 
 interface Video {
-  id: string
-  name: string
-  thumbnailUrl: string | null
-  duration: number | null
+  id: string;
+  name: string;
+  thumbnailUrl: string | null;
+  duration: number | null;
 }
 
 interface CampaignDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  videos: Video[]
-  onSuccess: () => void
-  preselectedVideoId?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  videos: Video[];
+  onSuccess: () => void;
+  preselectedVideoId?: string;
 }
 
 export function CampaignDialog({
@@ -44,79 +44,83 @@ export function CampaignDialog({
   onSuccess,
   preselectedVideoId,
 }: CampaignDialogProps) {
-  const { data: session } = authClient.useSession()
+  const { data: session } = authClient.useSession();
 
   // Helper to get default time (now + 1 minute)
   const getDefaultTime = () => {
-    const now = new Date()
-    now.setMinutes(now.getMinutes() + 1)
-    const hours = now.getHours().toString().padStart(2, '0')
-    const minutes = now.getMinutes().toString().padStart(2, '0')
-    return `${hours}:${minutes}`
-  }
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 1);
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
 
-  const [selectedVideoId, setSelectedVideoId] = useState(preselectedVideoId || '')
-  const [scheduleType, setScheduleType] = useState<'now' | 'later'>('now')
-  const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().split('T')[0])
-  const [scheduledTime, setScheduledTime] = useState(getDefaultTime())
-  const [countdownSeconds, setCountdownSeconds] = useState('60')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [timeError, setTimeError] = useState('')
+  const [selectedVideoId, setSelectedVideoId] = useState(
+    preselectedVideoId || "",
+  );
+  const [scheduleType, setScheduleType] = useState<"now" | "later">("now");
+  const [scheduledDate, setScheduledDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+  const [scheduledTime, setScheduledTime] = useState(getDefaultTime());
+  const [countdownSeconds, setCountdownSeconds] = useState("60");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeError, setTimeError] = useState("");
 
   // Reset form when dialog opens
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen) {
-      setSelectedVideoId(preselectedVideoId || '')
-      setScheduleType('now')
+      setSelectedVideoId(preselectedVideoId || "");
+      setScheduleType("now");
       // Default to today's date
-      setScheduledDate(new Date().toISOString().split('T')[0])
+      setScheduledDate(new Date().toISOString().split("T")[0]);
       // Default to current time + 1 minute
-      const now = new Date()
-      now.setMinutes(now.getMinutes() + 1)
-      const hours = now.getHours().toString().padStart(2, '0')
-      const minutes = now.getMinutes().toString().padStart(2, '0')
-      setScheduledTime(`${hours}:${minutes}`)
-      setCountdownSeconds('60')
-      setTimeError('')
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 1);
+      const hours = now.getHours().toString().padStart(2, "0");
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      setScheduledTime(`${hours}:${minutes}`);
+      setCountdownSeconds("60");
+      setTimeError("");
     }
-    onOpenChange(newOpen)
-  }
+    onOpenChange(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!selectedVideoId) {
-      toast.error('Izaberite video')
-      return
+      toast.error("Izaberite video");
+      return;
     }
 
     if (!session?.user?.id) {
-      toast.error('Niste prijavljeni')
-      return
+      toast.error("Niste prijavljeni");
+      return;
     }
 
-    let scheduledAt: Date
+    let scheduledAt: Date;
 
-    if (scheduleType === 'now') {
+    if (scheduleType === "now") {
       // Schedule for 3 seconds from now (immediate)
-      scheduledAt = new Date(Date.now() + 3 * 1000)
+      scheduledAt = new Date(Date.now() + 3 * 1000);
     } else {
       if (!scheduledDate || !scheduledTime) {
-        toast.error('Unesite datum i vreme')
-        return
+        toast.error("Unesite datum i vreme");
+        return;
       }
-      scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`)
+      scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`);
 
       if (isNaN(scheduledAt.getTime())) {
-        toast.error('Unesite ispravan datum i vreme')
-        return
+        toast.error("Unesite ispravan datum i vreme");
+        return;
       }
 
       if (scheduledAt <= new Date()) {
-        toast.error('Zakazano vreme mora biti u budućnosti')
-        return
+        toast.error("Zakazano vreme mora biti u budućnosti");
+        return;
       }
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       await createCampaign({
         data: {
@@ -125,23 +129,23 @@ export function CampaignDialog({
           countdownSeconds: parseInt(countdownSeconds),
           createdBy: session.user.id,
         },
-      })
+      });
 
       toast.success(
-        scheduleType === 'now'
-          ? 'Kampanja kreirana! Video će se prikazati za nekoliko sekundi.'
-          : 'Kampanja je zakazana!'
-      )
-      onSuccess()
+        scheduleType === "now"
+          ? "Kampanja kreirana! Video će se prikazati za nekoliko sekundi."
+          : "Kampanja je zakazana!",
+      );
+      onSuccess();
     } catch (error) {
-      console.error('Failed to create campaign:', error)
-      toast.error('Greška pri kreiranju kampanje')
+      console.error("Failed to create campaign:", error);
+      toast.error("Greška pri kreiranju kampanje");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const selectedVideo = videos.find(v => v.id === selectedVideoId)
+  const selectedVideo = videos.find((v) => v.id === selectedVideoId);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -159,15 +163,22 @@ export function CampaignDialog({
             <Label>Video</Label>
             {videos.length === 0 ? (
               <p className="text-sm text-muted-foreground py-2">
-                Nema videa za prikazivanje.{' '}
-                <Link to="/admin/videos/generacija" className="text-primary underline" onClick={() => onOpenChange(false)}>
+                Nema videa za prikazivanje.{" "}
+                <Link
+                  to="/admin/videos/generacija"
+                  className="text-primary underline"
+                  onClick={() => onOpenChange(false)}
+                >
                   Napravite video
-                </Link>{' '}
+                </Link>{" "}
                 pa se vratite ovde.
               </p>
             ) : (
               <>
-                <Select value={selectedVideoId} onValueChange={setSelectedVideoId}>
+                <Select
+                  value={selectedVideoId}
+                  onValueChange={setSelectedVideoId}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Izaberite video" />
                   </SelectTrigger>
@@ -194,7 +205,10 @@ export function CampaignDialog({
           {/* Schedule Type */}
           <div className="space-y-2">
             <Label>Kada prikazati</Label>
-            <Select value={scheduleType} onValueChange={(v) => setScheduleType(v as 'now' | 'later')}>
+            <Select
+              value={scheduleType}
+              onValueChange={(v) => setScheduleType(v as "now" | "later")}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -206,7 +220,7 @@ export function CampaignDialog({
           </div>
 
           {/* Date/Time picker (only shown when scheduling for later) */}
-          {scheduleType === 'later' && (
+          {scheduleType === "later" && (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="date">Datum</Label>
@@ -215,7 +229,7 @@ export function CampaignDialog({
                   type="date"
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
+                  min={new Date().toISOString().split("T")[0]}
                 />
               </div>
               <div className="space-y-2">
@@ -229,49 +243,56 @@ export function CampaignDialog({
                     value={scheduledTime}
                     aria-invalid={!!timeError}
                     onChange={(e) => {
-                      const value = e.target.value
-                      if (value === '' || /^[0-9:]*$/.test(value)) {
-                        setScheduledTime(value)
-                        setTimeError('')
+                      const value = e.target.value;
+                      if (value === "" || /^[0-9:]*$/.test(value)) {
+                        setScheduledTime(value);
+                        setTimeError("");
                       }
                     }}
                     onBlur={(e) => {
-                      const value = e.target.value.trim()
-                      let hours = ''
-                      let minutes = ''
+                      const value = e.target.value.trim();
+                      let hours = "";
+                      let minutes = "";
 
                       // Handle "1924" or "924" format (no colon)
                       if (/^\d{3,4}$/.test(value)) {
                         if (value.length === 4) {
                           // "1924" -> "19:24"
-                          hours = value.slice(0, 2)
-                          minutes = value.slice(2)
+                          hours = value.slice(0, 2);
+                          minutes = value.slice(2);
                         } else {
                           // "924" -> "09:24"
-                          hours = value.slice(0, 1).padStart(2, '0')
-                          minutes = value.slice(1)
+                          hours = value.slice(0, 1).padStart(2, "0");
+                          minutes = value.slice(1);
                         }
                       }
                       // Handle "19:24" or "9:5" format (with colon)
                       else {
-                        const match = value.match(/^(\d{1,2}):(\d{1,2})$/)
+                        const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
                         if (match) {
-                          hours = match[1].padStart(2, '0')
-                          minutes = match[2].padStart(2, '0')
+                          hours = match[1].padStart(2, "0");
+                          minutes = match[2].padStart(2, "0");
                         }
                       }
 
                       // Validate and set
-                      if (hours && minutes && parseInt(hours) < 24 && parseInt(minutes) < 60) {
-                        setScheduledTime(`${hours}:${minutes}`)
-                        setTimeError('')
-                      } else if (value !== '') {
-                        setTimeError('Unesite vreme u formatu HH:MM')
+                      if (
+                        hours &&
+                        minutes &&
+                        parseInt(hours) < 24 &&
+                        parseInt(minutes) < 60
+                      ) {
+                        setScheduledTime(`${hours}:${minutes}`);
+                        setTimeError("");
+                      } else if (value !== "") {
+                        setTimeError("Unesite vreme u formatu HH:MM");
                       }
                     }}
                   />
                   {timeError && (
-                    <p className="absolute left-0 top-full text-sm text-destructive">{timeError}</p>
+                    <p className="absolute left-0 top-full text-sm text-destructive">
+                      {timeError}
+                    </p>
                   )}
                 </div>
               </div>
@@ -281,7 +302,10 @@ export function CampaignDialog({
           {/* Countdown Duration */}
           <div className="space-y-2">
             <Label>Odbrojavanje pre videa</Label>
-            <Select value={countdownSeconds} onValueChange={setCountdownSeconds}>
+            <Select
+              value={countdownSeconds}
+              onValueChange={setCountdownSeconds}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -301,14 +325,25 @@ export function CampaignDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             Otkaži
           </Button>
-          <Button onClick={handleSubmit} disabled={!selectedVideoId || isSubmitting}>
-            {isSubmitting ? 'Kreiranje...' : scheduleType === 'now' ? 'Pusti odmah' : 'Zakaži'}
+          <Button
+            onClick={handleSubmit}
+            disabled={!selectedVideoId || isSubmitting}
+          >
+            {isSubmitting
+              ? "Kreiranje..."
+              : scheduleType === "now"
+                ? "Pusti odmah"
+                : "Zakaži"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

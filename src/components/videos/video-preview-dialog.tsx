@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -5,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { useEffect, useRef } from "react";
 
 interface VideoPreviewDialogProps {
   video: {

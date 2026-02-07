@@ -1,11 +1,16 @@
-import { createFileRoute, Outlet, useMatches, useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
-import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
-import { AdminSidebar } from '~/components/admin-sidebar'
-import { authClient } from '~/lib/auth-client'
-import { Skeleton } from '~/components/ui/skeleton'
+import {
+  createFileRoute,
+  Outlet,
+  useMatches,
+  useNavigate,
+} from "@tanstack/react-router";
+import { useEffect } from "react";
+import { AdminSidebar } from "~/components/admin-sidebar";
+import { SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
+import { Skeleton } from "~/components/ui/skeleton";
+import { authClient } from "~/lib/auth-client";
 
-export const Route = createFileRoute('/admin')({
+export const Route = createFileRoute("/admin")({
   component: AdminLayout,
   pendingComponent: () => (
     <div className="flex min-h-screen w-full items-center justify-center">
@@ -15,37 +20,38 @@ export const Route = createFileRoute('/admin')({
       </div>
     </div>
   ),
-})
+});
 
 const pageNames: Record<string, string> = {
-  '/admin/': 'Kontrolna tabla',
-  '/admin': 'Kontrolna tabla',
-  '/admin/products': 'Proizvodi',
-  '/admin/products/': 'Proizvodi',
-  '/admin/products/$id': 'Uredi proizvod',
-  '/admin/products/new': 'Dodaj proizvod',
-  '/admin/pricing': 'Cene',
-  '/admin/pricing/': 'Cene',
-  '/admin/videos': 'Video - Biblioteka',
-  '/admin/videos/': 'Video - Biblioteka',
-  '/admin/videos/generacija': 'Video - Generacija',
-  '/admin/settings': 'Podešavanja',
-  '/admin/settings/': 'Podešavanja',
-}
+  "/admin/": "Kontrolna tabla",
+  "/admin": "Kontrolna tabla",
+  "/admin/products": "Proizvodi",
+  "/admin/products/": "Proizvodi",
+  "/admin/products/$id": "Uredi proizvod",
+  "/admin/products/new": "Dodaj proizvod",
+  "/admin/pricing": "Cene",
+  "/admin/pricing/": "Cene",
+  "/admin/videos": "Video - Biblioteka",
+  "/admin/videos/": "Video - Biblioteka",
+  "/admin/videos/generacija": "Video - Generacija",
+  "/admin/settings": "Podešavanja",
+  "/admin/settings/": "Podešavanja",
+};
 
 function AdminLayout() {
-  const matches = useMatches()
-  const currentRoute = matches[matches.length - 1]
-  const currentPage = pageNames[currentRoute.routeId] || pageNames[currentRoute.id] || 'Admin'
-  const navigate = useNavigate()
-  const { data: session, isPending } = authClient.useSession()
+  const matches = useMatches();
+  const currentRoute = matches[matches.length - 1];
+  const currentPage =
+    pageNames[currentRoute.routeId] || pageNames[currentRoute.id] || "Admin";
+  const navigate = useNavigate();
+  const { data: session, isPending } = authClient.useSession();
 
   // Client-side auth check
   useEffect(() => {
     if (!isPending && !session) {
-      navigate({ to: '/login' })
+      navigate({ to: "/login" });
     }
-  }, [session, isPending, navigate])
+  }, [session, isPending, navigate]);
 
   // Show loading while checking session
   if (isPending) {
@@ -56,12 +62,12 @@ function AdminLayout() {
           <Skeleton className="h-4 w-32" />
         </div>
       </div>
-    )
+    );
   }
 
   // Don't render if not authenticated
   if (!session) {
-    return null
+    return null;
   }
 
   return (
@@ -79,5 +85,5 @@ function AdminLayout() {
         <AdminSidebar />
       </div>
     </SidebarProvider>
-  )
+  );
 }

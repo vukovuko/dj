@@ -1,9 +1,8 @@
-import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
-import { authClient } from "~/lib/auth-client.ts";
 import { Button } from "~/components/ui/button.tsx";
-import { Input } from "~/components/ui/input.tsx";
 import {
   Card,
   CardContent,
@@ -11,7 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card.tsx";
-import { toast } from "sonner";
+import { Input } from "~/components/ui/input.tsx";
+import { authClient } from "~/lib/auth-client.ts";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,

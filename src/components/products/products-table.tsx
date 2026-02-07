@@ -1,27 +1,39 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table"
-import { Checkbox } from "~/components/ui/checkbox"
-import { Badge } from "~/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu"
-import { Button } from "~/components/ui/button"
-import { MoreVertical, Edit, ToggleLeft } from "lucide-react"
-import { Link } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router";
+import { Edit, MoreVertical, ToggleLeft } from "lucide-react";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
 
 interface Product {
-  id: string
-  name: string
-  currentPrice: string
-  status: "active" | "draft"
-  categoryName: string | null
+  id: string;
+  name: string;
+  currentPrice: string;
+  status: "active" | "draft";
+  categoryName: string | null;
 }
 
 interface ProductsTableProps {
-  products: Product[]
-  selectedIds: Set<string>
-  onSelectAll: (checked: boolean) => void
-  onSelectOne: (id: string, checked: boolean) => void
-  onToggleStatus: (id: string) => void
-  onBulkDelete?: () => void
-  onBulkDraft?: () => void
+  products: Product[];
+  selectedIds: Set<string>;
+  onSelectAll: (checked: boolean) => void;
+  onSelectOne: (id: string, checked: boolean) => void;
+  onToggleStatus: (id: string) => void;
+  onBulkDelete?: () => void;
+  onBulkDraft?: () => void;
 }
 
 export function ProductsTable({
@@ -33,8 +45,10 @@ export function ProductsTable({
   onBulkDelete,
   onBulkDraft,
 }: ProductsTableProps) {
-  const allSelected = products.length > 0 && products.every((p) => selectedIds.has(p.id))
-  const someSelected = products.some((p) => selectedIds.has(p.id)) && !allSelected
+  const allSelected =
+    products.length > 0 && products.every((p) => selectedIds.has(p.id));
+  const someSelected =
+    products.some((p) => selectedIds.has(p.id)) && !allSelected;
 
   return (
     <div className="border rounded-lg relative">
@@ -43,7 +57,9 @@ export function ProductsTable({
           <TableRow>
             <TableHead className="w-12">
               <Checkbox
-                checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                checked={
+                  allSelected ? true : someSelected ? "indeterminate" : false
+                }
                 onCheckedChange={onSelectAll}
                 aria-label="Izaberi sve"
               />
@@ -58,7 +74,10 @@ export function ProductsTable({
         <TableBody>
           {products.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+              <TableCell
+                colSpan={6}
+                className="text-center text-muted-foreground py-8"
+              >
                 Nema proizvoda
               </TableCell>
             </TableRow>
@@ -68,7 +87,9 @@ export function ProductsTable({
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedIds.has(product.id)}
-                    onCheckedChange={(checked) => onSelectOne(product.id, checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      onSelectOne(product.id, checked as boolean)
+                    }
                     aria-label={`Izaberi ${product.name}`}
                   />
                 </TableCell>
@@ -109,7 +130,11 @@ export function ProductsTable({
                     params={{ id: product.id }}
                     className="block py-2"
                   >
-                    <Badge variant={product.status === "active" ? "default" : "secondary"}>
+                    <Badge
+                      variant={
+                        product.status === "active" ? "default" : "secondary"
+                      }
+                    >
                       {product.status === "active" ? "Aktivan" : "Draft"}
                     </Badge>
                   </Link>
@@ -134,10 +159,12 @@ export function ProductsTable({
                           Uredi
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation()
-                        onToggleStatus(product.id)
-                      }}>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleStatus(product.id);
+                        }}
+                      >
                         <ToggleLeft className="mr-2 h-4 w-4" />
                         {product.status === "active" ? "Draftuj" : "Aktiviraj"}
                       </DropdownMenuItem>
@@ -155,7 +182,9 @@ export function ProductsTable({
         <div className="absolute top-0 left-0 right-0 bg-background border-b flex items-center justify-between px-4 h-[42px]">
           <div className="flex items-center gap-4">
             <Checkbox
-              checked={allSelected ? true : someSelected ? "indeterminate" : false}
+              checked={
+                allSelected ? true : someSelected ? "indeterminate" : false
+              }
               onCheckedChange={onSelectAll}
               aria-label="Izaberi sve"
             />
@@ -199,5 +228,5 @@ export function ProductsTable({
         }
       `}</style>
     </div>
-  )
+  );
 }

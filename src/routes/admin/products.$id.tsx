@@ -1,7 +1,17 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
-import { ProductForm, type ProductFormData } from "~/components/products/product-form"
-import { ProductPageHeader } from "~/components/products/product-page-header"
-import { Button } from "~/components/ui/button"
+import {
+  createFileRoute,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
+import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  ProductForm,
+  type ProductFormData,
+} from "~/components/products/product-form";
+import { ProductPageHeader } from "~/components/products/product-page-header";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,11 +19,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "~/components/ui/dialog"
-import { toast } from "sonner"
-import { getProductById, updateProduct, deleteProduct, getCategories } from "~/queries/products.server"
-import { useState } from "react"
-import { Trash2 } from "lucide-react"
+} from "~/components/ui/dialog";
+import {
+  deleteProduct,
+  getCategories,
+  getProductById,
+  updateProduct,
+} from "~/queries/products.server";
 
 export const Route = createFileRoute("/admin/products/$id")({
   component: EditProductPage,
@@ -21,20 +33,20 @@ export const Route = createFileRoute("/admin/products/$id")({
     const [product, categories] = await Promise.all([
       getProductById({ data: { id: params.id } }),
       getCategories(),
-    ])
-    return { product, categories }
+    ]);
+    return { product, categories };
   },
-})
+});
 
 function EditProductPage() {
-  const navigate = useNavigate()
-  const router = useRouter()
-  const { id } = Route.useParams()
-  const { product, categories } = Route.useLoaderData()
+  const navigate = useNavigate();
+  const router = useRouter();
+  const { id } = Route.useParams();
+  const { product, categories } = Route.useLoaderData();
 
-  const [currentName, setCurrentName] = useState(product.name)
-  const [showMobileDeleteDialog, setShowMobileDeleteDialog] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [currentName, setCurrentName] = useState(product.name);
+  const [showMobileDeleteDialog, setShowMobileDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const initialData: ProductFormData = {
     name: product.name,
@@ -43,7 +55,7 @@ function EditProductPage() {
     minPrice: Math.round(parseFloat(product.minPrice)),
     maxPrice: Math.round(parseFloat(product.maxPrice)),
     status: product.status,
-  }
+  };
 
   const handleSubmit = async (data: ProductFormData) => {
     try {
@@ -52,36 +64,36 @@ function EditProductPage() {
           id,
           ...data,
         },
-      })
+      });
 
-      setCurrentName(data.name)
-      toast.success("Proizvod je uspešno ažuriran!")
-      router.invalidate()
+      setCurrentName(data.name);
+      toast.success("Proizvod je uspešno ažuriran!");
+      router.invalidate();
     } catch (error) {
-      toast.error("Greška pri ažuriranju proizvoda")
-      throw error
+      toast.error("Greška pri ažuriranju proizvoda");
+      throw error;
     }
-  }
+  };
 
   const handleCancel = () => {
-    navigate({ to: "/admin/products" })
-  }
+    navigate({ to: "/admin/products" });
+  };
 
   const handleDelete = async () => {
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      await deleteProduct({ data: { id } })
+      await deleteProduct({ data: { id } });
 
-      toast.success("Proizvod je uspešno obrisan!")
-      setShowMobileDeleteDialog(false)
-      navigate({ to: "/admin/products" })
+      toast.success("Proizvod je uspešno obrisan!");
+      setShowMobileDeleteDialog(false);
+      navigate({ to: "/admin/products" });
     } catch (error) {
-      toast.error("Greška pri brisanju proizvoda")
-      throw error
+      toast.error("Greška pri brisanju proizvoda");
+      throw error;
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-3xl relative">
@@ -111,12 +123,16 @@ function EditProductPage() {
       </div>
 
       {/* Mobile Delete Confirmation Dialog */}
-      <Dialog open={showMobileDeleteDialog} onOpenChange={setShowMobileDeleteDialog}>
+      <Dialog
+        open={showMobileDeleteDialog}
+        onOpenChange={setShowMobileDeleteDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Obriši proizvod</DialogTitle>
             <DialogDescription>
-              Da li ste sigurni da želite da obrišete ovaj proizvod? Ova akcija se ne može poništiti.
+              Da li ste sigurni da želite da obrišete ovaj proizvod? Ova akcija
+              se ne može poništiti.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -140,5 +156,5 @@ function EditProductPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

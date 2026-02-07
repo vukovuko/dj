@@ -4,14 +4,14 @@
  */
 
 export interface PricingProduct {
-  currentPrice: number
-  minPrice: number
-  maxPrice: number
-  pricingMode: string
-  priceIncreasePercent: number
-  priceIncreaseRandomPercent: number
-  priceDecreasePercent: number
-  priceDecreaseRandomPercent: number
+  currentPrice: number;
+  minPrice: number;
+  maxPrice: number;
+  pricingMode: string;
+  priceIncreasePercent: number;
+  priceIncreaseRandomPercent: number;
+  priceDecreasePercent: number;
+  priceDecreaseRandomPercent: number;
 }
 
 /**
@@ -35,46 +35,43 @@ export function calculatePrice(
 ): number {
   // Step 0: Check if pricing is disabled
   if (product.pricingMode === "off") {
-    return product.currentPrice
+    return product.currentPrice;
   }
 
-  let newPrice: number
+  let newPrice: number;
 
   // Step 1 & 2: Check sales and determine direction
   if (salesThisWindow > 0) {
     // Product sold in this window - consider increasing price
     if (product.pricingMode === "down") {
-      return product.currentPrice // Down-only mode: don't increase
+      return product.currentPrice; // Down-only mode: don't increase
     }
 
     // Mode allows increase (up or full)
-    const randomVariance = Math.random() // 0.0 to 1.0
+    const randomVariance = Math.random(); // 0.0 to 1.0
     const totalIncreasePercent =
       product.priceIncreasePercent +
-      randomVariance * product.priceIncreaseRandomPercent
+      randomVariance * product.priceIncreaseRandomPercent;
 
-    newPrice = product.currentPrice * (1 + totalIncreasePercent / 100)
+    newPrice = product.currentPrice * (1 + totalIncreasePercent / 100);
   } else {
     // No sales in this window - consider decreasing price
     if (product.pricingMode === "up") {
-      return product.currentPrice // Up-only mode: don't decrease
+      return product.currentPrice; // Up-only mode: don't decrease
     }
 
     // Mode allows decrease (down or full)
-    const randomVariance = Math.random() // 0.0 to 1.0
+    const randomVariance = Math.random(); // 0.0 to 1.0
     const totalDecreasePercent =
       product.priceDecreasePercent +
-      randomVariance * product.priceDecreaseRandomPercent
+      randomVariance * product.priceDecreaseRandomPercent;
 
-    newPrice = product.currentPrice * (1 - totalDecreasePercent / 100)
+    newPrice = product.currentPrice * (1 - totalDecreasePercent / 100);
   }
 
   // Step 3: Apply bounds (min/max)
-  newPrice = Math.max(
-    product.minPrice,
-    Math.min(product.maxPrice, newPrice),
-  )
+  newPrice = Math.max(product.minPrice, Math.min(product.maxPrice, newPrice));
 
   // Round to integer (no decimals per requirements)
-  return Math.round(newPrice)
+  return Math.round(newPrice);
 }

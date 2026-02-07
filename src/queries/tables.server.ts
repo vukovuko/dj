@@ -1,20 +1,20 @@
-import { createServerFn } from '@tanstack/react-start'
-import { db } from '~/db'
-import { tables, tableOrders, products, categories } from '~/db/schema'
-import { eq, desc, sql, and, inArray } from 'drizzle-orm'
+import { createServerFn } from "@tanstack/react-start";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { db } from "~/db";
+import { categories, products, tableOrders, tables } from "~/db/schema";
 
 // Get all tables with pagination and search
-export const getTablesWithPagination = createServerFn({ method: 'GET' })
+export const getTablesWithPagination = createServerFn({ method: "GET" })
   .inputValidator((data: { search?: string; page: number }) => data)
   .handler(async ({ data }) => {
-    const search = data.search || ''
-    const page = data.page || 1
-    const limit = 25
-    const offset = (page - 1) * limit
+    const search = data.search || "";
+    const page = data.page || 1;
+    const limit = 25;
+    const offset = (page - 1) * limit;
 
     const whereCondition = search
-      ? sql`CAST(${tables.number} AS TEXT) ILIKE ${'%' + search + '%'}`
-      : undefined
+      ? sql`CAST(${tables.number} AS TEXT) ILIKE ${"%" + search + "%"}`
+      : undefined;
 
     const [totalResult, tablesList] = await Promise.all([
       db.select({ count: sql`COUNT(*)` }).from(tables).where(whereCondition),
@@ -33,31 +33,31 @@ export const getTablesWithPagination = createServerFn({ method: 'GET' })
         .orderBy(desc(tables.number))
         .limit(limit)
         .offset(offset),
-    ])
+    ]);
 
-    const total = Number(totalResult[0]?.count || 0)
-    const totalPages = Math.ceil(total / limit)
+    const total = Number(totalResult[0]?.count || 0);
+    const totalPages = Math.ceil(total / limit);
 
     return {
       tables: tablesList,
       total,
       totalPages,
       currentPage: page,
-    }
-  })
+    };
+  });
 
 // Get single table with orders
-export const getTableById = createServerFn({ method: 'GET' })
+export const getTableById = createServerFn({ method: "GET" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
     const [table] = await db
       .select()
       .from(tables)
       .where(eq(tables.id, data.id))
-      .limit(1)
+      .limit(1);
 
     if (!table) {
-      throw new Error('Table not found')
+      throw new Error("Table not found");
     }
 
     const orders = await db
@@ -76,20 +76,20 @@ export const getTableById = createServerFn({ method: 'GET' })
       .innerJoin(products, eq(tableOrders.productId, products.id))
       .innerJoin(categories, eq(products.categoryId, categories.id))
       .where(eq(tableOrders.tableId, data.id))
-      .orderBy(desc(tableOrders.createdAt))
+      .orderBy(desc(tableOrders.createdAt));
 
     // Calculate revenue
     const totalRevenue = orders.reduce((sum, order) => {
-      const price = parseFloat(order.orderedPrice)
-      return sum + price * order.quantity
-    }, 0)
+      const price = parseFloat(order.orderedPrice);
+      return sum + price * order.quantity;
+    }, 0);
 
     const paidRevenue = orders
-      .filter((o) => o.paymentStatus === 'paid')
+      .filter((o) => o.paymentStatus === "paid")
       .reduce((sum, order) => {
-        const price = parseFloat(order.orderedPrice)
-        return sum + price * order.quantity
-      }, 0)
+        const price = parseFloat(order.orderedPrice);
+        return sum + price * order.quantity;
+      }, 0);
 
     return {
       table,
@@ -97,11 +97,11 @@ export const getTableById = createServerFn({ method: 'GET' })
       totalRevenue,
       paidRevenue,
       unpaidRevenue: totalRevenue - paidRevenue,
-    }
-  })
+    };
+  });
 
 // Create new table
-export const createTable = createServerFn({ method: 'POST' })
+export const createTable = createServerFn({ method: "POST" })
   .inputValidator((data: { number: number }) => data)
   .handler(async ({ data }) => {
     // Check if table with this number already exists
@@ -109,40 +109,45 @@ export const createTable = createServerFn({ method: 'POST' })
       .select()
       .from(tables)
       .where(eq(tables.number, data.number))
-      .limit(1)
+      .limit(1);
 
     if (existing) {
-      throw new Error(`Sto broj ${data.number} već postoji`)
+      throw new Error(`Sto broj ${data.number} već postoji`);
     }
 
     const [created] = await db
       .insert(tables)
       .values({
         number: data.number,
-        status: 'active',
+        status: "active",
       })
-      .returning()
+      .returning();
 
-    return created
-  })
+    return created;
+  });
 
 // Update table
-export const updateTable = createServerFn({ method: 'POST' })
-  .inputValidator((data: { id: string; number: number; status: 'active' | 'inactive' }) => data)
+export const updateTable = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: { id: string; number: number; status: "active" | "inactive" }) =>
+      data,
+  )
   .handler(async ({ data }) => {
     // Check if another table with this number already exists
     const [existing] = await db
       .select()
       .from(tables)
-      .where(and(
-        eq(tables.number, data.number),
-        // Exclude the current table being updated
-        sql`${tables.id} != ${data.id}`
-      ))
-      .limit(1)
+      .where(
+        and(
+          eq(tables.number, data.number),
+          // Exclude the current table being updated
+          sql`${tables.id} != ${data.id}`,
+        ),
+      )
+      .limit(1);
 
     if (existing) {
-      throw new Error(`Sto broj ${data.number} već postoji`)
+      throw new Error(`Sto broj ${data.number} već postoji`);
     }
 
     const [updated] = await db
@@ -153,55 +158,62 @@ export const updateTable = createServerFn({ method: 'POST' })
         updatedAt: new Date(),
       })
       .where(eq(tables.id, data.id))
-      .returning()
+      .returning();
 
-    return updated
-  })
+    return updated;
+  });
 
 // Delete table
-export const deleteTable = createServerFn({ method: 'POST' })
+export const deleteTable = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
-    const result = await db.delete(tables).where(eq(tables.id, data.id)).returning()
-    return result[0]
-  })
+    const result = await db
+      .delete(tables)
+      .where(eq(tables.id, data.id))
+      .returning();
+    return result[0];
+  });
 
 // Bulk delete tables
-export const bulkDeleteTables = createServerFn({ method: 'POST' })
+export const bulkDeleteTables = createServerFn({ method: "POST" })
   .inputValidator((data: { ids: string[] }) => data)
   .handler(async ({ data }) => {
     const result = await db
       .delete(tables)
       .where(inArray(tables.id, data.ids))
-      .returning()
-    return result
-  })
+      .returning();
+    return result;
+  });
 
 // Add product to table order
-export const addProductToTable = createServerFn({ method: 'POST' })
-  .inputValidator((data: { tableId: string; productId: string; quantity: number }) => data)
+export const addProductToTable = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: { tableId: string; productId: string; quantity: number }) => data,
+  )
   .handler(async ({ data }) => {
     // Fetch the product to get current price
     const [product] = await db
       .select()
       .from(products)
       .where(eq(products.id, data.productId))
-      .limit(1)
+      .limit(1);
 
     if (!product) {
-      throw new Error('Product not found')
+      throw new Error("Product not found");
     }
 
     // Check if product with same price already exists for this table
     const [existing] = await db
       .select()
       .from(tableOrders)
-      .where(and(
-        eq(tableOrders.tableId, data.tableId),
-        eq(tableOrders.productId, data.productId),
-        eq(tableOrders.orderedPrice, product.currentPrice)
-      ))
-      .limit(1)
+      .where(
+        and(
+          eq(tableOrders.tableId, data.tableId),
+          eq(tableOrders.productId, data.productId),
+          eq(tableOrders.orderedPrice, product.currentPrice),
+        ),
+      )
+      .limit(1);
 
     if (existing) {
       // Update quantity (keep original price)
@@ -212,7 +224,7 @@ export const addProductToTable = createServerFn({ method: 'POST' })
           updatedAt: new Date(),
         })
         .where(eq(tableOrders.id, existing.id))
-        .returning()
+        .returning();
 
       // Increment product salesCount
       await db
@@ -221,9 +233,9 @@ export const addProductToTable = createServerFn({ method: 'POST' })
           salesCount: sql`${products.salesCount} + ${data.quantity}`,
           updatedAt: new Date(),
         })
-        .where(eq(products.id, data.productId))
+        .where(eq(products.id, data.productId));
 
-      return updated
+      return updated;
     } else {
       // Create new order with current product price
       const [created] = await db
@@ -233,9 +245,9 @@ export const addProductToTable = createServerFn({ method: 'POST' })
           productId: data.productId,
           quantity: data.quantity,
           orderedPrice: product.currentPrice,
-          paymentStatus: 'unpaid',
+          paymentStatus: "unpaid",
         })
-        .returning()
+        .returning();
 
       // Increment product salesCount
       await db
@@ -244,14 +256,14 @@ export const addProductToTable = createServerFn({ method: 'POST' })
           salesCount: sql`${products.salesCount} + ${data.quantity}`,
           updatedAt: new Date(),
         })
-        .where(eq(products.id, data.productId))
+        .where(eq(products.id, data.productId));
 
-      return created
+      return created;
     }
-  })
+  });
 
 // Update order quantity
-export const updateOrderQuantity = createServerFn({ method: 'POST' })
+export const updateOrderQuantity = createServerFn({ method: "POST" })
   .inputValidator((data: { orderId: string; quantity: number }) => data)
   .handler(async ({ data }) => {
     // Get the existing order to know the old quantity and productId
@@ -259,17 +271,20 @@ export const updateOrderQuantity = createServerFn({ method: 'POST' })
       .select()
       .from(tableOrders)
       .where(eq(tableOrders.id, data.orderId))
-      .limit(1)
+      .limit(1);
 
     if (!existingOrder) {
-      throw new Error('Order not found')
+      throw new Error("Order not found");
     }
 
-    const quantityDelta = data.quantity - existingOrder.quantity
+    const quantityDelta = data.quantity - existingOrder.quantity;
 
     if (data.quantity <= 0) {
       // Delete if quantity is 0 or less
-      const result = await db.delete(tableOrders).where(eq(tableOrders.id, data.orderId)).returning()
+      const result = await db
+        .delete(tableOrders)
+        .where(eq(tableOrders.id, data.orderId))
+        .returning();
 
       // Decrement product salesCount by the old quantity
       await db
@@ -278,9 +293,9 @@ export const updateOrderQuantity = createServerFn({ method: 'POST' })
           salesCount: sql`${products.salesCount} - ${existingOrder.quantity}`,
           updatedAt: new Date(),
         })
-        .where(eq(products.id, existingOrder.productId))
+        .where(eq(products.id, existingOrder.productId));
 
-      return result[0]
+      return result[0];
     }
 
     const [updated] = await db
@@ -290,7 +305,7 @@ export const updateOrderQuantity = createServerFn({ method: 'POST' })
         updatedAt: new Date(),
       })
       .where(eq(tableOrders.id, data.orderId))
-      .returning()
+      .returning();
 
     // Update product salesCount by the delta
     if (quantityDelta !== 0) {
@@ -300,15 +315,17 @@ export const updateOrderQuantity = createServerFn({ method: 'POST' })
           salesCount: sql`${products.salesCount} + ${quantityDelta}`,
           updatedAt: new Date(),
         })
-        .where(eq(products.id, existingOrder.productId))
+        .where(eq(products.id, existingOrder.productId));
     }
 
-    return updated
-  })
+    return updated;
+  });
 
 // Toggle payment status for single order
-export const toggleOrderPaymentStatus = createServerFn({ method: 'POST' })
-  .inputValidator((data: { orderId: string; status: 'paid' | 'unpaid' }) => data)
+export const toggleOrderPaymentStatus = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: { orderId: string; status: "paid" | "unpaid" }) => data,
+  )
   .handler(async ({ data }) => {
     const [updated] = await db
       .update(tableOrders)
@@ -317,14 +334,16 @@ export const toggleOrderPaymentStatus = createServerFn({ method: 'POST' })
         updatedAt: new Date(),
       })
       .where(eq(tableOrders.id, data.orderId))
-      .returning()
+      .returning();
 
-    return updated
-  })
+    return updated;
+  });
 
 // Bulk toggle payment status
-export const bulkToggleOrderPaymentStatus = createServerFn({ method: 'POST' })
-  .inputValidator((data: { orderIds: string[]; status: 'paid' | 'unpaid' }) => data)
+export const bulkToggleOrderPaymentStatus = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: { orderIds: string[]; status: "paid" | "unpaid" }) => data,
+  )
   .handler(async ({ data }) => {
     const result = await db
       .update(tableOrders)
@@ -333,13 +352,13 @@ export const bulkToggleOrderPaymentStatus = createServerFn({ method: 'POST' })
         updatedAt: new Date(),
       })
       .where(inArray(tableOrders.id, data.orderIds))
-      .returning()
+      .returning();
 
-    return result
-  })
+    return result;
+  });
 
 // Delete order
-export const deleteTableOrder = createServerFn({ method: 'POST' })
+export const deleteTableOrder = createServerFn({ method: "POST" })
   .inputValidator((data: { orderId: string }) => data)
   .handler(async ({ data }) => {
     // Get the order to know the productId and quantity
@@ -347,13 +366,16 @@ export const deleteTableOrder = createServerFn({ method: 'POST' })
       .select()
       .from(tableOrders)
       .where(eq(tableOrders.id, data.orderId))
-      .limit(1)
+      .limit(1);
 
     if (!order) {
-      throw new Error('Order not found')
+      throw new Error("Order not found");
     }
 
-    const result = await db.delete(tableOrders).where(eq(tableOrders.id, data.orderId)).returning()
+    const result = await db
+      .delete(tableOrders)
+      .where(eq(tableOrders.id, data.orderId))
+      .returning();
 
     // Decrement product salesCount
     await db
@@ -362,26 +384,26 @@ export const deleteTableOrder = createServerFn({ method: 'POST' })
         salesCount: sql`${products.salesCount} - ${order.quantity}`,
         updatedAt: new Date(),
       })
-      .where(eq(products.id, order.productId))
+      .where(eq(products.id, order.productId));
 
-    return result[0]
-  })
+    return result[0];
+  });
 
 // Clear all orders for table
-export const clearTableOrders = createServerFn({ method: 'POST' })
+export const clearTableOrders = createServerFn({ method: "POST" })
   .inputValidator((data: { tableId: string }) => data)
   .handler(async ({ data }) => {
     // Get all orders for this table to update salesCount
     const orders = await db
       .select()
       .from(tableOrders)
-      .where(eq(tableOrders.tableId, data.tableId))
+      .where(eq(tableOrders.tableId, data.tableId));
 
     // Delete all orders
     const result = await db
       .delete(tableOrders)
       .where(eq(tableOrders.tableId, data.tableId))
-      .returning()
+      .returning();
 
     // Decrement salesCount for each product
     for (const order of orders) {
@@ -391,25 +413,25 @@ export const clearTableOrders = createServerFn({ method: 'POST' })
           salesCount: sql`${products.salesCount} - ${order.quantity}`,
           updatedAt: new Date(),
         })
-        .where(eq(products.id, order.productId))
+        .where(eq(products.id, order.productId));
     }
 
-    return result
-  })
+    return result;
+  });
 
 // Get all active products for adding to table
-export const getActiveProducts = createServerFn({ method: 'GET' })
+export const getActiveProducts = createServerFn({ method: "GET" })
   .inputValidator((data: { search?: string }) => data)
   .handler(async ({ data }) => {
-    const search = data.search || ''
+    const search = data.search || "";
 
     // Build where condition with unaccent for smart search (ä → a, ö → o, etc.)
-    let whereCondition = eq(products.status, 'active')
+    let whereCondition = eq(products.status, "active");
     if (search) {
       whereCondition = and(
         whereCondition,
-        sql`unaccent(${products.name}) ILIKE unaccent('%' || ${search} || '%')`
-      )!
+        sql`unaccent(${products.name}) ILIKE unaccent('%' || ${search} || '%')`,
+      )!;
     }
 
     const result = await db
@@ -422,7 +444,7 @@ export const getActiveProducts = createServerFn({ method: 'GET' })
       .from(products)
       .innerJoin(categories, eq(products.categoryId, categories.id))
       .where(whereCondition)
-      .orderBy(products.name)
+      .orderBy(products.name);
 
-    return result
-  })
+    return result;
+  });

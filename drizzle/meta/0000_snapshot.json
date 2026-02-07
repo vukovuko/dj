@@ -95,12 +95,8 @@
           "name": "account_userId_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -156,9 +152,7 @@
         "categories_slug_unique": {
           "name": "categories_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -209,12 +203,8 @@
           "name": "priceHistory_productId_products_id_fk",
           "tableFrom": "priceHistory",
           "tableTo": "products",
-          "columnsFrom": [
-            "productId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["productId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -364,12 +354,8 @@
           "name": "products_categoryId_categories_id_fk",
           "tableFrom": "products",
           "tableTo": "categories",
-          "columnsFrom": [
-            "categoryId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["categoryId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -441,12 +427,8 @@
           "name": "session_userId_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -456,9 +438,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -503,9 +483,7 @@
         "settings_key_unique": {
           "name": "settings_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         }
       },
       "policies": {},
@@ -576,12 +554,8 @@
           "name": "tableOrders_tableId_tables_id_fk",
           "tableFrom": "tableOrders",
           "tableTo": "tables",
-          "columnsFrom": [
-            "tableId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tableId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -589,12 +563,8 @@
           "name": "tableOrders_productId_products_id_fk",
           "tableFrom": "tableOrders",
           "tableTo": "products",
-          "columnsFrom": [
-            "productId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["productId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -652,9 +622,7 @@
         "tables_number_unique": {
           "name": "tables_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "number"
-          ]
+          "columns": ["number"]
         }
       },
       "policies": {},
@@ -738,16 +706,12 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "user_username_unique": {
           "name": "user_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -849,12 +813,8 @@
           "name": "videoGenerationChats_userId_user_id_fk",
           "tableFrom": "videoGenerationChats",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -864,9 +824,7 @@
         "videoGenerationChats_userId_unique": {
           "name": "videoGenerationChats_userId_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "userId"
-          ]
+          "columns": ["userId"]
         }
       },
       "policies": {},
@@ -968,12 +926,8 @@
           "name": "videos_createdBy_user_id_fk",
           "tableFrom": "videos",
           "tableTo": "user",
-          "columnsFrom": [
-            "createdBy"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["createdBy"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -989,61 +943,37 @@
     "public.aspect_ratio": {
       "name": "aspect_ratio",
       "schema": "public",
-      "values": [
-        "landscape",
-        "portrait"
-      ]
+      "values": ["landscape", "portrait"]
     },
     "public.order_status": {
       "name": "order_status",
       "schema": "public",
-      "values": [
-        "paid",
-        "unpaid"
-      ]
+      "values": ["paid", "unpaid"]
     },
     "public.product_status": {
       "name": "product_status",
       "schema": "public",
-      "values": [
-        "active",
-        "draft"
-      ]
+      "values": ["active", "draft"]
     },
     "public.role": {
       "name": "role",
       "schema": "public",
-      "values": [
-        "superadmin",
-        "admin",
-        "staff"
-      ]
+      "values": ["superadmin", "admin", "staff"]
     },
     "public.table_status": {
       "name": "table_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive"
-      ]
+      "values": ["active", "inactive"]
     },
     "public.trend": {
       "name": "trend",
       "schema": "public",
-      "values": [
-        "up",
-        "down"
-      ]
+      "values": ["up", "down"]
     },
     "public.video_status": {
       "name": "video_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "generating",
-        "ready",
-        "failed"
-      ]
+      "values": ["pending", "generating", "ready", "failed"]
     }
   },
   "schemas": {},

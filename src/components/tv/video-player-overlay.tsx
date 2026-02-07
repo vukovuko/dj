@@ -3,12 +3,12 @@
  * Plays video over the price display
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef } from "react";
 
 interface VideoPlayerOverlayProps {
-  videoUrl: string
-  videoName: string
-  onEnded: () => void
+  videoUrl: string;
+  videoName: string;
+  onEnded: () => void;
 }
 
 export function VideoPlayerOverlay({
@@ -16,16 +16,16 @@ export function VideoPlayerOverlay({
   videoName,
   onEnded,
 }: VideoPlayerOverlayProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     // Auto-play when component mounts
     if (videoRef.current) {
       videoRef.current.play().catch((error) => {
-        console.error('Failed to auto-play video:', error)
-      })
+        console.error("Failed to auto-play video:", error);
+      });
     }
-  }, [videoUrl])
+  }, [videoUrl]);
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
@@ -38,9 +38,9 @@ export function VideoPlayerOverlay({
         playsInline
         onEnded={onEnded}
         onError={(e) => {
-          console.error('Video playback error:', e)
+          console.error("Video playback error:", e);
           // Call onEnded to move to next campaign if video fails
-          onEnded()
+          onEnded();
         }}
       />
 
@@ -49,5 +49,5 @@ export function VideoPlayerOverlay({
         <p className="text-2xl text-white font-medium">{videoName}</p>
       </div>
     </div>
-  )
+  );
 }

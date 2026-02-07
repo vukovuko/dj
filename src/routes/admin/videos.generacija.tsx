@@ -1,15 +1,19 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { GenerationChat } from "~/components/videos/generation-chat";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { GenerationChat } from "~/components/videos/generation-chat";
 import {
-  getUserChatHistory,
-  saveChatMessage,
-  generateVideo,
-  getVideoById,
-} from "~/queries/videos.server";
+  durationToSeconds,
+  type LumaModel,
+  type VideoDuration,
+} from "~/config/luma-models";
 import { authClient } from "~/lib/auth-client";
-import { durationToSeconds, type LumaModel, type VideoDuration } from "~/config/luma-models";
+import {
+  generateVideo,
+  getUserChatHistory,
+  getVideoById,
+  saveChatMessage,
+} from "~/queries/videos.server";
 
 // ========== ROUTE ==========
 
@@ -108,7 +112,11 @@ function GeneracijaPage() {
     return () => clearInterval(pollInterval);
   }, [pendingVideoId, session, router]);
 
-  const handleSendMessage = async (content: string, model: LumaModel, duration: VideoDuration) => {
+  const handleSendMessage = async (
+    content: string,
+    model: LumaModel,
+    duration: VideoDuration,
+  ) => {
     if (!session?.user?.id) {
       toast.error("Niste prijavljeni");
       return;

@@ -1,4 +1,22 @@
+import { useNavigate } from "@tanstack/react-router";
+import { Eye, Video } from "lucide-react";
 import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "~/components/ui/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import {
   Conversation,
   ConversationContent,
@@ -11,34 +29,16 @@ import {
 } from "~/components/ui/shadcn-io/ai/message";
 import {
   PromptInput,
+  PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
-  PromptInputSubmit,
 } from "~/components/ui/shadcn-io/ai/prompt-input";
-import { Button } from "~/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Video, Eye } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "~/components/ui/empty";
-import {
-  LUMA_MODELS,
-  DEFAULT_MODEL,
   DEFAULT_DURATION,
+  DEFAULT_MODEL,
   getSupportedDurations,
+  LUMA_MODELS,
   type LumaModel,
   type VideoDuration,
 } from "~/config/luma-models";
@@ -158,7 +158,7 @@ export function GenerationChat({
               <Select value={selectedModel} onValueChange={handleModelChange}>
                 <SelectTrigger className="w-32 h-8 text-xs">
                   <SelectValue>
-                    {LUMA_MODELS.find(m => m.id === selectedModel)?.name}
+                    {LUMA_MODELS.find((m) => m.id === selectedModel)?.name}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -169,8 +169,12 @@ export function GenerationChat({
                       className="cursor-pointer"
                     >
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium">{model.name}</span>
-                        <span className="text-xs text-muted-foreground">{model.description}</span>
+                        <span className="text-sm font-medium">
+                          {model.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {model.description}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}

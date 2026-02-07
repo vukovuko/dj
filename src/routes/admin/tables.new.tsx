@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { Button } from "~/components/ui/button";
-import { NumberInput } from "~/components/ui/number-input";
-import { Label } from "~/components/ui/label";
-import { Card } from "~/components/ui/card";
-import { Separator } from "~/components/ui/separator";
-import { toast } from "sonner";
-import { createTable, getTablesWithPagination } from "~/queries/tables.server";
 import { ChevronLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import { Label } from "~/components/ui/label";
+import { NumberInput } from "~/components/ui/number-input";
+import { Separator } from "~/components/ui/separator";
+import { createTable, getTablesWithPagination } from "~/queries/tables.server";
 
 export const Route = createFileRoute("/admin/tables/new")({
   component: CreateTablePage,
@@ -130,7 +130,9 @@ function CreateTablePage() {
                 }
               />
               {errors.number && (
-                <p className="absolute left-0 top-full text-sm text-destructive">{errors.number}</p>
+                <p className="absolute left-0 top-full text-sm text-destructive">
+                  {errors.number}
+                </p>
               )}
             </div>
           </div>

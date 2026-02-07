@@ -6,55 +6,62 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "~/components/ui/pagination"
+} from "~/components/ui/pagination";
 
 interface ProductsPaginationProps {
-  currentPage: number
-  totalPages: number
-  total: number
-  onPageChange: (page: number) => void
-  limit?: number
-  itemType?: string
+  currentPage: number;
+  totalPages: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  limit?: number;
+  itemType?: string;
 }
 
-export function ProductsPagination({ currentPage, totalPages, total, onPageChange, limit = 25, itemType = 'proizvoda' }: ProductsPaginationProps) {
-  const startItem = (currentPage - 1) * limit + 1
-  const endItem = Math.min(currentPage * limit, total)
+export function ProductsPagination({
+  currentPage,
+  totalPages,
+  total,
+  onPageChange,
+  limit = 25,
+  itemType = "proizvoda",
+}: ProductsPaginationProps) {
+  const startItem = (currentPage - 1) * limit + 1;
+  const endItem = Math.min(currentPage * limit, total);
 
   // Generate page numbers to show
   const getPageNumbers = () => {
-    const delta = 2 // Number of pages to show on each side of current page
-    const range: (number | "ellipsis")[] = []
-    const left = Math.max(2, currentPage - delta)
-    const right = Math.min(totalPages - 1, currentPage + delta)
+    const delta = 2; // Number of pages to show on each side of current page
+    const range: (number | "ellipsis")[] = [];
+    const left = Math.max(2, currentPage - delta);
+    const right = Math.min(totalPages - 1, currentPage + delta);
 
     // Always show first page
-    range.push(1)
+    range.push(1);
 
     // Show ellipsis if there's a gap
     if (left > 2) {
-      range.push("ellipsis")
+      range.push("ellipsis");
     }
 
     // Show pages around current page
     for (let i = left; i <= right; i++) {
-      range.push(i)
+      range.push(i);
     }
 
     // Show ellipsis if there's a gap
     if (right < totalPages - 1) {
-      range.push("ellipsis")
+      range.push("ellipsis");
     }
 
     // Always show last page (if more than 1 page)
     if (totalPages > 1) {
-      range.push(totalPages)
+      range.push(totalPages);
     }
 
-    return range
-  }
+    return range;
+  };
 
-  const pageNumbers = getPageNumbers()
+  const pageNumbers = getPageNumbers();
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -67,7 +74,11 @@ export function ProductsPagination({ currentPage, totalPages, total, onPageChang
           <PaginationItem>
             <PaginationPrevious
               onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
-              className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              className={
+                currentPage === 1
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
             />
           </PaginationItem>
 
@@ -89,12 +100,18 @@ export function ProductsPagination({ currentPage, totalPages, total, onPageChang
 
           <PaginationItem>
             <PaginationNext
-              onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
-              className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              onClick={() =>
+                currentPage < totalPages && onPageChange(currentPage + 1)
+              }
+              className={
+                currentPage === totalPages
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
             />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
     </div>
-  )
+  );
 }

@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Package, Tag, Video, WandSparkles, Settings, Coffee } from "lucide-react";
+import {
+  Coffee,
+  Package,
+  Settings,
+  Tag,
+  Video,
+  WandSparkles,
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -46,7 +53,7 @@ const navigationCards = [
 
 function AdminDashboard() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold mb-2">Kontrolna tabla</h1>
         <p className="text-sm text-muted-foreground">Pregled sistema</p>

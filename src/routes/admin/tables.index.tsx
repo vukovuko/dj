@@ -1,118 +1,141 @@
-import { createFileRoute, useRouter, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
-import { z } from 'zod'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table'
-import { Badge } from '~/components/ui/badge'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle, AlertDialogTrigger } from '~/components/ui/alert-dialog'
-import { ProductsPagination } from '~/components/products/pagination'
-import { Checkbox } from '~/components/ui/checkbox'
-import { Trash2, Edit2, Plus, Search } from 'lucide-react'
-import { toast } from 'sonner'
-import { getTablesWithPagination, deleteTable, bulkDeleteTables } from '~/queries/tables.server'
+import {
+  createFileRoute,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
+import { Edit2, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { ProductsPagination } from "~/components/products/pagination";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Input } from "~/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
+import {
+  bulkDeleteTables,
+  deleteTable,
+  getTablesWithPagination,
+} from "~/queries/tables.server";
 
 const tablesSearchSchema = z.object({
-  search: z.string().optional().default(''),
+  search: z.string().optional().default(""),
   page: z.coerce.number().optional().default(1),
-})
+});
 
-export const Route = createFileRoute('/admin/tables/')({
+export const Route = createFileRoute("/admin/tables/")({
   validateSearch: tablesSearchSchema,
   component: TablesPage,
   loaderDeps: ({ search }) => ({ search: search.search, page: search.page }),
   loader: async ({ deps }) => {
     return await getTablesWithPagination({
       data: { search: deps.search, page: deps.page },
-    })
+    });
   },
-})
+});
 
 function TablesPage() {
-  const loaderData = Route.useLoaderData()
-  const router = useRouter()
-  const searchParams = Route.useSearch()
-  const navigate = useNavigate()
+  const loaderData = Route.useLoaderData();
+  const router = useRouter();
+  const searchParams = Route.useSearch();
+  const navigate = useNavigate();
 
-  const [searchInput, setSearchInput] = useState(searchParams.search)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [searchInput, setSearchInput] = useState(searchParams.search);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchInput !== searchParams.search) {
         navigate({
-          to: '.',
+          to: ".",
           search: (prev) => ({ ...prev, search: searchInput, page: 1 }),
-        })
+        });
       }
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchInput, navigate, searchParams.search])
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput, navigate, searchParams.search]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(loaderData.tables.map((t) => t.id)))
+      setSelectedIds(new Set(loaderData.tables.map((t) => t.id)));
     } else {
-      setSelectedIds(new Set())
+      setSelectedIds(new Set());
     }
-  }
+  };
 
   const handleSelectTable = (id: string, checked: boolean) => {
-    const newSelected = new Set(selectedIds)
+    const newSelected = new Set(selectedIds);
     if (checked) {
-      newSelected.add(id)
+      newSelected.add(id);
     } else {
-      newSelected.delete(id)
+      newSelected.delete(id);
     }
-    setSelectedIds(newSelected)
-  }
+    setSelectedIds(newSelected);
+  };
 
   const handleDelete = async (id: string) => {
     try {
-      setIsDeleting(true)
-      await deleteTable({ data: { id } })
-      router.invalidate()
-      toast.success('Sto je obrisano!')
+      setIsDeleting(true);
+      await deleteTable({ data: { id } });
+      router.invalidate();
+      toast.success("Sto je obrisano!");
     } catch (error) {
-      toast.error('Greška pri brisanju stola')
+      toast.error("Greška pri brisanju stola");
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   const handleBulkDelete = async () => {
     try {
-      setIsDeleting(true)
-      await bulkDeleteTables({ data: { ids: Array.from(selectedIds) } })
-      router.invalidate()
-      setSelectedIds(new Set())
-      toast.success('Stolovi su obrisani!')
+      setIsDeleting(true);
+      await bulkDeleteTables({ data: { ids: Array.from(selectedIds) } });
+      router.invalidate();
+      setSelectedIds(new Set());
+      toast.success("Stolovi su obrisani!");
     } catch (error) {
-      toast.error('Greška pri brisanju stolova')
+      toast.error("Greška pri brisanju stolova");
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-1">Stolovi</h1>
-          <p className="text-sm text-muted-foreground">Upravljajte stolovima i narudžbinama</p>
+          <p className="text-sm text-muted-foreground">
+            Upravljajte stolovima i narudžbinama
+          </p>
         </div>
-        <Button
-          onClick={() => navigate({ to: '/admin/tables/new' })}
-        >
+        <Button onClick={() => navigate({ to: "/admin/tables/new" })}>
           <Plus className="w-4 h-4 mr-2" />
           Novi sto
         </Button>
       </div>
 
       {/* Search */}
-      <div className="relative mb-4 max-w-sm">
+      <div className="relative mb-4 w-full sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           type="text"
@@ -130,7 +153,14 @@ function TablesPage() {
             <TableRow>
               <TableHead className="w-12">
                 <Checkbox
-                  checked={selectedIds.size === loaderData.tables.length && loaderData.tables.length > 0 ? true : selectedIds.size > 0 ? "indeterminate" : false}
+                  checked={
+                    selectedIds.size === loaderData.tables.length &&
+                    loaderData.tables.length > 0
+                      ? true
+                      : selectedIds.size > 0
+                        ? "indeterminate"
+                        : false
+                  }
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
@@ -143,7 +173,10 @@ function TablesPage() {
           <TableBody>
             {loaderData.tables.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground py-8"
+                >
                   Nema stolova
                 </TableCell>
               </TableRow>
@@ -153,27 +186,39 @@ function TablesPage() {
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedIds.has(table.id)}
-                      onCheckedChange={(checked) => handleSelectTable(table.id, checked as boolean)}
+                      onCheckedChange={(checked) =>
+                        handleSelectTable(table.id, checked as boolean)
+                      }
                     />
                   </TableCell>
                   <TableCell
                     className="font-medium cursor-pointer hover:underline"
-                    onClick={() => navigate({ to: `/admin/tables/${table.id}` })}
+                    onClick={() =>
+                      navigate({ to: `/admin/tables/${table.id}` })
+                    }
                   >
                     #{table.number}
                   </TableCell>
                   <TableCell
                     className="cursor-pointer text-sm text-muted-foreground"
-                    onClick={() => navigate({ to: `/admin/tables/${table.id}` })}
+                    onClick={() =>
+                      navigate({ to: `/admin/tables/${table.id}` })
+                    }
                   >
                     {(table as any).kupljeno || 0} kom.
                   </TableCell>
                   <TableCell
                     className="cursor-pointer"
-                    onClick={() => navigate({ to: `/admin/tables/${table.id}` })}
+                    onClick={() =>
+                      navigate({ to: `/admin/tables/${table.id}` })
+                    }
                   >
-                    <Badge variant={table.status === 'active' ? 'default' : 'secondary'}>
-                      {table.status === 'active' ? 'Aktivan' : 'Neaktivan'}
+                    <Badge
+                      variant={
+                        table.status === "active" ? "default" : "secondary"
+                      }
+                    >
+                      {table.status === "active" ? "Aktivan" : "Neaktivan"}
                     </Badge>
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -190,7 +235,8 @@ function TablesPage() {
                       <AlertDialogContent>
                         <AlertDialogTitle>Obriši sto?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Sigurno želite da obrišete sto #{table.number}? Ovo će obrisati i sve narudžbine za ovaj sto.
+                          Sigurno želite da obrišete sto #{table.number}? Ovo će
+                          obrisati i sve narudžbine za ovaj sto.
                         </AlertDialogDescription>
                         <div className="flex justify-end gap-2">
                           <AlertDialogCancel>Otkaži</AlertDialogCancel>
@@ -216,7 +262,14 @@ function TablesPage() {
           <div className="absolute top-0 left-0 right-0 bg-background border-b flex items-center justify-between px-4 h-[42px]">
             <div className="flex items-center gap-4">
               <Checkbox
-                checked={selectedIds.size === loaderData.tables.length && loaderData.tables.length > 0 ? true : selectedIds.size > 0 ? "indeterminate" : false}
+                checked={
+                  selectedIds.size === loaderData.tables.length &&
+                  loaderData.tables.length > 0
+                    ? true
+                    : selectedIds.size > 0
+                      ? "indeterminate"
+                      : false
+                }
                 onCheckedChange={handleSelectAll}
               />
               <span className="text-sm font-normal">
@@ -245,7 +298,8 @@ function TablesPage() {
                 <AlertDialogContent>
                   <AlertDialogTitle>Obriši stolove?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Sigurno želite da obrišete {selectedIds.size} sto(a)? Ovo se ne može poništiti.
+                    Sigurno želite da obrišete {selectedIds.size} sto(a)? Ovo se
+                    ne može poništiti.
                   </AlertDialogDescription>
                   <div className="flex justify-end gap-2">
                     <AlertDialogCancel>Otkaži</AlertDialogCancel>
@@ -286,7 +340,7 @@ function TablesPage() {
             itemType="stolova"
             onPageChange={(page) =>
               navigate({
-                to: '.',
+                to: ".",
                 search: (prev) => ({ ...prev, page }),
               })
             }
@@ -294,5 +348,5 @@ function TablesPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

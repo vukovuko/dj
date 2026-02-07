@@ -1,14 +1,7 @@
-import { useState } from "react"
-import { Button } from "~/components/ui/button"
-import { Input } from "~/components/ui/input"
-import { Label } from "~/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select"
+import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,36 +9,46 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "~/components/ui/dialog"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 // Validation schema
 const productSchema = z.object({
-  name: z.string().min(1, "Ovo polje je obavezno").max(100, "Naziv je predugačak"),
+  name: z
+    .string()
+    .min(1, "Ovo polje je obavezno")
+    .max(100, "Naziv je predugačak"),
   categoryId: z.string().min(1, "Morate izabrati kategoriju"),
   basePrice: z.coerce.number().positive("Cena mora biti veća od 0"),
   minPrice: z.coerce.number().positive("Cena mora biti veća od 0"),
   maxPrice: z.coerce.number().positive("Cena mora biti veća od 0"),
   status: z.enum(["active", "draft"]),
-})
+});
 
 export interface ProductFormData {
-  name: string
-  categoryId: string
-  basePrice: number
-  minPrice: number
-  maxPrice: number
-  status: "active" | "draft"
+  name: string;
+  categoryId: string;
+  basePrice: number;
+  minPrice: number;
+  maxPrice: number;
+  status: "active" | "draft";
 }
 
 interface ProductFormProps {
-  initialData?: ProductFormData
-  categories: Array<{ id: string; name: string }>
-  onSubmit: (data: ProductFormData) => Promise<void>
-  onCancel: () => void
-  onDelete?: () => Promise<void>
-  submitLabel?: string
+  initialData?: ProductFormData;
+  categories: Array<{ id: string; name: string }>;
+  onSubmit: (data: ProductFormData) => Promise<void>;
+  onCancel: () => void;
+  onDelete?: () => Promise<void>;
+  submitLabel?: string;
 }
 
 export function ProductForm({
@@ -56,10 +59,10 @@ export function ProductForm({
   onDelete,
   submitLabel = "Sačuvaj",
 }: ProductFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<ProductFormData>(
     initialData || {
@@ -69,55 +72,55 @@ export function ProductForm({
       minPrice: 0,
       maxPrice: 0,
       status: "active",
-    }
-  )
+    },
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrors({})
+    e.preventDefault();
+    setErrors({});
 
     // Validate min < max
     if (formData.minPrice >= formData.maxPrice) {
-      setErrors({ minPrice: "Minimalna cena mora biti manja od maksimalne" })
-      return
+      setErrors({ minPrice: "Minimalna cena mora biti manja od maksimalne" });
+      return;
     }
 
     // Validate with Zod
-    const result = productSchema.safeParse(formData)
+    const result = productSchema.safeParse(formData);
     if (!result.success) {
-      const newErrors: Record<string, string> = {}
+      const newErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
         if (issue.path[0]) {
-          newErrors[issue.path[0].toString()] = issue.message
+          newErrors[issue.path[0].toString()] = issue.message;
         }
-      })
-      setErrors(newErrors)
-      return
+      });
+      setErrors(newErrors);
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await onSubmit(formData)
+      await onSubmit(formData);
     } catch (error) {
-      toast.error("Greška pri čuvanju proizvoda")
+      toast.error("Greška pri čuvanju proizvoda");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!onDelete) return
+    if (!onDelete) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      await onDelete()
-      setShowDeleteDialog(false)
+      await onDelete();
+      setShowDeleteDialog(false);
     } catch (error) {
-      toast.error("Greška pri brisanju proizvoda")
+      toast.error("Greška pri brisanju proizvoda");
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -136,7 +139,9 @@ export function ProductForm({
             className={errors.name ? "border-destructive" : ""}
           />
           {errors.name && (
-            <p className="absolute left-0 top-full text-sm text-destructive">{errors.name}</p>
+            <p className="absolute left-0 top-full text-sm text-destructive">
+              {errors.name}
+            </p>
           )}
         </div>
       </div>
@@ -153,7 +158,9 @@ export function ProductForm({
               setFormData({ ...formData, categoryId: value })
             }
           >
-            <SelectTrigger className={errors.categoryId ? "border-destructive" : ""}>
+            <SelectTrigger
+              className={errors.categoryId ? "border-destructive" : ""}
+            >
               <SelectValue placeholder="Izaberite kategoriju" />
             </SelectTrigger>
             <SelectContent>
@@ -165,7 +172,9 @@ export function ProductForm({
             </SelectContent>
           </Select>
           {errors.categoryId && (
-            <p className="absolute left-0 top-full text-sm text-destructive">{errors.categoryId}</p>
+            <p className="absolute left-0 top-full text-sm text-destructive">
+              {errors.categoryId}
+            </p>
           )}
         </div>
       </div>
@@ -184,12 +193,17 @@ export function ProductForm({
             placeholder="400"
             value={formData.basePrice || ""}
             onChange={(e) =>
-              setFormData({ ...formData, basePrice: Math.round(parseFloat(e.target.value) || 0) })
+              setFormData({
+                ...formData,
+                basePrice: Math.round(parseFloat(e.target.value) || 0),
+              })
             }
             className={errors.basePrice ? "border-destructive" : ""}
           />
           {errors.basePrice && (
-            <p className="absolute left-0 top-full text-sm text-destructive">{errors.basePrice}</p>
+            <p className="absolute left-0 top-full text-sm text-destructive">
+              {errors.basePrice}
+            </p>
           )}
         </div>
       </div>
@@ -208,12 +222,17 @@ export function ProductForm({
             placeholder="300"
             value={formData.minPrice || ""}
             onChange={(e) =>
-              setFormData({ ...formData, minPrice: Math.round(parseFloat(e.target.value) || 0) })
+              setFormData({
+                ...formData,
+                minPrice: Math.round(parseFloat(e.target.value) || 0),
+              })
             }
             className={errors.minPrice ? "border-destructive" : ""}
           />
           {errors.minPrice && (
-            <p className="absolute left-0 top-full text-sm text-destructive">{errors.minPrice}</p>
+            <p className="absolute left-0 top-full text-sm text-destructive">
+              {errors.minPrice}
+            </p>
           )}
         </div>
       </div>
@@ -232,12 +251,17 @@ export function ProductForm({
             placeholder="500"
             value={formData.maxPrice || ""}
             onChange={(e) =>
-              setFormData({ ...formData, maxPrice: Math.round(parseFloat(e.target.value) || 0) })
+              setFormData({
+                ...formData,
+                maxPrice: Math.round(parseFloat(e.target.value) || 0),
+              })
             }
             className={errors.maxPrice ? "border-destructive" : ""}
           />
           {errors.maxPrice && (
-            <p className="absolute left-0 top-full text-sm text-destructive">{errors.maxPrice}</p>
+            <p className="absolute left-0 top-full text-sm text-destructive">
+              {errors.maxPrice}
+            </p>
           )}
         </div>
       </div>
@@ -263,7 +287,9 @@ export function ProductForm({
             </SelectContent>
           </Select>
           {errors.status && (
-            <p className="absolute left-0 top-full text-sm text-destructive">{errors.status}</p>
+            <p className="absolute left-0 top-full text-sm text-destructive">
+              {errors.status}
+            </p>
           )}
         </div>
       </div>
@@ -297,7 +323,8 @@ export function ProductForm({
           <DialogHeader>
             <DialogTitle>Obriši proizvod</DialogTitle>
             <DialogDescription>
-              Da li ste sigurni da želite da obrišete ovaj proizvod? Ova akcija se ne može poništiti.
+              Da li ste sigurni da želite da obrišete ovaj proizvod? Ova akcija
+              se ne može poništiti.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -321,5 +348,5 @@ export function ProductForm({
         </DialogContent>
       </Dialog>
     </form>
-  )
+  );
 }

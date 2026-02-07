@@ -1,30 +1,30 @@
-import { Card } from "~/components/ui/card"
-import { Checkbox } from "~/components/ui/checkbox"
-import { Button } from "~/components/ui/button"
+import { Eye, Loader2, MoreVertical, Trash2 } from "lucide-react";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu"
-import { Badge } from "~/components/ui/badge"
-import { MoreVertical, Eye, Trash2, Loader2 } from "lucide-react"
+} from "~/components/ui/dropdown-menu";
 
 interface VideoCardProps {
   video: {
-    id: string
-    name: string
-    url: string | null
-    thumbnailUrl: string | null
-    duration: number
-    aspectRatio: "landscape" | "portrait"
-    status: "pending" | "generating" | "ready" | "failed"
-    errorMessage: string | null
-  }
-  isSelected: boolean
-  onSelect: (id: string, checked: boolean) => void
-  onPreview: (id: string) => void
-  onDelete: (id: string) => void
+    id: string;
+    name: string;
+    url: string | null;
+    thumbnailUrl: string | null;
+    duration: number;
+    aspectRatio: "landscape" | "portrait";
+    status: "pending" | "generating" | "ready" | "failed";
+    errorMessage: string | null;
+  };
+  isSelected: boolean;
+  onSelect: (id: string, checked: boolean) => void;
+  onPreview: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export function VideoCard({
@@ -37,36 +37,36 @@ export function VideoCard({
   const getStatusBadge = () => {
     switch (video.status) {
       case "pending":
-        return <Badge variant="secondary">Na čekanju</Badge>
+        return <Badge variant="secondary">Na čekanju</Badge>;
       case "generating":
         return (
           <Badge variant="secondary" className="gap-1">
             <Loader2 className="h-3 w-3 animate-spin" />
             Generisanje...
           </Badge>
-        )
+        );
       case "ready":
-        return <Badge>Spreman</Badge>
+        return <Badge>Spreman</Badge>;
       case "failed":
-        return <Badge variant="destructive">Greška</Badge>
+        return <Badge variant="destructive">Greška</Badge>;
     }
-  }
+  };
 
   const formatDuration = (seconds: number) => {
-    return `${seconds}s`
-  }
+    return `${seconds}s`;
+  };
 
   const formatAspectRatio = (ratio: string) => {
-    return ratio === "landscape" ? "Horizontalno" : "Vertikalno"
-  }
+    return ratio === "landscape" ? "Horizontalno" : "Vertikalno";
+  };
 
-  const canInteract = video.status === "ready"
+  const canInteract = video.status === "ready";
 
   const handleCardClick = () => {
     if (canInteract) {
-      onPreview(video.id)
+      onPreview(video.id);
     }
-  }
+  };
 
   return (
     <Card
@@ -81,7 +81,9 @@ export function VideoCard({
         <div className="bg-background/80 backdrop-blur-sm rounded p-1">
           <Checkbox
             checked={isSelected}
-            onCheckedChange={(checked) => onSelect(video.id, checked as boolean)}
+            onCheckedChange={(checked) =>
+              onSelect(video.id, checked as boolean)
+            }
             aria-label={`Izaberi ${video.name}`}
             disabled={!canInteract}
           />
@@ -191,5 +193,5 @@ export function VideoCard({
         )}
       </div>
     </Card>
-  )
+  );
 }

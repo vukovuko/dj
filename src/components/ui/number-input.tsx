@@ -1,23 +1,23 @@
-import { ChevronDown, ChevronUp } from 'lucide-react'
-import { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
-import { NumericFormat, NumericFormatProps } from 'react-number-format'
-import { Button } from './button'
-import { Input } from './input'
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { NumericFormat, type NumericFormatProps } from "react-number-format";
+import { Button } from "./button";
+import { Input } from "./input";
 
 export interface NumberInputProps
-  extends Omit<NumericFormatProps, 'value' | 'onValueChange'> {
-  stepper?: number
-  thousandSeparator?: string
-  placeholder?: string
-  defaultValue?: number
-  min?: number
-  max?: number
-  value?: number // Controlled value
-  suffix?: string
-  prefix?: string
-  onValueChange?: (value: number | undefined) => void
-  fixedDecimalScale?: boolean
-  decimalScale?: number
+  extends Omit<NumericFormatProps, "value" | "onValueChange"> {
+  stepper?: number;
+  thousandSeparator?: string;
+  placeholder?: string;
+  defaultValue?: number;
+  min?: number;
+  max?: number;
+  value?: number; // Controlled value
+  suffix?: string;
+  prefix?: string;
+  onValueChange?: (value: number | undefined) => void;
+  fixedDecimalScale?: boolean;
+  decimalScale?: number;
 }
 
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
@@ -37,35 +37,41 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       value: controlledValue,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [value, setValue] = useState<number | undefined>(
-      controlledValue ?? defaultValue
-    )
-    const valueRef = useRef<number | undefined>(controlledValue ?? defaultValue)
+      controlledValue ?? defaultValue,
+    );
+    const valueRef = useRef<number | undefined>(
+      controlledValue ?? defaultValue,
+    );
 
     // Keep ref in sync with state
     useEffect(() => {
-      valueRef.current = value
-    }, [value])
+      valueRef.current = value;
+    }, [value]);
 
     const handleIncrement = useCallback(() => {
-      const prev = valueRef.current
-      const newValue = prev === undefined ? stepper ?? 1 : Math.min(prev + (stepper ?? 1), max)
-      valueRef.current = newValue
-      setValue(newValue)
-      onValueChange?.(newValue)
-    }, [stepper, max, onValueChange])
+      const prev = valueRef.current;
+      const newValue =
+        prev === undefined
+          ? (stepper ?? 1)
+          : Math.min(prev + (stepper ?? 1), max);
+      valueRef.current = newValue;
+      setValue(newValue);
+      onValueChange?.(newValue);
+    }, [stepper, max, onValueChange]);
 
     const handleDecrement = useCallback(() => {
-      const prev = valueRef.current
-      const newValue = prev === undefined
-        ? -(stepper ?? 1)
-        : Math.max(prev - (stepper ?? 1), min)
-      valueRef.current = newValue
-      setValue(newValue)
-      onValueChange?.(newValue)
-    }, [stepper, min, onValueChange])
+      const prev = valueRef.current;
+      const newValue =
+        prev === undefined
+          ? -(stepper ?? 1)
+          : Math.max(prev - (stepper ?? 1), min);
+      valueRef.current = newValue;
+      setValue(newValue);
+      onValueChange?.(newValue);
+    }, [stepper, min, onValueChange]);
 
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -73,53 +79,53 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           document.activeElement ===
           (ref as React.RefObject<HTMLInputElement>).current
         ) {
-          if (e.key === 'ArrowUp') {
-            handleIncrement()
-          } else if (e.key === 'ArrowDown') {
-            handleDecrement()
+          if (e.key === "ArrowUp") {
+            handleIncrement();
+          } else if (e.key === "ArrowDown") {
+            handleDecrement();
           }
         }
-      }
+      };
 
-      window.addEventListener('keydown', handleKeyDown)
+      window.addEventListener("keydown", handleKeyDown);
 
       return () => {
-        window.removeEventListener('keydown', handleKeyDown)
-      }
-    }, [handleIncrement, handleDecrement, ref])
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }, [handleIncrement, handleDecrement, ref]);
 
     useEffect(() => {
       if (controlledValue !== undefined) {
-        setValue(controlledValue)
-        valueRef.current = controlledValue
+        setValue(controlledValue);
+        valueRef.current = controlledValue;
       }
-    }, [controlledValue])
+    }, [controlledValue]);
 
     const handleChange = (
       values: { value: string; floatValue: number | undefined },
-      sourceInfo: { source: string }
+      sourceInfo: { source: string },
     ) => {
       const newValue =
-        values.floatValue === undefined ? undefined : values.floatValue
-      setValue(newValue)
-      if (sourceInfo.source === 'event' && onValueChange) {
-        onValueChange(newValue)
+        values.floatValue === undefined ? undefined : values.floatValue;
+      setValue(newValue);
+      if (sourceInfo.source === "event" && onValueChange) {
+        onValueChange(newValue);
       }
-    }
+    };
 
     const handleBlur = () => {
       if (value !== undefined) {
         if (value < min) {
-          setValue(min)
-          ;(ref as React.RefObject<HTMLInputElement>).current!.value =
-            String(min)
+          setValue(min);
+          (ref as React.RefObject<HTMLInputElement>).current!.value =
+            String(min);
         } else if (value > max) {
-          setValue(max)
-          ;(ref as React.RefObject<HTMLInputElement>).current!.value =
-            String(max)
+          setValue(max);
+          (ref as React.RefObject<HTMLInputElement>).current!.value =
+            String(max);
         }
       }
-    }
+    };
 
     return (
       <div className="flex items-center">
@@ -168,8 +174,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           </Button>
         </div>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-NumberInput.displayName = 'NumberInput'
+NumberInput.displayName = "NumberInput";

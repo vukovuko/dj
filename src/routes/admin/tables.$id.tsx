@@ -1,25 +1,15 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { Button } from "~/components/ui/button";
-import { NumberInput } from "~/components/ui/number-input";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
+import {
+  createFileRoute,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
+import { MoreVertical, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { TablePageHeader } from "~/components/tables/table-page-header";
 import { Badge } from "~/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -34,21 +24,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Checkbox } from "~/components/ui/checkbox";
-import { TablePageHeader } from "~/components/tables/table-page-header";
-import { toast } from "sonner";
-import { Trash2, Plus, Search, MoreVertical } from "lucide-react";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { NumberInput } from "~/components/ui/number-input";
 import {
-  getTableById,
-  updateTable,
-  deleteTable,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
+import {
   addProductToTable,
-  updateOrderQuantity,
-  toggleOrderPaymentStatus,
   bulkToggleOrderPaymentStatus,
-  deleteTableOrder,
   clearTableOrders,
+  deleteTable,
+  deleteTableOrder,
   getActiveProducts,
+  getTableById,
+  toggleOrderPaymentStatus,
+  updateOrderQuantity,
+  updateTable,
 } from "~/queries/tables.server";
 
 export const Route = createFileRoute("/admin/tables/$id")({
@@ -73,7 +77,9 @@ function TableDetailPage() {
     number: Number(table.number),
     status: table.status,
   });
-  const [tableFormErrors, setTableFormErrors] = useState<Record<string, string>>({});
+  const [tableFormErrors, setTableFormErrors] = useState<
+    Record<string, string>
+  >({});
 
   const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -130,7 +136,8 @@ function TableDetailPage() {
       setIsEditingTable(false);
       toast.success("Sto je ažuriran!");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Greška pri ažuriranju stola";
+      const message =
+        error instanceof Error ? error.message : "Greška pri ažuriranju stola";
 
       if (message.includes("već postoji")) {
         setTableFormErrors({ number: message });
@@ -728,7 +735,9 @@ function TableDetailPage() {
                   }
                 />
                 {tableFormErrors.number && (
-                  <p className="absolute left-0 top-full text-sm text-destructive">{tableFormErrors.number}</p>
+                  <p className="absolute left-0 top-full text-sm text-destructive">
+                    {tableFormErrors.number}
+                  </p>
                 )}
               </div>
             </div>

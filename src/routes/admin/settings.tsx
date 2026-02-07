@@ -1,68 +1,74 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
-import { toast } from 'sonner'
-import { getPricingStatus, updatePricingConfig, getPriceUpdateInterval, setPriceUpdateInterval } from '~/queries/products.server'
+} from "~/components/ui/select";
+import {
+  getPriceUpdateInterval,
+  getPricingStatus,
+  setPriceUpdateInterval,
+  updatePricingConfig,
+} from "~/queries/products.server";
 
-export const Route = createFileRoute('/admin/settings')({
+export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
   loader: async () => {
     const [pricingStatus, interval] = await Promise.all([
       getPricingStatus(),
       getPriceUpdateInterval(),
-    ])
-    return { pricingStatus, interval }
+    ]);
+    return { pricingStatus, interval };
   },
-})
+});
 
 function SettingsPage() {
-  const router = useRouter()
-  const { pricingStatus, interval } = Route.useLoaderData()
-  const [isSaving, setIsSaving] = useState(false)
-  const [priceUpdateIntervalMinutes, setPriceUpdateIntervalMinutes] = useState<string>(
-    interval.minutes.toString()
-  )
+  const router = useRouter();
+  const { pricingStatus, interval } = Route.useLoaderData();
+  const [isSaving, setIsSaving] = useState(false);
+  const [priceUpdateIntervalMinutes, setPriceUpdateIntervalMinutes] =
+    useState<string>(interval.minutes.toString());
 
   // Get first product to get current settings (all products share same settings)
-  const firstProduct = pricingStatus[0]
+  const firstProduct = pricingStatus[0];
 
   const [pricingMode, setPricingMode] = useState<string>(
-    firstProduct?.pricingMode || 'full'
-  )
+    firstProduct?.pricingMode || "full",
+  );
   const [priceIncreasePercent, setPriceIncreasePercent] = useState<string>(
-    firstProduct?.priceIncreasePercent || '2.00'
-  )
-  const [priceIncreaseRandomPercent, setPriceIncreaseRandomPercent] = useState<string>(
-    firstProduct?.priceIncreaseRandomPercent || '1.00'
-  )
+    firstProduct?.priceIncreasePercent || "2.00",
+  );
+  const [priceIncreaseRandomPercent, setPriceIncreaseRandomPercent] =
+    useState<string>(firstProduct?.priceIncreaseRandomPercent || "1.00");
   const [priceDecreasePercent, setPriceDecreasePercent] = useState<string>(
-    firstProduct?.priceDecreasePercent || '1.00'
-  )
-  const [priceDecreaseRandomPercent, setPriceDecreaseRandomPercent] = useState<string>(
-    firstProduct?.priceDecreaseRandomPercent || '0.00'
-  )
+    firstProduct?.priceDecreasePercent || "1.00",
+  );
+  const [priceDecreaseRandomPercent, setPriceDecreaseRandomPercent] =
+    useState<string>(firstProduct?.priceDecreaseRandomPercent || "0.00");
 
   useEffect(() => {
     if (firstProduct) {
-      setPricingMode(firstProduct.pricingMode || 'full')
-      setPriceIncreasePercent(firstProduct.priceIncreasePercent || '2.00')
-      setPriceIncreaseRandomPercent(firstProduct.priceIncreaseRandomPercent || '1.00')
-      setPriceDecreasePercent(firstProduct.priceDecreasePercent || '1.00')
-      setPriceDecreaseRandomPercent(firstProduct.priceDecreaseRandomPercent || '0.00')
+      setPricingMode(firstProduct.pricingMode || "full");
+      setPriceIncreasePercent(firstProduct.priceIncreasePercent || "2.00");
+      setPriceIncreaseRandomPercent(
+        firstProduct.priceIncreaseRandomPercent || "1.00",
+      );
+      setPriceDecreasePercent(firstProduct.priceDecreasePercent || "1.00");
+      setPriceDecreaseRandomPercent(
+        firstProduct.priceDecreaseRandomPercent || "0.00",
+      );
     }
-  }, [firstProduct])
+  }, [firstProduct]);
 
   const handleSave = async () => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       // Update pricing config
       const result = await updatePricingConfig({
@@ -73,28 +79,32 @@ function SettingsPage() {
           priceDecreasePercent: parseFloat(priceDecreasePercent),
           priceDecreaseRandomPercent: parseFloat(priceDecreaseRandomPercent),
         },
-      })
+      });
 
       // Update price update interval
       await setPriceUpdateInterval({
         data: { minutes: parseInt(priceUpdateIntervalMinutes) },
-      })
+      });
 
-      toast.success(`Podešavanja ažurirana za ${result.updatedCount} proizvod(a)`)
-      router.invalidate()
+      toast.success(
+        `Podešavanja ažurirana za ${result.updatedCount} proizvod(a)`,
+      );
+      router.invalidate();
     } catch (error: any) {
-      console.error('Failed to update pricing config:', error)
-      toast.error(error.message || 'Greška pri ažuriranju podešavanja')
+      console.error("Failed to update pricing config:", error);
+      toast.error(error.message || "Greška pri ažuriranju podešavanja");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2">Podešavanja dinamičkog određivanja cena</h1>
+        <h1 className="text-2xl font-bold mb-2">
+          Podešavanja dinamičkog određivanja cena
+        </h1>
         <p className="text-sm text-muted-foreground">
           Konfigurišite kako se cene proizvoda automatski menjaju
         </p>
@@ -117,16 +127,20 @@ function SettingsPage() {
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground mt-2">
-          {pricingMode === 'off' && 'Cene se ne menjaju automatski'}
-          {pricingMode === 'up' && 'Cene se samo povećavaju na osnovu prodaje'}
-          {pricingMode === 'down' && 'Cene se samo snižavaju kada nema prodaje'}
-          {pricingMode === 'full' && 'Cene se povećavaju ili snižavaju zavisno od prodaje'}
+          {pricingMode === "off" && "Cene se ne menjaju automatski"}
+          {pricingMode === "up" && "Cene se samo povećavaju na osnovu prodaje"}
+          {pricingMode === "down" && "Cene se samo snižavaju kada nema prodaje"}
+          {pricingMode === "full" &&
+            "Cene se povećavaju ili snižavaju zavisno od prodaje"}
         </p>
       </div>
 
       {/* Update Interval Section */}
       <div className="mb-8 p-6 border rounded-lg">
-        <Label htmlFor="interval" className="text-base font-semibold mb-4 block">
+        <Label
+          htmlFor="interval"
+          className="text-base font-semibold mb-4 block"
+        >
           Učestalost ažuriranja cena
         </Label>
         <div className="flex items-end gap-2">
@@ -144,7 +158,8 @@ function SettingsPage() {
           <span className="text-sm text-muted-foreground pb-2">minuta</span>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Cene će se automatski ažurirati svakih {priceUpdateIntervalMinutes} minuta (1-60 min)
+          Cene će se automatski ažurirati svakih {priceUpdateIntervalMinutes}{" "}
+          minuta (1-60 min)
         </p>
       </div>
 
@@ -244,26 +259,24 @@ function SettingsPage() {
           <div>
             <strong>Ako se proizvod proda:</strong>
             <div className="ml-4 mt-1">
-              Povećanje = {priceIncreasePercent}% + (slučajno(0,1) × {priceIncreaseRandomPercent}%)
+              Povećanje = {priceIncreasePercent}% + (slučajno(0,1) ×{" "}
+              {priceIncreaseRandomPercent}%)
             </div>
           </div>
           <div>
             <strong>Ako se proizvod ne proda:</strong>
             <div className="ml-4 mt-1">
-              Sniženje = {priceDecreasePercent}% + (slučajno(0,1) × {priceDecreaseRandomPercent}%)
+              Sniženje = {priceDecreasePercent}% + (slučajno(0,1) ×{" "}
+              {priceDecreaseRandomPercent}%)
             </div>
           </div>
         </div>
       </div>
 
       {/* Save Button */}
-      <Button
-        onClick={handleSave}
-        disabled={isSaving}
-        className="w-full"
-      >
-        {isSaving ? 'Čuvanje...' : 'Sačuvaj podešavanja'}
+      <Button onClick={handleSave} disabled={isSaving} className="w-full">
+        {isSaving ? "Čuvanje..." : "Sačuvaj podešavanja"}
       </Button>
     </div>
-  )
+  );
 }

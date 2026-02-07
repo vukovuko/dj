@@ -26,8 +26,10 @@ export function ThemeProvider({
   storageKey = "dj-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (typeof window !== 'undefined' ? (localStorage.getItem(storageKey) as Theme) || defaultTheme : defaultTheme)
+  const [theme, setTheme] = useState<Theme>(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem(storageKey) as Theme) || defaultTheme
+      : defaultTheme,
   );
 
   useEffect(() => {

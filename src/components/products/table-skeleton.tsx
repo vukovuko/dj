@@ -1,5 +1,12 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table"
-import { Skeleton } from "~/components/ui/skeleton"
+import { Skeleton } from "~/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
 
 export function TableSkeleton() {
   return (
@@ -54,5 +61,5 @@ export function TableSkeleton() {
         }
       `}</style>
     </div>
-  )
+  );
 }

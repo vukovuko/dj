@@ -1,36 +1,39 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { ProductForm, type ProductFormData } from "~/components/products/product-form.tsx"
-import { ProductPageHeader } from "~/components/products/product-page-header"
-import { toast } from "sonner"
-import { createProduct, getCategories } from "~/queries/products.server"
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
+import {
+  ProductForm,
+  type ProductFormData,
+} from "~/components/products/product-form.tsx";
+import { ProductPageHeader } from "~/components/products/product-page-header";
+import { createProduct, getCategories } from "~/queries/products.server";
 
 export const Route = createFileRoute("/admin/products/new")({
   component: NewProductPage,
   loader: async () => {
-    const categories = await getCategories()
-    return { categories }
+    const categories = await getCategories();
+    return { categories };
   },
-})
+});
 
 function NewProductPage() {
-  const navigate = useNavigate()
-  const { categories } = Route.useLoaderData()
+  const navigate = useNavigate();
+  const { categories } = Route.useLoaderData();
 
   const handleSubmit = async (data: ProductFormData) => {
     try {
-      await createProduct({ data })
+      await createProduct({ data });
 
-      toast.success("Proizvod je uspešno kreiran!")
-      navigate({ to: "/admin/products" })
+      toast.success("Proizvod je uspešno kreiran!");
+      navigate({ to: "/admin/products" });
     } catch (error) {
-      toast.error("Greška pri kreiranju proizvoda")
-      throw error
+      toast.error("Greška pri kreiranju proizvoda");
+      throw error;
     }
-  }
+  };
 
   const handleCancel = () => {
-    navigate({ to: "/admin/products" })
-  }
+    navigate({ to: "/admin/products" });
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">
@@ -47,5 +50,5 @@ function NewProductPage() {
         />
       </div>
     </div>
-  )
+  );
 }

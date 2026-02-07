@@ -1,4 +1,6 @@
-import { VideoCard } from "./video-card"
+import { useNavigate } from "@tanstack/react-router";
+import { Video } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import {
   Empty,
   EmptyContent,
@@ -6,26 +8,24 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "~/components/ui/empty"
-import { Button } from "~/components/ui/button"
-import { Video } from "lucide-react"
-import { useNavigate } from "@tanstack/react-router"
+} from "~/components/ui/empty";
+import { VideoCard } from "./video-card";
 
 interface VideoGridProps {
   videos: Array<{
-    id: string
-    name: string
-    url: string | null
-    thumbnailUrl: string | null
-    duration: number
-    aspectRatio: "landscape" | "portrait"
-    status: "pending" | "generating" | "ready" | "failed"
-    errorMessage: string | null
-  }>
-  selectedIds: Set<string>
-  onSelectVideo: (id: string, checked: boolean) => void
-  onPreview: (id: string) => void
-  onDelete: (id: string) => void
+    id: string;
+    name: string;
+    url: string | null;
+    thumbnailUrl: string | null;
+    duration: number;
+    aspectRatio: "landscape" | "portrait";
+    status: "pending" | "generating" | "ready" | "failed";
+    errorMessage: string | null;
+  }>;
+  selectedIds: Set<string>;
+  onSelectVideo: (id: string, checked: boolean) => void;
+  onPreview: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export function VideoGrid({
@@ -35,7 +35,7 @@ export function VideoGrid({
   onPreview,
   onDelete,
 }: VideoGridProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   if (videos.length === 0) {
     return (
@@ -50,14 +50,12 @@ export function VideoGrid({
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button
-            onClick={() => navigate({ to: "/admin/videos/generacija" })}
-          >
+          <Button onClick={() => navigate({ to: "/admin/videos/generacija" })}>
             Generiši video
           </Button>
         </EmptyContent>
       </Empty>
-    )
+    );
   }
 
   return (
@@ -73,5 +71,5 @@ export function VideoGrid({
         />
       ))}
     </div>
-  )
+  );
 }

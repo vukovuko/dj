@@ -1,16 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  getTVDisplayProducts,
-  subscribeToPriceUpdates,
-} from "~/queries/products.server";
+import { ArrowDown, ArrowUp } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CountdownOverlay } from "~/components/tv/countdown-overlay";
+import { VideoPlayerOverlay } from "~/components/tv/video-player-overlay";
 import {
   getActiveCampaign,
   subscribeToCampaignUpdates,
 } from "~/queries/campaigns.server";
-import { ArrowUp, ArrowDown } from "lucide-react";
-import { CountdownOverlay } from "~/components/tv/countdown-overlay";
-import { VideoPlayerOverlay } from "~/components/tv/video-player-overlay";
+import {
+  getTVDisplayProducts,
+  subscribeToPriceUpdates,
+} from "~/queries/products.server";
 
 interface Product {
   id: string;
@@ -157,7 +157,7 @@ function TVDisplay() {
       const elapsed = Math.floor((Date.now() - started.getTime()) / 1000);
       return Math.max(0, countdownSeconds - elapsed);
     },
-    []
+    [],
   );
 
   // Handle video end - reset to idle
@@ -178,10 +178,13 @@ function TVDisplay() {
         const activeCampaign = await getActiveCampaign();
         if (activeCampaign) {
           console.log("📺 Found active campaign:", activeCampaign.status);
-          if (activeCampaign.status === "countdown" && activeCampaign.startedAt) {
+          if (
+            activeCampaign.status === "countdown" &&
+            activeCampaign.startedAt
+          ) {
             const remaining = calculateCountdownRemaining(
               activeCampaign.startedAt,
-              activeCampaign.countdownSeconds
+              activeCampaign.countdownSeconds,
             );
             setCampaignState({
               status: "countdown",
@@ -208,7 +211,9 @@ function TVDisplay() {
                 videoThumbnailUrl: activeCampaign.videoThumbnailUrl,
                 videoDuration: activeCampaign.videoDuration,
                 countdownSeconds: activeCampaign.countdownSeconds,
-                startedAt: activeCampaign.startedAt ? new Date(activeCampaign.startedAt) : null,
+                startedAt: activeCampaign.startedAt
+                  ? new Date(activeCampaign.startedAt)
+                  : null,
               },
               countdownRemaining: 0,
             });
@@ -274,7 +279,10 @@ function TVDisplay() {
                     },
                     countdownRemaining: 0,
                   }));
-                } else if (parsed.type === "VIDEO_END" || parsed.type === "CANCELLED") {
+                } else if (
+                  parsed.type === "VIDEO_END" ||
+                  parsed.type === "CANCELLED"
+                ) {
                   setCampaignState({
                     status: "idle",
                     campaign: null,
@@ -314,7 +322,10 @@ function TVDisplay() {
 
   // Countdown timer interval
   useEffect(() => {
-    if (campaignState.status === "countdown" && campaignState.countdownRemaining > 0) {
+    if (
+      campaignState.status === "countdown" &&
+      campaignState.countdownRemaining > 0
+    ) {
       countdownIntervalRef.current = setInterval(() => {
         setCampaignState((prev) => {
           const newRemaining = prev.countdownRemaining - 1;
@@ -470,13 +481,14 @@ function TVDisplay() {
         />
       )}
 
-      {campaignState.status === "playing" && campaignState.campaign?.videoUrl && (
-        <VideoPlayerOverlay
-          videoUrl={campaignState.campaign.videoUrl}
-          videoName={campaignState.campaign.videoName || "Video"}
-          onEnded={handleVideoEnded}
-        />
-      )}
+      {campaignState.status === "playing" &&
+        campaignState.campaign?.videoUrl && (
+          <VideoPlayerOverlay
+            videoUrl={campaignState.campaign.videoUrl}
+            videoName={campaignState.campaign.videoName || "Video"}
+            onEnded={handleVideoEnded}
+          />
+        )}
     </div>
   );
 }

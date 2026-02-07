@@ -1,16 +1,17 @@
 // src/routes/__root.tsx
 /// <reference types="vite/client" />
-import type { ReactNode } from "react";
+
 import {
-  Outlet,
   createRootRoute,
   HeadContent,
-  Scripts,
+  Outlet,
   ScriptOnce,
+  Scripts,
 } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import appCss from "@/styles/app.css?url";
-import { ThemeProvider } from "~/components/theme-provider";
 import { NotFound } from "~/components/not-found";
+import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
 
 export const Route = createRootRoute({

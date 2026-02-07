@@ -1,11 +1,11 @@
+import { eq } from "drizzle-orm";
+import ffmpeg from "fluent-ffmpeg";
+import fs from "fs/promises";
 import { LumaAI } from "lumaai";
+import path from "path";
+import env from "../../env.ts";
 import { db } from "../db/index.ts";
 import { videos } from "../db/schema.ts";
-import { eq } from "drizzle-orm";
-import env from "../../env.ts";
-import fs from "fs/promises";
-import path from "path";
-import ffmpeg from "fluent-ffmpeg";
 
 interface GenerateVideoPayload {
   videoId: string;
@@ -58,10 +58,17 @@ async function generateThumbnail(
  * - Client polling detects ready status (every 5s)
  */
 const task = async (payload: any, helpers: any) => {
-  const { videoId, prompt, duration, aspectRatio, model = "ray-2" } =
-    payload as GenerateVideoPayload;
+  const {
+    videoId,
+    prompt,
+    duration,
+    aspectRatio,
+    model = "ray-2",
+  } = payload as GenerateVideoPayload;
 
-  helpers.logger.info(`Starting video generation for ${videoId} with model ${model}`);
+  helpers.logger.info(
+    `Starting video generation for ${videoId} with model ${model}`,
+  );
 
   try {
     // Update status to generating

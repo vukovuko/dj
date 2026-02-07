@@ -1,26 +1,27 @@
+import { useTheme } from "~/components/theme-provider";
 import {
   ThemeToggleButton,
   useThemeTransition,
-} from "~/components/ui/shadcn-io/theme-toggle-button"
-import { useTheme } from "~/components/theme-provider"
+} from "~/components/ui/shadcn-io/theme-toggle-button";
 
 export function ModeToggle() {
-  const { theme, setTheme } = useTheme()
-  const { startTransition } = useThemeTransition()
+  const { theme, setTheme } = useTheme();
+  const { startTransition } = useThemeTransition();
 
   const currentTheme =
     theme === "system"
-      ? typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? typeof window !== "undefined" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light"
-      : theme
+      : theme;
 
   const handleThemeToggle = () => {
     startTransition(() => {
-      const newTheme = currentTheme === "dark" ? "light" : "dark"
-      setTheme(newTheme)
-    })
-  }
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      setTheme(newTheme);
+    });
+  };
 
   return (
     <ThemeToggleButton
@@ -29,5 +30,5 @@ export function ModeToggle() {
       variant="circle"
       start="top-right"
     />
-  )
+  );
 }

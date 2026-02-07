@@ -10,9 +10,9 @@
  * Status flow: scheduled → countdown → playing → completed
  */
 
-import { db, pool } from "../db/index.ts"
-import { videoCampaigns, videos } from "../db/schema.ts"
-import { eq, and, lte, or } from "drizzle-orm"
+import { and, eq, lte, or } from "drizzle-orm";
+import { db, pool } from "../db/index.ts";
+import { videoCampaigns, videos } from "../db/schema.ts";
 
 // Send campaign notification via PostgreSQL NOTIFY
 // This works across processes (worker -> web server)
@@ -25,7 +25,7 @@ async function notifyCampaign(
     videoName?: string | null;
     videoDuration?: number | null;
     countdownSeconds?: number;
-  }
+  },
 ) {
   const payload = JSON.stringify({
     type,
@@ -46,7 +46,7 @@ async function notifyCampaign(
 }
 
 const task = async (payload: any, helpers: any) => {
-  const now = new Date()
+  const now = new Date();
 
   try {
     // ========== 0. Check if there's already an active campaign ==========
@@ -57,32 +57,34 @@ const task = async (payload: any, helpers: any) => {
       .where(
         or(
           eq(videoCampaigns.status, "countdown"),
-          eq(videoCampaigns.status, "playing")
-        )
+          eq(videoCampaigns.status, "playing"),
+        ),
       )
-      .limit(1)
+      .limit(1);
 
     // ========== 1. Start countdown for scheduled campaigns ==========
     // Find campaigns where scheduledAt <= now AND status = "scheduled"
     // Only if no campaign is currently active
-    const campaignsToStart = activeCampaign ? [] : await db
-      .select({
-        id: videoCampaigns.id,
-        videoId: videoCampaigns.videoId,
-        countdownSeconds: videoCampaigns.countdownSeconds,
-        videoUrl: videos.url,
-        videoName: videos.name,
-        videoDuration: videos.duration,
-      })
-      .from(videoCampaigns)
-      .leftJoin(videos, eq(videoCampaigns.videoId, videos.id))
-      .where(
-        and(
-          eq(videoCampaigns.status, "scheduled"),
-          lte(videoCampaigns.scheduledAt, now)
-        )
-      )
-      .limit(1) // Process one at a time to avoid conflicts
+    const campaignsToStart = activeCampaign
+      ? []
+      : await db
+          .select({
+            id: videoCampaigns.id,
+            videoId: videoCampaigns.videoId,
+            countdownSeconds: videoCampaigns.countdownSeconds,
+            videoUrl: videos.url,
+            videoName: videos.name,
+            videoDuration: videos.duration,
+          })
+          .from(videoCampaigns)
+          .leftJoin(videos, eq(videoCampaigns.videoId, videos.id))
+          .where(
+            and(
+              eq(videoCampaigns.status, "scheduled"),
+              lte(videoCampaigns.scheduledAt, now),
+            ),
+          )
+          .limit(1); // Process one at a time to avoid conflicts
 
     for (const campaign of campaignsToStart) {
       // If countdown is 0, skip directly to playing
@@ -94,9 +96,11 @@ const task = async (payload: any, helpers: any) => {
             startedAt: now,
             updatedAt: now,
           })
-          .where(eq(videoCampaigns.id, campaign.id))
+          .where(eq(videoCampaigns.id, campaign.id));
 
-        helpers.logger.info(`📺 Campaign ${campaign.id} started playing (no countdown)`)
+        helpers.logger.info(
+          `📺 Campaign ${campaign.id} started playing (no countdown)`,
+        );
 
         await notifyCampaign("VIDEO_PLAY", {
           id: campaign.id,
@@ -104,7 +108,7 @@ const task = async (payload: any, helpers: any) => {
           videoUrl: campaign.videoUrl,
           videoName: campaign.videoName,
           videoDuration: campaign.videoDuration,
-        })
+        });
       } else {
         // Start countdown
         await db
@@ -114,9 +118,11 @@ const task = async (payload: any, helpers: any) => {
             startedAt: now,
             updatedAt: now,
           })
-          .where(eq(videoCampaigns.id, campaign.id))
+          .where(eq(videoCampaigns.id, campaign.id));
 
-        helpers.logger.info(`📺 Campaign ${campaign.id} countdown started (${campaign.countdownSeconds}s)`)
+        helpers.logger.info(
+          `📺 Campaign ${campaign.id} countdown started (${campaign.countdownSeconds}s)`,
+        );
 
         await notifyCampaign("COUNTDOWN_START", {
           id: campaign.id,
@@ -125,7 +131,7 @@ const task = async (payload: any, helpers: any) => {
           videoName: campaign.videoName,
           videoDuration: campaign.videoDuration,
           countdownSeconds: campaign.countdownSeconds,
-        })
+        });
       }
     }
 
@@ -142,12 +148,14 @@ const task = async (payload: any, helpers: any) => {
       })
       .from(videoCampaigns)
       .leftJoin(videos, eq(videoCampaigns.videoId, videos.id))
-      .where(eq(videoCampaigns.status, "countdown"))
+      .where(eq(videoCampaigns.status, "countdown"));
 
     for (const campaign of countdownCampaigns) {
-      if (!campaign.startedAt) continue
+      if (!campaign.startedAt) continue;
 
-      const countdownEndTime = new Date(campaign.startedAt.getTime() + campaign.countdownSeconds * 1000)
+      const countdownEndTime = new Date(
+        campaign.startedAt.getTime() + campaign.countdownSeconds * 1000,
+      );
 
       if (now >= countdownEndTime) {
         await db
@@ -156,9 +164,9 @@ const task = async (payload: any, helpers: any) => {
             status: "playing",
             updatedAt: now,
           })
-          .where(eq(videoCampaigns.id, campaign.id))
+          .where(eq(videoCampaigns.id, campaign.id));
 
-        helpers.logger.info(`📺 Campaign ${campaign.id} started playing`)
+        helpers.logger.info(`📺 Campaign ${campaign.id} started playing`);
 
         await notifyCampaign("VIDEO_PLAY", {
           id: campaign.id,
@@ -166,7 +174,7 @@ const task = async (payload: any, helpers: any) => {
           videoUrl: campaign.videoUrl,
           videoName: campaign.videoName,
           videoDuration: campaign.videoDuration,
-        })
+        });
       }
     }
 
@@ -181,18 +189,18 @@ const task = async (payload: any, helpers: any) => {
       })
       .from(videoCampaigns)
       .leftJoin(videos, eq(videoCampaigns.videoId, videos.id))
-      .where(eq(videoCampaigns.status, "playing"))
+      .where(eq(videoCampaigns.status, "playing"));
 
     for (const campaign of playingCampaigns) {
-      if (!campaign.startedAt || !campaign.videoDuration) continue
+      if (!campaign.startedAt || !campaign.videoDuration) continue;
 
       // Calculate when video should end (startedAt + countdown + video duration)
       const videoStartTime = new Date(
-        campaign.startedAt.getTime() + campaign.countdownSeconds * 1000
-      )
+        campaign.startedAt.getTime() + campaign.countdownSeconds * 1000,
+      );
       const videoEndTime = new Date(
-        videoStartTime.getTime() + campaign.videoDuration * 1000
-      )
+        videoStartTime.getTime() + campaign.videoDuration * 1000,
+      );
 
       if (now >= videoEndTime) {
         await db
@@ -202,20 +210,20 @@ const task = async (payload: any, helpers: any) => {
             completedAt: now,
             updatedAt: now,
           })
-          .where(eq(videoCampaigns.id, campaign.id))
+          .where(eq(videoCampaigns.id, campaign.id));
 
-        helpers.logger.info(`📺 Campaign ${campaign.id} completed`)
+        helpers.logger.info(`📺 Campaign ${campaign.id} completed`);
 
         await notifyCampaign("VIDEO_END", {
           id: campaign.id,
           videoId: campaign.videoId,
-        })
+        });
       }
     }
   } catch (error) {
-    helpers.logger.error("📺 Campaign processing failed", { error })
-    throw error
+    helpers.logger.error("📺 Campaign processing failed", { error });
+    throw error;
   }
-}
+};
 
-export default task
+export default task;
