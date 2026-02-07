@@ -1,15 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { sr } from "date-fns/locale/sr";
-import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  Play,
-  Plus,
-  Timer,
-  XCircle,
-} from "lucide-react";
+import { Calendar, CheckCircle, Clock, Play, Timer } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CampaignDialog } from "~/components/campaigns/campaign-dialog";
@@ -207,8 +199,7 @@ function CampaignsPage() {
             </p>
           </div>
           <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova kampanja
+            Dodaj kampanju
           </Button>
         </div>
 

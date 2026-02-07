@@ -3,7 +3,7 @@ import {
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
-import { MoreVertical, Plus, Search, Trash2 } from "lucide-react";
+import { MoreVertical, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { TablePageHeader } from "~/components/tables/table-page-header";
@@ -331,7 +331,7 @@ function TableDetailPage() {
   const selectedProduct = searchResults.find((p) => p.id === selectedProductId);
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl relative">
+    <div className="container mx-auto p-4 md:p-6 max-w-3xl relative">
       <div className="flex items-center justify-between mb-6">
         <TablePageHeader
           title={`Sto #${table.number}`}
@@ -350,7 +350,7 @@ function TableDetailPage() {
       </div>
 
       {/* Add Product Section */}
-      <div className="border rounded-lg p-6 mb-6">
+      <div className="border rounded-lg p-4 md:p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Dodaj proizvod</h2>
         <div className="space-y-4">
           <div className="space-y-2 relative">
@@ -415,7 +415,6 @@ function TableDetailPage() {
             disabled={!selectedProductId || isAddingProduct}
             className="w-full"
           >
-            <Plus className="w-4 h-4 mr-2" />
             Dodaj proizvod
           </Button>
         </div>
@@ -423,9 +422,9 @@ function TableDetailPage() {
 
       {/* Orders Section */}
       {orders.length > 0 && (
-        <div className="border rounded-lg p-6 mb-6">
+        <div className="border rounded-lg p-4 md:p-6 mb-6">
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h2 className="text-lg font-semibold">
                 Narudžbine ({orders.length})
               </h2>
@@ -683,7 +682,7 @@ function TableDetailPage() {
       )}
 
       {/* Table Info Section */}
-      <div className="border rounded-lg p-6 space-y-4 mb-6">
+      <div className="border rounded-lg p-4 md:p-6 space-y-4 mb-6">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-semibold mb-4">Informacije o stolu</h2>
@@ -788,9 +787,9 @@ function TableDetailPage() {
 
       {/* Revenue Section - at bottom */}
       {orders.length > 0 && (
-        <div className="border rounded-lg p-6 mb-6">
+        <div className="border rounded-lg p-4 md:p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Prihod</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Ukupno</p>
               <p className="text-2xl font-bold">

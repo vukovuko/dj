@@ -99,7 +99,7 @@ function SettingsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
+    <div className="container mx-auto p-4 md:p-6 max-w-2xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2">
@@ -111,7 +111,7 @@ function SettingsPage() {
       </div>
 
       {/* Mode Section */}
-      <div className="mb-8 p-6 border rounded-lg">
+      <div className="mb-8 p-4 md:p-6 border rounded-lg">
         <Label htmlFor="mode" className="text-base font-semibold mb-4 block">
           Režim određivanja cena
         </Label>
@@ -136,7 +136,7 @@ function SettingsPage() {
       </div>
 
       {/* Update Interval Section */}
-      <div className="mb-8 p-6 border rounded-lg">
+      <div className="mb-8 p-4 md:p-6 border rounded-lg">
         <Label
           htmlFor="interval"
           className="text-base font-semibold mb-4 block"
@@ -164,9 +164,9 @@ function SettingsPage() {
       </div>
 
       {/* Percentage Settings */}
-      <div className="grid grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         {/* Increase Section */}
-        <div className="p-6 border rounded-lg">
+        <div className="p-4 md:p-6 border rounded-lg">
           <h3 className="font-semibold text-base mb-4">Povećanje cene</h3>
           <div className="space-y-4">
             <div>
@@ -209,7 +209,7 @@ function SettingsPage() {
         </div>
 
         {/* Decrease Section */}
-        <div className="p-6 border rounded-lg">
+        <div className="p-4 md:p-6 border rounded-lg">
           <h3 className="font-semibold text-base mb-4">Sniženje cene</h3>
           <div className="space-y-4">
             <div>
@@ -253,7 +253,7 @@ function SettingsPage() {
       </div>
 
       {/* Example Calculation */}
-      <div className="mb-8 p-6 border rounded-lg">
+      <div className="mb-8 p-4 md:p-6 border rounded-lg">
         <h4 className="font-semibold text-sm mb-3">Primer proračuna</h4>
         <div className="space-y-2 text-sm text-muted-foreground">
           <div>

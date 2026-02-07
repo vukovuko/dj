@@ -179,7 +179,7 @@ export function ProductsTable({
 
       {/* Overlay kada su proizvodi selektovani */}
       {selectedIds.size > 0 && (
-        <div className="absolute top-0 left-0 right-0 bg-background border-b flex items-center justify-between px-4 h-[42px]">
+        <div className="absolute top-0 left-0 right-0 bg-background border-b flex flex-wrap items-center justify-between px-3 sm:px-4 h-[42px]">
           <div className="flex items-center gap-4">
             <Checkbox
               checked={

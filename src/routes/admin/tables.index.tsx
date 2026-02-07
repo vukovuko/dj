@@ -3,7 +3,7 @@ import {
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
-import { Edit2, Plus, Search, Trash2 } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -129,8 +129,7 @@ function TablesPage() {
           </p>
         </div>
         <Button onClick={() => navigate({ to: "/admin/tables/new" })}>
-          <Plus className="w-4 h-4 mr-2" />
-          Novi sto
+          Dodaj sto
         </Button>
       </div>
 

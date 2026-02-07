@@ -311,7 +311,7 @@ function VideosPage() {
         {/* Mobile Sticky Toolbar - always visible on mobile */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-50">
           {selectedIds.size > 0 ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-muted-foreground mr-2">
                 Izabrano: {selectedIds.size}
               </span>
