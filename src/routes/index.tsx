@@ -377,21 +377,21 @@ function TVDisplay() {
         {categories.map((category, catIdx) => (
           <div
             key={category}
-            className={`flex flex-col h-full ${catIdx < categories.length - 1 ? "border-r border-white/10" : ""}`}
+            className={`flex flex-col h-full overflow-hidden ${catIdx < categories.length - 1 ? "border-r border-white/10" : ""}`}
           >
             {/* Category header */}
-            <div className="flex items-center gap-2 md:gap-4 px-4 md:px-8 py-3 md:py-5 border-b border-white/[0.07] shrink-0">
+            <div className="flex items-center gap-1.5 lg:gap-4 px-2 lg:px-8 py-2 lg:py-5 border-b border-white/[0.07] shrink-0">
               <div
-                className={`w-1.5 h-6 md:h-10 rounded-full ${accentColors[catIdx % accentColors.length]}`}
+                className={`w-1 lg:w-1.5 h-4 lg:h-10 rounded-full ${accentColors[catIdx % accentColors.length]}`}
               />
-              <h2 className="text-2xl md:text-5xl font-black tracking-wider text-white/70 uppercase">
+              <h2 className="text-sm lg:text-5xl xl:text-6xl font-black tracking-wider text-white/70 uppercase truncate">
                 {category}
               </h2>
             </div>
 
             {/* Products */}
             <div
-              className="flex-1 grid min-h-0"
+              className="lg:flex-1 grid min-h-0 overflow-hidden"
               style={{
                 gridTemplateRows: `repeat(${maxItems}, 1fr)`,
               }}
@@ -401,16 +401,16 @@ function TVDisplay() {
                 return (
                   <div
                     key={product.id}
-                    className={`flex items-center justify-between px-4 md:px-8 ${
+                    className={`flex items-center justify-between px-2 lg:px-8 py-2 lg:py-0 overflow-hidden ${
                       i % 2 === 0 ? "bg-white/3" : ""
                     }`}
                   >
-                    <span className="text-xl md:text-5xl font-black tracking-wide text-white truncate mr-4">
+                    <span className="text-sm lg:text-5xl xl:text-6xl font-black tracking-wide text-white truncate mr-1 lg:mr-4">
                       {product.name.toUpperCase()}
                     </span>
-                    <div className="flex items-center gap-2 md:gap-5 shrink-0">
+                    <div className="flex items-center gap-1 lg:gap-5 shrink-0">
                       <span
-                        className={`text-xl md:text-5xl font-mono font-black tabular-nums ${
+                        className={`text-sm lg:text-5xl xl:text-6xl font-mono font-black tabular-nums ${
                           product.trend === "up"
                             ? "text-emerald-400"
                             : "text-red-400"
@@ -418,17 +418,17 @@ function TVDisplay() {
                       >
                         {price}
                       </span>
-                      <span className="text-sm md:text-2xl text-white/30 font-mono">
+                      <span className="hidden lg:inline text-2xl xl:text-3xl text-white/30 font-mono">
                         RSD
                       </span>
                       {product.trend === "up" ? (
                         <ArrowUp
-                          className="w-5 h-5 md:w-10 md:h-10 text-emerald-400"
+                          className="w-3.5 h-3.5 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-emerald-400"
                           strokeWidth={2.5}
                         />
                       ) : (
                         <ArrowDown
-                          className="w-5 h-5 md:w-10 md:h-10 text-red-400"
+                          className="w-3.5 h-3.5 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-red-400"
                           strokeWidth={2.5}
                         />
                       )}
