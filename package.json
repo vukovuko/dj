@@ -16,7 +16,8 @@
     "db:stop": "docker-compose -f docker-compose.dev.yml down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "node --experimental-strip-types src/db/seed.ts"
+    "db:seed": "node --experimental-strip-types src/db/seed.ts",
+    "dev:full": "node --experimental-strip-types scripts/dev-setup.ts"
   },
   "keywords": [],
   "author": "",
@@ -39,6 +40,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
+    "@shikijs/transformers": "^3.22.0",
     "@tailwindcss/postcss": "^4.1.16",
     "@tanstack/nitro-v2-vite-plugin": "^1.133.19",
     "@tanstack/react-router": "^1.133.27",

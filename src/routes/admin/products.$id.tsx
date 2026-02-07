@@ -39,9 +39,9 @@ function EditProductPage() {
   const initialData: ProductFormData = {
     name: product.name,
     categoryId: product.categoryId,
-    basePrice: parseFloat(product.basePrice),
-    minPrice: parseFloat(product.minPrice),
-    maxPrice: parseFloat(product.maxPrice),
+    basePrice: Math.round(parseFloat(product.basePrice)),
+    minPrice: Math.round(parseFloat(product.minPrice)),
+    maxPrice: Math.round(parseFloat(product.maxPrice)),
     status: product.status,
   }
 
@@ -64,7 +64,7 @@ function EditProductPage() {
   }
 
   const handleCancel = () => {
-    navigate({ to: "/admin/products/" })
+    navigate({ to: "/admin/products" })
   }
 
   const handleDelete = async () => {
@@ -74,7 +74,7 @@ function EditProductPage() {
 
       toast.success("Proizvod je uspešno obrisan!")
       setShowMobileDeleteDialog(false)
-      navigate({ to: "/admin/products/" })
+      navigate({ to: "/admin/products" })
     } catch (error) {
       toast.error("Greška pri brisanju proizvoda")
       throw error

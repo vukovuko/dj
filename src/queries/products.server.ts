@@ -85,9 +85,9 @@ export const updateProduct = createServerFn({ method: "POST" })
       .set({
         name: updateData.name,
         categoryId: updateData.categoryId,
-        basePrice: updateData.basePrice.toString(),
-        minPrice: updateData.minPrice.toString(),
-        maxPrice: updateData.maxPrice.toString(),
+        basePrice: Math.round(updateData.basePrice).toString(),
+        minPrice: Math.round(updateData.minPrice).toString(),
+        maxPrice: Math.round(updateData.maxPrice).toString(),
         status: updateData.status,
         updatedAt: new Date(),
       })
@@ -131,11 +131,11 @@ export const createProduct = createServerFn({ method: "POST" })
       .values({
         name: data.name,
         categoryId: data.categoryId,
-        basePrice: data.basePrice.toString(),
-        minPrice: data.minPrice.toString(),
-        maxPrice: data.maxPrice.toString(),
-        currentPrice: data.basePrice.toString(),
-        previousPrice: data.basePrice.toString(),
+        basePrice: Math.round(data.basePrice).toString(),
+        minPrice: Math.round(data.minPrice).toString(),
+        maxPrice: Math.round(data.maxPrice).toString(),
+        currentPrice: Math.round(data.basePrice).toString(),
+        previousPrice: Math.round(data.basePrice).toString(),
         salesCount: 0,
         trend: "down",
         status: data.status,
@@ -284,9 +284,9 @@ export const bulkUpdatePrices = createServerFn({ method: "POST" })
       return db
         .update(products)
         .set({
-          basePrice: update.basePrice.toString(),
-          minPrice: update.minPrice.toString(),
-          maxPrice: update.maxPrice.toString(),
+          basePrice: Math.round(update.basePrice).toString(),
+          minPrice: Math.round(update.minPrice).toString(),
+          maxPrice: Math.round(update.maxPrice).toString(),
           manualSalesAdjustment, // Update adjustment, NOT salesCount
           updatedAt: new Date(),
         })
@@ -623,7 +623,7 @@ export const getPriceUpdateInterval = createServerFn({ method: "GET" })
       .limit(1)
 
     // Default to 1 minute if not set
-    const minutes = result[0]?.value?.minutes ?? 1
+    const minutes = (result[0]?.value as Record<string, any>)?.minutes ?? 1
     return { minutes }
   })
 
@@ -674,7 +674,7 @@ export const setPriceUpdateInterval = createServerFn({ method: "POST" })
  * Clients connect to this endpoint and receive instant updates when prices change
  */
 export const subscribeToPriceUpdates = createServerFn({ method: "GET" })
-  .handler(async ({ request }) => {
+  .handler(async () => {
     // Initialize PostgreSQL LISTEN if not already done
     await initializePriceListener()
 

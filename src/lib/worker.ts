@@ -18,7 +18,7 @@ async function getPriceUpdateIntervalMs(): Promise<number> {
       .where(eq(settings.key, 'priceUpdateIntervalMinutes'))
       .limit(1)
 
-    const minutes = result[0]?.value?.minutes ?? 1
+    const minutes = (result[0]?.value as Record<string, any>)?.minutes ?? 1
     return minutes * 60 * 1000
   } catch (error) {
     console.error('Failed to get price update interval from database, using default 1 minute:', error)

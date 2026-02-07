@@ -77,7 +77,7 @@ function SettingsPage() {
 
       // Update price update interval
       await setPriceUpdateInterval({
-        minutes: parseInt(priceUpdateIntervalMinutes),
+        data: { minutes: parseInt(priceUpdateIntervalMinutes) },
       })
 
       toast.success(`Podešavanja ažurirana za ${result.updatedCount} proizvod(a)`)

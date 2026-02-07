@@ -130,8 +130,7 @@ function TablesPage() {
             <TableRow>
               <TableHead className="w-12">
                 <Checkbox
-                  checked={selectedIds.size === loaderData.tables.length && loaderData.tables.length > 0}
-                  indeterminate={selectedIds.size > 0 && selectedIds.size < loaderData.tables.length ? true : undefined}
+                  checked={selectedIds.size === loaderData.tables.length && loaderData.tables.length > 0 ? true : selectedIds.size > 0 ? "indeterminate" : false}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
@@ -217,8 +216,7 @@ function TablesPage() {
           <div className="absolute top-0 left-0 right-0 bg-background border-b flex items-center justify-between px-4 h-[42px]">
             <div className="flex items-center gap-4">
               <Checkbox
-                checked={selectedIds.size === loaderData.tables.length && loaderData.tables.length > 0}
-                indeterminate={selectedIds.size > 0 && selectedIds.size < loaderData.tables.length ? true : undefined}
+                checked={selectedIds.size === loaderData.tables.length && loaderData.tables.length > 0 ? true : selectedIds.size > 0 ? "indeterminate" : false}
                 onCheckedChange={handleSelectAll}
               />
               <span className="text-sm font-normal">

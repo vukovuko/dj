@@ -118,19 +118,21 @@ function CreateTablePage() {
             <Label htmlFor="number">
               Broj stola <span className="text-destructive">*</span>
             </Label>
-            <NumberInput
-              stepper={1}
-              min={1}
-              decimalScale={0}
-              placeholder="1, 2, 3..."
-              value={formData.number}
-              onValueChange={(value) =>
-                setFormData({ ...formData, number: value })
-              }
-            />
-            {errors.number && (
-              <p className="text-sm text-destructive">{errors.number}</p>
-            )}
+            <div className="relative pb-5">
+              <NumberInput
+                stepper={1}
+                min={1}
+                decimalScale={0}
+                placeholder="1, 2, 3..."
+                value={formData.number}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, number: value })
+                }
+              />
+              {errors.number && (
+                <p className="absolute left-0 top-full text-sm text-destructive">{errors.number}</p>
+              )}
+            </div>
           </div>
 
           {existingNumbers.size > 0 && (

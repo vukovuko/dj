@@ -96,12 +96,12 @@ async function seed() {
 
       // Cocktails
       const cocktailsData = [
-        { name: "Mojito", price: "427.50", min: "320.00", max: "640.00" },
-        { name: "Cuba Libre", price: "348.50", min: "260.00", max: "520.00" },
-        { name: "Aperol Spritz", price: "420.00", min: "315.00", max: "630.00" },
-        { name: "Pina Colada", price: "450.00", min: "340.00", max: "680.00" },
-        { name: "Sex on the Beach", price: "400.00", min: "300.00", max: "600.00" },
-        { name: "Tequila Sunrise", price: "400.00", min: "300.00", max: "600.00" },
+        { name: "Mojito", price: "428", min: "320", max: "640" },
+        { name: "Cuba Libre", price: "349", min: "260", max: "520" },
+        { name: "Aperol Spritz", price: "420", min: "315", max: "630" },
+        { name: "Pina Colada", price: "450", min: "340", max: "680" },
+        { name: "Sex on the Beach", price: "400", min: "300", max: "600" },
+        { name: "Tequila Sunrise", price: "400", min: "300", max: "600" },
       ]
 
       for (const cocktail of cocktailsData) {
@@ -121,13 +121,13 @@ async function seed() {
 
       // Shots
       const shotsData = [
-        { name: "Jameson", price: "300.00", min: "220.00", max: "450.00" },
-        { name: "Johnnie Walker", price: "300.00", min: "220.00", max: "450.00" },
-        { name: "Jim Beam", price: "380.00", min: "285.00", max: "570.00" },
-        { name: "Jack Daniel's", price: "380.00", min: "285.00", max: "570.00" },
-        { name: "Absolut Vodka", price: "370.00", min: "280.00", max: "555.00" },
-        { name: "Ballantine's", price: "400.00", min: "300.00", max: "600.00" },
-        { name: "Jägermeister", price: "320.00", min: "240.00", max: "480.00" },
+        { name: "Jameson", price: "300", min: "220", max: "450" },
+        { name: "Johnnie Walker", price: "300", min: "220", max: "450" },
+        { name: "Jim Beam", price: "380", min: "285", max: "570" },
+        { name: "Jack Daniel's", price: "380", min: "285", max: "570" },
+        { name: "Absolut Vodka", price: "370", min: "280", max: "555" },
+        { name: "Ballantine's", price: "400", min: "300", max: "600" },
+        { name: "Jägermeister", price: "320", min: "240", max: "480" },
       ]
 
       for (const shot of shotsData) {
@@ -156,15 +156,21 @@ async function seed() {
     if (existingSettings.length === 0) {
       console.log("Creating settings...")
 
-      await db.insert(settings).values({
-        key: "pricing_config",
-        value: {
-          mode: "manual",
-          upPercentage: 5,
-          downPercentage: 3,
-          updateInterval: 300,
+      await db.insert(settings).values([
+        {
+          key: "pricing_config",
+          value: {
+            mode: "manual",
+            upPercentage: 5,
+            downPercentage: 3,
+            updateInterval: 300,
+          },
         },
-      })
+        {
+          key: "priceUpdateIntervalMinutes",
+          value: { minutes: 1 },
+        },
+      ])
 
       console.log("✓ Created pricing config settings")
     } else {

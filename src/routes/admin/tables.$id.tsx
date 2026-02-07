@@ -384,7 +384,7 @@ function TableDetailPage() {
                     <div className="font-medium">{product.name}</div>
                     <div className="text-xs text-muted-foreground">
                       {product.categoryName} -{" "}
-                      {parseFloat(product.currentPrice).toFixed(2)} дин
+                      {Math.round(parseFloat(product.currentPrice))} дин
                     </div>
                   </button>
                 ))}
@@ -485,7 +485,7 @@ function TableDetailPage() {
                             },
                           )}
                         </TableCell>
-                        <TableCell>{price.toFixed(2)} дин</TableCell>
+                        <TableCell>{Math.round(price)} дин</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button
@@ -520,7 +520,7 @@ function TableDetailPage() {
                           </div>
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {total.toFixed(2)} дин
+                          {Math.round(total)} дин
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -714,21 +714,23 @@ function TableDetailPage() {
           <div className="space-y-4 border-t pt-4">
             <div className="space-y-2">
               <Label htmlFor="table-number">Broj stola</Label>
-              <NumberInput
-                stepper={1}
-                min={1}
-                decimalScale={0}
-                value={tableFormData.number}
-                onValueChange={(value) =>
-                  setTableFormData({
-                    ...tableFormData,
-                    number: value || tableFormData.number,
-                  })
-                }
-              />
-              {tableFormErrors.number && (
-                <p className="text-sm text-destructive">{tableFormErrors.number}</p>
-              )}
+              <div className="relative pb-5">
+                <NumberInput
+                  stepper={1}
+                  min={1}
+                  decimalScale={0}
+                  value={tableFormData.number}
+                  onValueChange={(value) =>
+                    setTableFormData({
+                      ...tableFormData,
+                      number: value || tableFormData.number,
+                    })
+                  }
+                />
+                {tableFormErrors.number && (
+                  <p className="absolute left-0 top-full text-sm text-destructive">{tableFormErrors.number}</p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -789,7 +791,7 @@ function TableDetailPage() {
                       sum + parseFloat(order.orderedPrice) * order.quantity,
                     0,
                   )
-                  .toFixed(2)}{" "}
+                  .toFixed(0)}{" "}
                 дин
               </p>
             </div>
@@ -803,7 +805,7 @@ function TableDetailPage() {
                       sum + parseFloat(order.orderedPrice) * order.quantity,
                     0,
                   )
-                  .toFixed(2)}{" "}
+                  .toFixed(0)}{" "}
                 дин
               </p>
             </div>
@@ -817,7 +819,7 @@ function TableDetailPage() {
                       sum + parseFloat(order.orderedPrice) * order.quantity,
                     0,
                   )
-                  .toFixed(2)}{" "}
+                  .toFixed(0)}{" "}
                 дин
               </p>
             </div>

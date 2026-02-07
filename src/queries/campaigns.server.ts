@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start"
 import { db } from "~/db"
 import { videoCampaigns, videos, user } from "~/db/schema"
 import { eq, desc, inArray, or, and, lte, sql } from "drizzle-orm"
+import { z } from "zod"
 
 // Get all campaigns with video info, ordered by scheduledAt
 export const getCampaigns = createServerFn({ method: "GET" })
@@ -90,13 +91,17 @@ export const getUpcomingCampaigns = createServerFn({ method: "GET" })
   })
 
 // Create a new campaign
+const createCampaignSchema = z.object({
+  videoId: z.string().uuid(),
+  scheduledAt: z.string()
+    .refine((v) => !isNaN(new Date(v).getTime()), "Neispravan datum")
+    .refine((v) => new Date(v) > new Date(), "Datum mora biti u budućnosti"),
+  countdownSeconds: z.number().refine((v) => [0, 10, 30, 60, 120, 300].includes(v)),
+  createdBy: z.string().min(1),
+})
+
 export const createCampaign = createServerFn({ method: "POST" })
-  .inputValidator((data: {
-    videoId: string
-    scheduledAt: string // ISO date string
-    countdownSeconds: number
-    createdBy: string
-  }) => data)
+  .inputValidator((data: unknown) => createCampaignSchema.parse(data))
   .handler(async ({ data }) => {
     const [campaign] = await db
       .insert(videoCampaigns)

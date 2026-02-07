@@ -74,7 +74,7 @@ export function ProductsTable({
                 </TableCell>
                 <TableCell className="font-medium">
                   <Link
-                    from="/admin/products/"
+                    from="/admin/products"
                     to="/admin/products/$id"
                     params={{ id: product.id }}
                     className="block py-2 hover:underline"
@@ -84,7 +84,7 @@ export function ProductsTable({
                 </TableCell>
                 <TableCell>
                   <Link
-                    from="/admin/products/"
+                    from="/admin/products"
                     to="/admin/products/$id"
                     params={{ id: product.id }}
                     className="block py-2"
@@ -94,17 +94,17 @@ export function ProductsTable({
                 </TableCell>
                 <TableCell>
                   <Link
-                    from="/admin/products/"
+                    from="/admin/products"
                     to="/admin/products/$id"
                     params={{ id: product.id }}
                     className="block py-2"
                   >
-                    {parseFloat(product.currentPrice).toFixed(2)} RSD
+                    {Math.round(parseFloat(product.currentPrice))} RSD
                   </Link>
                 </TableCell>
                 <TableCell>
                   <Link
-                    from="/admin/products/"
+                    from="/admin/products"
                     to="/admin/products/$id"
                     params={{ id: product.id }}
                     className="block py-2"
@@ -125,7 +125,7 @@ export function ProductsTable({
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
                         <Link
-                          from="/admin/products/"
+                          from="/admin/products"
                           to="/admin/products/$id"
                           params={{ id: product.id }}
                           className="flex items-center cursor-pointer"

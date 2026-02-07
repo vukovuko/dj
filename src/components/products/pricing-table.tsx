@@ -126,10 +126,10 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
               >
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>
-                  <span className="text-sm">{parseFloat(product.currentPrice)} RSD</span>
+                  <span className="text-sm">{Math.round(parseFloat(product.currentPrice))} RSD</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm text-muted-foreground">{parseFloat(product.previousPrice)} RSD</span>
+                  <span className="text-sm text-muted-foreground">{Math.round(parseFloat(product.previousPrice))} RSD</span>
                 </TableCell>
                 <TableCell>
                   <NumberInput

@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { forwardRef, useCallback, useEffect, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
 import { NumericFormat, NumericFormatProps } from 'react-number-format'
 import { Button } from './button'
 import { Input } from './input'
@@ -42,27 +42,29 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const [value, setValue] = useState<number | undefined>(
       controlledValue ?? defaultValue
     )
+    const valueRef = useRef<number | undefined>(controlledValue ?? defaultValue)
+
+    // Keep ref in sync with state
+    useEffect(() => {
+      valueRef.current = value
+    }, [value])
 
     const handleIncrement = useCallback(() => {
-      setValue((prev) => {
-        const newValue = prev === undefined ? stepper ?? 1 : Math.min(prev + (stepper ?? 1), max)
-        if (onValueChange) {
-          onValueChange(newValue)
-        }
-        return newValue
-      })
+      const prev = valueRef.current
+      const newValue = prev === undefined ? stepper ?? 1 : Math.min(prev + (stepper ?? 1), max)
+      valueRef.current = newValue
+      setValue(newValue)
+      onValueChange?.(newValue)
     }, [stepper, max, onValueChange])
 
     const handleDecrement = useCallback(() => {
-      setValue((prev) => {
-        const newValue = prev === undefined
-          ? -(stepper ?? 1)
-          : Math.max(prev - (stepper ?? 1), min)
-        if (onValueChange) {
-          onValueChange(newValue)
-        }
-        return newValue
-      })
+      const prev = valueRef.current
+      const newValue = prev === undefined
+        ? -(stepper ?? 1)
+        : Math.max(prev - (stepper ?? 1), min)
+      valueRef.current = newValue
+      setValue(newValue)
+      onValueChange?.(newValue)
     }, [stepper, min, onValueChange])
 
     useEffect(() => {
@@ -89,17 +91,18 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     useEffect(() => {
       if (controlledValue !== undefined) {
         setValue(controlledValue)
+        valueRef.current = controlledValue
       }
     }, [controlledValue])
 
-    const handleChange = (values: {
-      value: string
-      floatValue: number | undefined
-    }) => {
+    const handleChange = (
+      values: { value: string; floatValue: number | undefined },
+      sourceInfo: { source: string }
+    ) => {
       const newValue =
         values.floatValue === undefined ? undefined : values.floatValue
       setValue(newValue)
-      if (onValueChange) {
+      if (sourceInfo.source === 'event' && onValueChange) {
         onValueChange(newValue)
       }
     }

@@ -126,17 +126,19 @@ export function ProductForm({
         <Label htmlFor="name">
           Naziv proizvoda <span className="text-destructive">*</span>
         </Label>
-        <Input
-          id="name"
-          type="text"
-          placeholder="Npr. Mojito"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className={errors.name ? "border-destructive" : ""}
-        />
-        {errors.name && (
-          <p className="text-sm text-destructive">{errors.name}</p>
-        )}
+        <div className="relative pb-5">
+          <Input
+            id="name"
+            type="text"
+            placeholder="Npr. Mojito"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className={errors.name ? "border-destructive" : ""}
+          />
+          {errors.name && (
+            <p className="absolute left-0 top-full text-sm text-destructive">{errors.name}</p>
+          )}
+        </div>
       </div>
 
       {/* Category */}
@@ -144,26 +146,28 @@ export function ProductForm({
         <Label htmlFor="categoryId">
           Kategorija <span className="text-destructive">*</span>
         </Label>
-        <Select
-          value={formData.categoryId}
-          onValueChange={(value) =>
-            setFormData({ ...formData, categoryId: value })
-          }
-        >
-          <SelectTrigger className={errors.categoryId ? "border-destructive" : ""}>
-            <SelectValue placeholder="Izaberite kategoriju" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.categoryId && (
-          <p className="text-sm text-destructive">{errors.categoryId}</p>
-        )}
+        <div className="relative pb-5">
+          <Select
+            value={formData.categoryId}
+            onValueChange={(value) =>
+              setFormData({ ...formData, categoryId: value })
+            }
+          >
+            <SelectTrigger className={errors.categoryId ? "border-destructive" : ""}>
+              <SelectValue placeholder="Izaberite kategoriju" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.categoryId && (
+            <p className="absolute left-0 top-full text-sm text-destructive">{errors.categoryId}</p>
+          )}
+        </div>
       </div>
 
       {/* Base Price */}
@@ -171,21 +175,23 @@ export function ProductForm({
         <Label htmlFor="basePrice">
           Osnovna cena (RSD) <span className="text-destructive">*</span>
         </Label>
-        <Input
-          id="basePrice"
-          type="number"
-          min="1"
-          step="0.01"
-          placeholder="400"
-          value={formData.basePrice || ""}
-          onChange={(e) =>
-            setFormData({ ...formData, basePrice: parseFloat(e.target.value) || 0 })
-          }
-          className={errors.basePrice ? "border-destructive" : ""}
-        />
-        {errors.basePrice && (
-          <p className="text-sm text-destructive">{errors.basePrice}</p>
-        )}
+        <div className="relative pb-5">
+          <Input
+            id="basePrice"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="400"
+            value={formData.basePrice || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, basePrice: Math.round(parseFloat(e.target.value) || 0) })
+            }
+            className={errors.basePrice ? "border-destructive" : ""}
+          />
+          {errors.basePrice && (
+            <p className="absolute left-0 top-full text-sm text-destructive">{errors.basePrice}</p>
+          )}
+        </div>
       </div>
 
       {/* Min Price */}
@@ -193,21 +199,23 @@ export function ProductForm({
         <Label htmlFor="minPrice">
           Minimalna cena (RSD) <span className="text-destructive">*</span>
         </Label>
-        <Input
-          id="minPrice"
-          type="number"
-          min="1"
-          step="0.01"
-          placeholder="300"
-          value={formData.minPrice || ""}
-          onChange={(e) =>
-            setFormData({ ...formData, minPrice: parseFloat(e.target.value) || 0 })
-          }
-          className={errors.minPrice ? "border-destructive" : ""}
-        />
-        {errors.minPrice && (
-          <p className="text-sm text-destructive">{errors.minPrice}</p>
-        )}
+        <div className="relative pb-5">
+          <Input
+            id="minPrice"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="300"
+            value={formData.minPrice || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, minPrice: Math.round(parseFloat(e.target.value) || 0) })
+            }
+            className={errors.minPrice ? "border-destructive" : ""}
+          />
+          {errors.minPrice && (
+            <p className="absolute left-0 top-full text-sm text-destructive">{errors.minPrice}</p>
+          )}
+        </div>
       </div>
 
       {/* Max Price */}
@@ -215,21 +223,23 @@ export function ProductForm({
         <Label htmlFor="maxPrice">
           Maksimalna cena (RSD) <span className="text-destructive">*</span>
         </Label>
-        <Input
-          id="maxPrice"
-          type="number"
-          min="1"
-          step="0.01"
-          placeholder="500"
-          value={formData.maxPrice || ""}
-          onChange={(e) =>
-            setFormData({ ...formData, maxPrice: parseFloat(e.target.value) || 0 })
-          }
-          className={errors.maxPrice ? "border-destructive" : ""}
-        />
-        {errors.maxPrice && (
-          <p className="text-sm text-destructive">{errors.maxPrice}</p>
-        )}
+        <div className="relative pb-5">
+          <Input
+            id="maxPrice"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="500"
+            value={formData.maxPrice || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, maxPrice: Math.round(parseFloat(e.target.value) || 0) })
+            }
+            className={errors.maxPrice ? "border-destructive" : ""}
+          />
+          {errors.maxPrice && (
+            <p className="absolute left-0 top-full text-sm text-destructive">{errors.maxPrice}</p>
+          )}
+        </div>
       </div>
 
       {/* Status */}
@@ -237,23 +247,25 @@ export function ProductForm({
         <Label htmlFor="status">
           Status <span className="text-destructive">*</span>
         </Label>
-        <Select
-          value={formData.status}
-          onValueChange={(value: "active" | "draft") =>
-            setFormData({ ...formData, status: value })
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Izaberite status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Aktivan</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.status && (
-          <p className="text-sm text-destructive">{errors.status}</p>
-        )}
+        <div className="relative pb-5">
+          <Select
+            value={formData.status}
+            onValueChange={(value: "active" | "draft") =>
+              setFormData({ ...formData, status: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Izaberite status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Aktivan</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.status && (
+            <p className="absolute left-0 top-full text-sm text-destructive">{errors.status}</p>
+          )}
+        </div>
       </div>
 
       {/* Actions */}

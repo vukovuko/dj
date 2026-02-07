@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { createCampaign } from '~/queries/campaigns.server'
 import { authClient } from '~/lib/auth-client'
@@ -60,6 +61,7 @@ export function CampaignDialog({
   const [scheduledTime, setScheduledTime] = useState(getDefaultTime())
   const [countdownSeconds, setCountdownSeconds] = useState('60')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [timeError, setTimeError] = useState('')
 
   // Reset form when dialog opens
   const handleOpenChange = (newOpen: boolean) => {
@@ -75,6 +77,7 @@ export function CampaignDialog({
       const minutes = now.getMinutes().toString().padStart(2, '0')
       setScheduledTime(`${hours}:${minutes}`)
       setCountdownSeconds('60')
+      setTimeError('')
     }
     onOpenChange(newOpen)
   }
@@ -101,6 +104,11 @@ export function CampaignDialog({
         return
       }
       scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`)
+
+      if (isNaN(scheduledAt.getTime())) {
+        toast.error('Unesite ispravan datum i vreme')
+        return
+      }
 
       if (scheduledAt <= new Date()) {
         toast.error('Zakazano vreme mora biti u budućnosti')
@@ -149,25 +157,37 @@ export function CampaignDialog({
           {/* Video Selection */}
           <div className="space-y-2">
             <Label>Video</Label>
-            <Select value={selectedVideoId} onValueChange={setSelectedVideoId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Izaberite video" />
-              </SelectTrigger>
-              <SelectContent>
-                {videos.map((video) => (
-                  <SelectItem key={video.id} value={video.id}>
-                    {video.name}
-                    {video.duration && ` (${video.duration}s)`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedVideo?.thumbnailUrl && (
-              <img
-                src={selectedVideo.thumbnailUrl}
-                alt={selectedVideo.name}
-                className="w-full h-32 object-cover rounded-lg mt-2"
-              />
+            {videos.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-2">
+                Nema videa za prikazivanje.{' '}
+                <Link to="/admin/videos/generacija" className="text-primary underline" onClick={() => onOpenChange(false)}>
+                  Napravite video
+                </Link>{' '}
+                pa se vratite ovde.
+              </p>
+            ) : (
+              <>
+                <Select value={selectedVideoId} onValueChange={setSelectedVideoId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Izaberite video" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {videos.map((video) => (
+                      <SelectItem key={video.id} value={video.id}>
+                        {video.name}
+                        {video.duration && ` (${video.duration}s)`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedVideo?.thumbnailUrl && (
+                  <img
+                    src={selectedVideo.thumbnailUrl}
+                    alt={selectedVideo.name}
+                    className="w-full h-32 object-cover rounded-lg mt-2"
+                  />
+                )}
+              </>
             )}
           </div>
 
@@ -200,51 +220,60 @@ export function CampaignDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="time">Vreme (24h)</Label>
-                <Input
-                  id="time"
-                  type="text"
-                  placeholder="HH:MM"
-                  pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-                  value={scheduledTime}
-                  onChange={(e) => {
-                    // Allow only valid time input
-                    const value = e.target.value
-                    if (value === '' || /^[0-9:]*$/.test(value)) {
-                      setScheduledTime(value)
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const value = e.target.value.trim()
-                    let hours = ''
-                    let minutes = ''
-
-                    // Handle "1924" or "924" format (no colon)
-                    if (/^\d{3,4}$/.test(value)) {
-                      if (value.length === 4) {
-                        // "1924" -> "19:24"
-                        hours = value.slice(0, 2)
-                        minutes = value.slice(2)
-                      } else {
-                        // "924" -> "09:24"
-                        hours = value.slice(0, 1).padStart(2, '0')
-                        minutes = value.slice(1)
+                <div className="relative pb-5">
+                  <Input
+                    id="time"
+                    type="text"
+                    placeholder="HH:MM"
+                    pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
+                    value={scheduledTime}
+                    aria-invalid={!!timeError}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '' || /^[0-9:]*$/.test(value)) {
+                        setScheduledTime(value)
+                        setTimeError('')
                       }
-                    }
-                    // Handle "19:24" or "9:5" format (with colon)
-                    else {
-                      const match = value.match(/^(\d{1,2}):(\d{1,2})$/)
-                      if (match) {
-                        hours = match[1].padStart(2, '0')
-                        minutes = match[2].padStart(2, '0')
-                      }
-                    }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value.trim()
+                      let hours = ''
+                      let minutes = ''
 
-                    // Validate and set
-                    if (hours && minutes && parseInt(hours) < 24 && parseInt(minutes) < 60) {
-                      setScheduledTime(`${hours}:${minutes}`)
-                    }
-                  }}
-                />
+                      // Handle "1924" or "924" format (no colon)
+                      if (/^\d{3,4}$/.test(value)) {
+                        if (value.length === 4) {
+                          // "1924" -> "19:24"
+                          hours = value.slice(0, 2)
+                          minutes = value.slice(2)
+                        } else {
+                          // "924" -> "09:24"
+                          hours = value.slice(0, 1).padStart(2, '0')
+                          minutes = value.slice(1)
+                        }
+                      }
+                      // Handle "19:24" or "9:5" format (with colon)
+                      else {
+                        const match = value.match(/^(\d{1,2}):(\d{1,2})$/)
+                        if (match) {
+                          hours = match[1].padStart(2, '0')
+                          minutes = match[2].padStart(2, '0')
+                        }
+                      }
+
+                      // Validate and set
+                      if (hours && minutes && parseInt(hours) < 24 && parseInt(minutes) < 60) {
+                        setScheduledTime(`${hours}:${minutes}`)
+                        setTimeError('')
+                      } else if (value !== '') {
+                        setTimeError('Unesite vreme u formatu HH:MM')
+                      }
+                    }}
+                  />
+                  {timeError && (
+                    <p className="absolute left-0 top-full text-sm text-destructive">{timeError}</p>
+                  )}
+                </div>
               </div>
             </div>
           )}

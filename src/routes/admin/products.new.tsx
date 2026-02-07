@@ -21,7 +21,7 @@ function NewProductPage() {
       await createProduct({ data })
 
       toast.success("Proizvod je uspešno kreiran!")
-      navigate({ to: "/admin/products/" })
+      navigate({ to: "/admin/products" })
     } catch (error) {
       toast.error("Greška pri kreiranju proizvoda")
       throw error
@@ -29,7 +29,7 @@ function NewProductPage() {
   }
 
   const handleCancel = () => {
-    navigate({ to: "/admin/products/" })
+    navigate({ to: "/admin/products" })
   }
 
   return (
