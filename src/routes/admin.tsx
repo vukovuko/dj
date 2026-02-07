@@ -4,7 +4,7 @@ import {
   useMatches,
   useNavigate,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AdminSidebar } from "~/components/admin-sidebar";
 import { SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -45,16 +45,19 @@ function AdminLayout() {
     pageNames[currentRoute.routeId] || pageNames[currentRoute.id] || "Admin";
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   // Client-side auth check
   useEffect(() => {
-    if (!isPending && !session) {
+    if (mounted && !isPending && !session) {
       navigate({ to: "/login" });
     }
-  }, [session, isPending, navigate]);
+  }, [session, isPending, navigate, mounted]);
 
-  // Show loading while checking session
-  if (isPending) {
+  // Always render skeleton on server + first client render to avoid hydration mismatch
+  if (!mounted || isPending) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">

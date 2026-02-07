@@ -45,7 +45,7 @@ export const Route = createFileRoute("/")({
 function TVDisplay() {
   const initialData = Route.useLoaderData();
   const [products, setProducts] = useState(initialData);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -360,115 +360,85 @@ function TVDisplay() {
   );
 
   const categories = Object.keys(grouped).sort();
-  const leftCategory = categories[0];
-  const rightCategory = categories[1];
+  const maxItems = Math.max(...categories.map((c) => grouped[c].length), 1);
+  const accentColors = [
+    "bg-emerald-500",
+    "bg-sky-500",
+    "bg-amber-500",
+    "bg-violet-500",
+  ];
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-gray-100 p-2 md:p-4 overflow-hidden">
-      <div className="grid grid-cols-2 gap-2 md:gap-4 h-screen items-start">
-        {/* Left */}
-        {leftCategory && (
-          <div>
-            <h2
-              className="text-xl md:text-5xl font-black mb-1 md:mb-2 text-center text-white py-2 md:py-4 px-3 md:px-6 rounded-lg uppercase tracking-wider shadow-lg"
-              style={{ backgroundColor: "#06402B" }}
-            >
-              {leftCategory}
-            </h2>
-            <div className="space-y-1.5 md:space-y-4">
-              {grouped[leftCategory].map((product) => (
-                <div
-                  key={product.id}
-                  className={`flex justify-between items-center border-2 px-2 py-1.5 md:px-6 md:py-5 rounded-lg shadow-lg ${
-                    product.trend === "up"
-                      ? "border-emerald-700 bg-emerald-800 shadow-emerald-400/30"
-                      : "border-red-500 shadow-red-400/30"
-                  }`}
-                  style={
-                    product.trend === "down"
-                      ? { backgroundColor: "rgb(189, 31, 31)" }
-                      : undefined
-                  }
-                >
-                  <h3 className="text-sm md:text-4xl font-black tracking-wide flex-1 text-white">
-                    {product.name.toUpperCase()}
-                  </h3>
-                  <div className="flex items-center gap-1.5 md:gap-6 ml-2 md:ml-6">
-                    <span className="text-sm md:text-4xl font-black text-white tabular-nums whitespace-nowrap">
-                      {parseInt(parseFloat(product.currentPrice).toString())}{" "}
-                      RSD
-                    </span>
-                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                      {product.trend === "up" ? (
-                        <ArrowUp
-                          className="w-4 h-4 md:w-8 md:h-8 text-emerald-500"
-                          strokeWidth={2}
-                        />
-                      ) : (
-                        <ArrowDown
-                          className="w-4 h-4 md:w-8 md:h-8 text-rose-500"
-                          strokeWidth={2}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+    <div className="h-screen bg-black text-white flex overflow-hidden">
+      {/* Board */}
+      <div
+        className={`flex-1 grid h-full ${categories.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+      >
+        {categories.map((category, catIdx) => (
+          <div
+            key={category}
+            className={`flex flex-col h-full ${catIdx < categories.length - 1 ? "border-r border-white/10" : ""}`}
+          >
+            {/* Category header */}
+            <div className="flex items-center gap-2 md:gap-4 px-4 md:px-8 py-3 md:py-5 border-b border-white/[0.07] shrink-0">
+              <div
+                className={`w-1.5 h-6 md:h-10 rounded-full ${accentColors[catIdx % accentColors.length]}`}
+              />
+              <h2 className="text-2xl md:text-5xl font-black tracking-wider text-white/70 uppercase">
+                {category}
+              </h2>
             </div>
-          </div>
-        )}
 
-        {/* Right */}
-        {rightCategory && (
-          <div>
-            <h2
-              className="text-xl md:text-5xl font-black mb-1 md:mb-2 text-center text-white py-2 md:py-4 px-3 md:px-6 rounded-lg uppercase tracking-wider shadow-lg"
-              style={{ backgroundColor: "#341539" }}
+            {/* Products */}
+            <div
+              className="flex-1 grid min-h-0"
+              style={{
+                gridTemplateRows: `repeat(${maxItems}, 1fr)`,
+              }}
             >
-              {rightCategory}
-            </h2>
-            <div className="space-y-1.5 md:space-y-4">
-              {grouped[rightCategory].map((product) => (
-                <div
-                  key={product.id}
-                  className={`flex justify-between items-center border-2 px-2 py-1.5 md:px-6 md:py-5 rounded-lg shadow-lg ${
-                    product.trend === "up"
-                      ? "border-emerald-700 bg-emerald-800 shadow-emerald-400/30"
-                      : "border-red-500 shadow-red-400/30"
-                  }`}
-                  style={
-                    product.trend === "down"
-                      ? { backgroundColor: "rgb(189, 31, 31)" }
-                      : undefined
-                  }
-                >
-                  <h3 className="text-sm md:text-4xl font-black tracking-wide flex-1 text-white">
-                    {product.name.toUpperCase()}
-                  </h3>
-                  <div className="flex items-center gap-1.5 md:gap-6 ml-2 md:ml-6">
-                    <span className="text-sm md:text-4xl font-black text-white tabular-nums whitespace-nowrap">
-                      {parseInt(parseFloat(product.currentPrice).toString())}{" "}
-                      RSD
+              {grouped[category].map((product, i) => {
+                const price = Math.round(parseFloat(product.currentPrice));
+                return (
+                  <div
+                    key={product.id}
+                    className={`flex items-center justify-between px-4 md:px-8 ${
+                      i % 2 === 0 ? "bg-white/3" : ""
+                    }`}
+                  >
+                    <span className="text-xl md:text-5xl font-black tracking-wide text-white truncate mr-4">
+                      {product.name.toUpperCase()}
                     </span>
-                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                    <div className="flex items-center gap-2 md:gap-5 shrink-0">
+                      <span
+                        className={`text-xl md:text-5xl font-mono font-black tabular-nums ${
+                          product.trend === "up"
+                            ? "text-emerald-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {price}
+                      </span>
+                      <span className="text-sm md:text-2xl text-white/30 font-mono">
+                        RSD
+                      </span>
                       {product.trend === "up" ? (
                         <ArrowUp
-                          className="w-4 h-4 md:w-8 md:h-8 text-emerald-500"
-                          strokeWidth={2}
+                          className="w-5 h-5 md:w-10 md:h-10 text-emerald-400"
+                          strokeWidth={2.5}
                         />
                       ) : (
                         <ArrowDown
-                          className="w-4 h-4 md:w-8 md:h-8 text-rose-500"
-                          strokeWidth={2}
+                          className="w-5 h-5 md:w-10 md:h-10 text-red-400"
+                          strokeWidth={2.5}
                         />
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-        )}
+        ))}
       </div>
 
       {/* Campaign Overlays */}
