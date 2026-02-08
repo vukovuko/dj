@@ -16,6 +16,16 @@
 
 import { startWorker } from "./src/lib/worker.ts";
 
+process.on("uncaughtException", (err) => {
+  console.error("❌ Worker uncaught exception:", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("❌ Worker unhandled rejection:", reason);
+  process.exit(1);
+});
+
 startWorker()
   .then(() => {
     console.log("✅ Worker is running and processing jobs");

@@ -82,11 +82,15 @@ export async function startWorker() {
     // Reload interval every 30 minutes in case it was changed in admin panel
     setInterval(
       async () => {
-        const newIntervalMs = await getPriceUpdateIntervalMs();
-        const newIntervalMinutes = newIntervalMs / (60 * 1000);
-        console.log(
-          `⏰ Price update interval reloaded from database: ${newIntervalMinutes} minute(s)`,
-        );
+        try {
+          const newIntervalMs = await getPriceUpdateIntervalMs();
+          const newIntervalMinutes = newIntervalMs / (60 * 1000);
+          console.log(
+            `⏰ Price update interval reloaded from database: ${newIntervalMinutes} minute(s)`,
+          );
+        } catch (error) {
+          console.error("❌ Failed to reload price update interval:", error);
+        }
       },
       30 * 60 * 1000,
     );
@@ -116,13 +120,21 @@ export async function startWorker() {
   // Graceful shutdown
   process.on("SIGTERM", async () => {
     console.log("📛 SIGTERM received, shutting down worker...");
-    await runner.stop();
+    try {
+      await runner.stop();
+    } catch (error) {
+      console.error("❌ Error stopping worker:", error);
+    }
     process.exit(0);
   });
 
   process.on("SIGINT", async () => {
     console.log("📛 SIGINT received, shutting down worker...");
-    await runner.stop();
+    try {
+      await runner.stop();
+    } catch (error) {
+      console.error("❌ Error stopping worker:", error);
+    }
     process.exit(0);
   });
 

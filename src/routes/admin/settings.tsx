@@ -53,6 +53,25 @@ function SettingsPage() {
   const [priceDecreaseRandomPercent, setPriceDecreaseRandomPercent] =
     useState<string>(firstProduct?.priceDecreaseRandomPercent || "0.00");
 
+  const initialValues = {
+    priceUpdateIntervalMinutes: interval.minutes.toString(),
+    pricingMode: firstProduct?.pricingMode || "full",
+    priceIncreasePercent: firstProduct?.priceIncreasePercent || "2.00",
+    priceIncreaseRandomPercent:
+      firstProduct?.priceIncreaseRandomPercent || "1.00",
+    priceDecreasePercent: firstProduct?.priceDecreasePercent || "1.00",
+    priceDecreaseRandomPercent:
+      firstProduct?.priceDecreaseRandomPercent || "0.00",
+  };
+
+  const hasChanges =
+    priceUpdateIntervalMinutes !== initialValues.priceUpdateIntervalMinutes ||
+    pricingMode !== initialValues.pricingMode ||
+    priceIncreasePercent !== initialValues.priceIncreasePercent ||
+    priceIncreaseRandomPercent !== initialValues.priceIncreaseRandomPercent ||
+    priceDecreasePercent !== initialValues.priceDecreasePercent ||
+    priceDecreaseRandomPercent !== initialValues.priceDecreaseRandomPercent;
+
   useEffect(() => {
     if (firstProduct) {
       setPricingMode(firstProduct.pricingMode || "full");
@@ -274,7 +293,11 @@ function SettingsPage() {
       </div>
 
       {/* Save Button */}
-      <Button onClick={handleSave} disabled={isSaving} className="w-full">
+      <Button
+        onClick={handleSave}
+        disabled={!hasChanges || isSaving}
+        className="w-full"
+      >
         {isSaving ? "Čuvanje..." : "Sačuvaj podešavanja"}
       </Button>
     </div>

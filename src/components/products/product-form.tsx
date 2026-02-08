@@ -75,6 +75,15 @@ export function ProductForm({
     },
   );
 
+  const hasChanges =
+    !initialData ||
+    formData.name !== initialData.name ||
+    formData.categoryId !== initialData.categoryId ||
+    formData.basePrice !== initialData.basePrice ||
+    formData.minPrice !== initialData.minPrice ||
+    formData.maxPrice !== initialData.maxPrice ||
+    formData.status !== initialData.status;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -300,7 +309,10 @@ export function ProductForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Otkaži
           </Button>
-          <Button type="submit" disabled={isSubmitting || isDeleting}>
+          <Button
+            type="submit"
+            disabled={isSubmitting || isDeleting || !hasChanges}
+          >
             {isSubmitting ? "Čuvanje..." : submitLabel}
           </Button>
         </div>

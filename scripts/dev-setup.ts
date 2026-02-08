@@ -39,20 +39,35 @@ async function main() {
     shell: true,
     cwd: process.cwd(),
   });
-  const worker = spawn("node", ["--experimental-strip-types", "worker.ts"], {
-    stdio: "inherit",
-    shell: true,
-    cwd: process.cwd(),
-  });
+
+  let isShuttingDown = false;
+
+  function spawnWorker() {
+    const w = spawn("node", ["--experimental-strip-types", "worker.ts"], {
+      stdio: "inherit",
+      shell: true,
+      cwd: process.cwd(),
+    });
+
+    w.on("close", (code) => {
+      if (isShuttingDown) return;
+      if (code !== 0 && code !== null) {
+        console.error(
+          `❌ Worker exited with code ${code}, restarting in 2s...`,
+        );
+        setTimeout(spawnWorker, 2000);
+      }
+    });
+
+    return w;
+  }
+
+  let worker = spawnWorker();
 
   dev.on("close", (code) => {
+    isShuttingDown = true;
     worker.kill();
     process.exit(code ?? 0);
-  });
-  worker.on("close", (code) => {
-    if (code !== 0 && code !== null) {
-      console.error(`❌ Worker exited with code ${code}`);
-    }
   });
 }
 

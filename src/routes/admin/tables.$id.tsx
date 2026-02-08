@@ -81,6 +81,10 @@ function TableDetailPage() {
     Record<string, string>
   >({});
 
+  const hasTableChanges =
+    tableFormData.number !== Number(table.number) ||
+    tableFormData.status !== table.status;
+
   const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedProductId, setSelectedProductId] = useState("");
@@ -769,7 +773,10 @@ function TableDetailPage() {
               >
                 Otkaži
               </Button>
-              <Button onClick={handleUpdateTable} disabled={isLoadingTable}>
+              <Button
+                onClick={handleUpdateTable}
+                disabled={!hasTableChanges || isLoadingTable}
+              >
                 Sačuvaj
               </Button>
               <Button

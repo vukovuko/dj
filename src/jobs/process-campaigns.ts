@@ -36,12 +36,16 @@ async function notifyCampaign(
   // Escape single quotes for PostgreSQL
   const escapedPayload = payload.replace(/'/g, "''");
 
-  const client = await pool.connect();
   try {
-    await client.query(`NOTIFY campaign_update, '${escapedPayload}'`);
-    console.log(`📺 Sent NOTIFY: ${type} for campaign ${campaign.id}`);
-  } finally {
-    client.release();
+    const client = await pool.connect();
+    try {
+      await client.query(`NOTIFY campaign_update, '${escapedPayload}'`);
+      console.log(`📺 Sent NOTIFY: ${type} for campaign ${campaign.id}`);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error(`❌ Failed to send campaign notification: ${type}`, error);
   }
 }
 
