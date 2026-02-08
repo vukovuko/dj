@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import {
@@ -46,45 +47,55 @@ export function CampaignDialog({
 }: CampaignDialogProps) {
   const { data: session } = authClient.useSession();
 
-  // Helper to get default time (now + 1 minute)
-  const getDefaultTime = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    return `${hours}:${minutes}`;
-  };
-
   const [selectedVideoId, setSelectedVideoId] = useState(
     preselectedVideoId || "",
   );
+  const [videoSearch, setVideoSearch] = useState("");
+  const [isVideoDropdownOpen, setIsVideoDropdownOpen] = useState(false);
+  const videoSearchRef = useRef<HTMLDivElement>(null);
   const [scheduleType, setScheduleType] = useState<"now" | "later">("now");
   const [scheduledDate, setScheduledDate] = useState(
     new Date().toISOString().split("T")[0],
   );
-  const [scheduledTime, setScheduledTime] = useState(getDefaultTime());
+  const [scheduledTime, setScheduledTime] = useState("");
   const [countdownSeconds, setCountdownSeconds] = useState("60");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeError, setTimeError] = useState("");
 
-  // Reset form when dialog opens
-  const handleOpenChange = (newOpen: boolean) => {
-    if (newOpen) {
-      setSelectedVideoId(preselectedVideoId || "");
-      setScheduleType("now");
-      // Default to today's date
-      setScheduledDate(new Date().toISOString().split("T")[0]);
-      // Default to current time + 1 minute
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + 1);
-      const hours = now.getHours().toString().padStart(2, "0");
-      const minutes = now.getMinutes().toString().padStart(2, "0");
-      setScheduledTime(`${hours}:${minutes}`);
-      setCountdownSeconds("60");
-      setTimeError("");
-    }
-    onOpenChange(newOpen);
-  };
+  // Close video dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        videoSearchRef.current &&
+        !videoSearchRef.current.contains(e.target as Node)
+      ) {
+        setIsVideoDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredVideos = videos.filter((v) =>
+    v.name.toLowerCase().includes(videoSearch.toLowerCase()),
+  );
+
+  // Reset form when dialog opens (useEffect catches both parent-driven and internal opens)
+  useEffect(() => {
+    if (!open) return;
+    setSelectedVideoId(preselectedVideoId || "");
+    setVideoSearch("");
+    setIsVideoDropdownOpen(false);
+    setScheduleType("now");
+    setScheduledDate(new Date().toISOString().split("T")[0]);
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 1);
+    setScheduledTime(
+      `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`,
+    );
+    setCountdownSeconds("60");
+    setTimeError("");
+  }, [open, preselectedVideoId, videos]);
 
   const handleSubmit = async () => {
     if (!selectedVideoId) {
@@ -148,7 +159,7 @@ export function CampaignDialog({
   const selectedVideo = videos.find((v) => v.id === selectedVideoId);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Nova kampanja</DialogTitle>
@@ -175,22 +186,87 @@ export function CampaignDialog({
               </p>
             ) : (
               <>
-                <Select
-                  value={selectedVideoId}
-                  onValueChange={setSelectedVideoId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Izaberite video" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {videos.map((video) => (
-                      <SelectItem key={video.id} value={video.id}>
-                        {video.name}
-                        {video.duration && ` (${video.duration}s)`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {selectedVideoId && selectedVideo ? (
+                  <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+                    {selectedVideo.thumbnailUrl && (
+                      <img
+                        src={selectedVideo.thumbnailUrl}
+                        alt=""
+                        className="w-10 h-6 object-cover rounded shrink-0"
+                      />
+                    )}
+                    <span className="flex-1 text-sm truncate">
+                      {selectedVideo.name}
+                      {selectedVideo.duration && (
+                        <span className="text-muted-foreground ml-1">
+                          ({selectedVideo.duration}s)
+                        </span>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedVideoId("");
+                        setVideoSearch("");
+                      }}
+                      className="text-muted-foreground hover:text-foreground shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div ref={videoSearchRef} className="relative">
+                    <Input
+                      placeholder="Pretražite video..."
+                      value={videoSearch}
+                      onChange={(e) => {
+                        setVideoSearch(e.target.value);
+                        setIsVideoDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsVideoDropdownOpen(true)}
+                      autoFocus={!selectedVideoId}
+                    />
+                    {isVideoDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md">
+                        {filteredVideos.length === 0 ? (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            Nema rezultata
+                          </div>
+                        ) : (
+                          filteredVideos.map((video) => (
+                            <button
+                              key={video.id}
+                              type="button"
+                              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent cursor-pointer text-left"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setSelectedVideoId(video.id);
+                                setVideoSearch("");
+                                setIsVideoDropdownOpen(false);
+                              }}
+                            >
+                              {video.thumbnailUrl && (
+                                <img
+                                  src={video.thumbnailUrl}
+                                  alt=""
+                                  className="w-10 h-6 object-cover rounded"
+                                />
+                              )}
+                              <span>
+                                {video.name}
+                                {video.duration && (
+                                  <span className="text-muted-foreground ml-1">
+                                    ({video.duration}s)
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {selectedVideo?.thumbnailUrl && (
                   <img
                     src={selectedVideo.thumbnailUrl}

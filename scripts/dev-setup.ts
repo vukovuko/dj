@@ -27,6 +27,9 @@ async function main() {
 
   await waitForPostgres();
 
+  console.log("🔧 Enabling PostgreSQL extensions...");
+  run("node enable-unaccent.js");
+
   console.log("📦 Running migrations...");
   run("npx drizzle-kit migrate");
 
