@@ -12,7 +12,12 @@
 
 import { and, eq, lte, or } from "drizzle-orm";
 import { db, pool } from "../db/index.ts";
-import { videoCampaigns, videos } from "../db/schema.ts";
+import {
+  priceHistory,
+  products,
+  videoCampaigns,
+  videos,
+} from "../db/schema.ts";
 
 // Send campaign notification via PostgreSQL NOTIFY
 // This works across processes (worker -> web server)
@@ -25,6 +30,13 @@ async function notifyCampaign(
     videoName?: string | null;
     videoDuration?: number | null;
     countdownSeconds?: number;
+    highlight?: {
+      productId: string;
+      productName: string;
+      newPrice: string;
+      oldPrice: string;
+      durationSeconds: number;
+    } | null;
   },
 ) {
   const payload = JSON.stringify({
@@ -190,9 +202,18 @@ const task = async (payload: any, helpers: any) => {
         startedAt: videoCampaigns.startedAt,
         countdownSeconds: videoCampaigns.countdownSeconds,
         videoDuration: videos.duration,
+        // Highlight fields
+        productId: videoCampaigns.productId,
+        promotionalPrice: videoCampaigns.promotionalPrice,
+        highlightDurationSeconds: videoCampaigns.highlightDurationSeconds,
+        productName: products.name,
+        currentProductPrice: products.currentPrice,
+        productMinPrice: products.minPrice,
+        productMaxPrice: products.maxPrice,
       })
       .from(videoCampaigns)
       .leftJoin(videos, eq(videoCampaigns.videoId, videos.id))
+      .leftJoin(products, eq(videoCampaigns.productId, products.id))
       .where(eq(videoCampaigns.status, "playing"));
 
     for (const campaign of playingCampaigns) {
@@ -207,6 +228,94 @@ const task = async (payload: any, helpers: any) => {
       );
 
       if (now >= videoEndTime) {
+        // Update product price if campaign has a product highlight
+        let highlightData: {
+          productId: string;
+          productName: string;
+          newPrice: string;
+          oldPrice: string;
+          durationSeconds: number;
+        } | null = null;
+
+        if (
+          campaign.productId &&
+          campaign.promotionalPrice &&
+          campaign.productName &&
+          campaign.currentProductPrice
+        ) {
+          const oldPrice = campaign.currentProductPrice;
+          // Clamp promotional price to product's min/max bounds
+          let clampedPrice = parseFloat(campaign.promotionalPrice);
+          if (campaign.productMinPrice) {
+            clampedPrice = Math.max(
+              clampedPrice,
+              parseFloat(campaign.productMinPrice),
+            );
+          }
+          if (campaign.productMaxPrice) {
+            clampedPrice = Math.min(
+              clampedPrice,
+              parseFloat(campaign.productMaxPrice),
+            );
+          }
+          const newPrice = clampedPrice.toFixed(2);
+          const newPriceNum = clampedPrice;
+          const oldPriceNum = parseFloat(oldPrice);
+
+          // Update the product's price
+          await db
+            .update(products)
+            .set({
+              previousPrice: oldPrice,
+              currentPrice: newPrice,
+              trend: newPriceNum > oldPriceNum ? "up" : "down",
+              lastPriceUpdate: now,
+              updatedAt: now,
+            })
+            .where(eq(products.id, campaign.productId));
+
+          // Record in price history
+          await db.insert(priceHistory).values({
+            productId: campaign.productId,
+            price: newPrice,
+            timestamp: now,
+          });
+
+          helpers.logger.info(
+            `📺 Updated product ${campaign.productName} price: ${oldPrice} → ${newPrice}`,
+          );
+
+          highlightData = {
+            productId: campaign.productId,
+            productName: campaign.productName,
+            newPrice,
+            oldPrice,
+            durationSeconds: campaign.highlightDurationSeconds ?? 5,
+          };
+
+          // Send price_update NOTIFY so TV's price SSE stream picks up the change
+          try {
+            const priceClient = await pool.connect();
+            try {
+              const pricePayload = JSON.stringify({
+                count: 1,
+                timestamp: now.toISOString(),
+              });
+              const escapedPricePayload = pricePayload.replace(/'/g, "''");
+              await priceClient.query(
+                `NOTIFY price_update, '${escapedPricePayload}'`,
+              );
+            } finally {
+              priceClient.release();
+            }
+          } catch (error) {
+            helpers.logger.error(
+              "❌ Failed to send price_update notification",
+              { error },
+            );
+          }
+        }
+
         await db
           .update(videoCampaigns)
           .set({
@@ -221,6 +330,7 @@ const task = async (payload: any, helpers: any) => {
         await notifyCampaign("VIDEO_END", {
           id: campaign.id,
           videoId: campaign.videoId,
+          highlight: highlightData,
         });
       }
     }

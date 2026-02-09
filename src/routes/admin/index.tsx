@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Coffee,
+  Megaphone,
   Package,
   Settings,
   Tag,
@@ -42,6 +43,12 @@ const navigationCards = [
     description: "Kreirajte nove video sadržaje pomoću AI",
     icon: WandSparkles,
     url: "/admin/videos/generacija",
+  },
+  {
+    title: "Kampanje",
+    description: "Video kampanje i brze reklame za TV",
+    icon: Megaphone,
+    url: "/admin/campaigns",
   },
   {
     title: "Podešavanja",

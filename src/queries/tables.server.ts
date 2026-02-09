@@ -440,6 +440,8 @@ export const getActiveProducts = createServerFn({ method: "GET" })
         name: products.name,
         categoryName: categories.name,
         currentPrice: products.currentPrice,
+        minPrice: products.minPrice,
+        maxPrice: products.maxPrice,
       })
       .from(products)
       .innerJoin(categories, eq(products.categoryId, categories.id))

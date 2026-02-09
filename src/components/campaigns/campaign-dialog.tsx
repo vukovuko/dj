@@ -30,10 +30,20 @@ interface Video {
   duration: number | null;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  currentPrice: string;
+  minPrice: string;
+  maxPrice: string;
+  categoryName: string | null;
+}
+
 interface CampaignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   videos: Video[];
+  products: Product[];
   onSuccess: () => void;
   preselectedVideoId?: string;
 }
@@ -42,6 +52,7 @@ export function CampaignDialog({
   open,
   onOpenChange,
   videos,
+  products,
   onSuccess,
   preselectedVideoId,
 }: CampaignDialogProps) {
@@ -62,7 +73,15 @@ export function CampaignDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeError, setTimeError] = useState("");
 
-  // Close video dropdown when clicking outside
+  // Product highlight state
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+  const productSearchRef = useRef<HTMLDivElement>(null);
+  const [promotionalPrice, setPromotionalPrice] = useState("");
+  const [highlightDuration, setHighlightDuration] = useState("5");
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -71,6 +90,12 @@ export function CampaignDialog({
       ) {
         setIsVideoDropdownOpen(false);
       }
+      if (
+        productSearchRef.current &&
+        !productSearchRef.current.contains(e.target as Node)
+      ) {
+        setIsProductDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -78,6 +103,10 @@ export function CampaignDialog({
 
   const filteredVideos = videos.filter((v) =>
     v.name.toLowerCase().includes(videoSearch.toLowerCase()),
+  );
+
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase()),
   );
 
   // Reset form when dialog opens (useEffect catches both parent-driven and internal opens)
@@ -95,6 +124,12 @@ export function CampaignDialog({
     );
     setCountdownSeconds("60");
     setTimeError("");
+    // Reset product highlight fields
+    setSelectedProductId("");
+    setProductSearch("");
+    setIsProductDropdownOpen(false);
+    setPromotionalPrice("");
+    setHighlightDuration("5");
   }, [open, preselectedVideoId, videos]);
 
   const handleSubmit = async () => {
@@ -131,6 +166,25 @@ export function CampaignDialog({
       }
     }
 
+    // Validate product highlight fields
+    if (selectedProductId && !promotionalPrice) {
+      toast.error("Unesite novu cenu za istaknuti koktel");
+      return;
+    }
+    if (selectedProductId && selectedProduct) {
+      const priceNum = parseFloat(promotionalPrice);
+      const minPrice = Math.round(parseFloat(selectedProduct.minPrice));
+      const maxPrice = Math.round(parseFloat(selectedProduct.maxPrice));
+      if (isNaN(priceNum) || priceNum <= 0) {
+        toast.error("Cena mora biti pozitivan broj");
+        return;
+      }
+      if (priceNum < minPrice || priceNum > maxPrice) {
+        toast.error(`Cena mora biti između ${minPrice} i ${maxPrice} RSD`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       await createCampaign({
@@ -139,6 +193,11 @@ export function CampaignDialog({
           scheduledAt: scheduledAt.toISOString(),
           countdownSeconds: parseInt(countdownSeconds),
           createdBy: session.user.id,
+          ...(selectedProductId && {
+            productId: selectedProductId,
+            promotionalPrice: parseFloat(promotionalPrice),
+            highlightDurationSeconds: parseInt(highlightDuration),
+          }),
         },
       });
 
@@ -157,6 +216,7 @@ export function CampaignDialog({
   };
 
   const selectedVideo = videos.find((v) => v.id === selectedVideoId);
+  const selectedProduct = products.find((p) => p.id === selectedProductId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -397,6 +457,120 @@ export function CampaignDialog({
             <p className="text-xs text-muted-foreground">
               Odbrojavanje se prikazuje na TV-u pre početka videa
             </p>
+          </div>
+
+          {/* Product Highlight (optional) */}
+          <div className="space-y-2 border-t pt-4">
+            <Label>Istaknuti koktel</Label>
+            <p className="text-xs text-muted-foreground">
+              Opciono &mdash; koktel koji se ističe na TV-u nakon videa
+            </p>
+
+            {selectedProductId && selectedProduct ? (
+              <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+                <span className="flex-1 text-sm truncate">
+                  {selectedProduct.name}
+                  <span className="text-muted-foreground ml-1">
+                    ({Math.round(parseFloat(selectedProduct.currentPrice))} RSD)
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedProductId("");
+                    setProductSearch("");
+                    setPromotionalPrice("");
+                  }}
+                  className="text-muted-foreground hover:text-foreground shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div ref={productSearchRef} className="relative">
+                <Input
+                  placeholder="Pretražite koktel..."
+                  value={productSearch}
+                  onChange={(e) => {
+                    setProductSearch(e.target.value);
+                    setIsProductDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsProductDropdownOpen(true)}
+                />
+                {isProductDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md">
+                    {filteredProducts.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        Nema rezultata
+                      </div>
+                    ) : (
+                      filteredProducts.map((product) => (
+                        <button
+                          key={product.id}
+                          type="button"
+                          className="flex w-full items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-accent cursor-pointer text-left"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setSelectedProductId(product.id);
+                            setProductSearch("");
+                            setIsProductDropdownOpen(false);
+                          }}
+                        >
+                          <span className="truncate">{product.name}</span>
+                          <span className="text-muted-foreground shrink-0">
+                            {Math.round(parseFloat(product.currentPrice))} RSD
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Promotional price + duration (only when product selected) */}
+            {selectedProductId && selectedProduct && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="promo-price" className="text-xs">
+                    Nova cena (RSD)
+                  </Label>
+                  <Input
+                    id="promo-price"
+                    type="number"
+                    min={Math.round(parseFloat(selectedProduct.minPrice))}
+                    max={Math.round(parseFloat(selectedProduct.maxPrice))}
+                    placeholder={Math.round(
+                      parseFloat(selectedProduct.currentPrice),
+                    ).toString()}
+                    value={promotionalPrice}
+                    onChange={(e) => setPromotionalPrice(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Min: {Math.round(parseFloat(selectedProduct.minPrice))}{" "}
+                    &mdash; Max:{" "}
+                    {Math.round(parseFloat(selectedProduct.maxPrice))} RSD
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Trajanje prikaza</Label>
+                  <Select
+                    value={highlightDuration}
+                    onValueChange={setHighlightDuration}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 sekunde</SelectItem>
+                      <SelectItem value="5">5 sekundi</SelectItem>
+                      <SelectItem value="8">8 sekundi</SelectItem>
+                      <SelectItem value="10">10 sekundi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

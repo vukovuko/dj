@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CocktailHighlightOverlay } from "~/components/tv/cocktail-highlight-overlay";
 import { CountdownOverlay } from "~/components/tv/countdown-overlay";
 import { VideoPlayerOverlay } from "~/components/tv/video-player-overlay";
 import {
@@ -20,8 +21,16 @@ interface Product {
   trend: "up" | "down";
 }
 
+interface HighlightData {
+  productId?: string;
+  productName: string;
+  newPrice: string;
+  oldPrice?: string | null;
+  durationSeconds: number;
+}
+
 interface CampaignState {
-  status: "idle" | "countdown" | "playing";
+  status: "idle" | "countdown" | "playing" | "highlight";
   campaign: {
     id: string;
     videoId: string;
@@ -33,6 +42,7 @@ interface CampaignState {
     startedAt: Date | null;
   } | null;
   countdownRemaining: number;
+  highlight: HighlightData | null;
 }
 
 export const Route = createFileRoute("/")({
@@ -56,9 +66,11 @@ function TVDisplay() {
     status: "idle",
     campaign: null,
     countdownRemaining: 0,
+    highlight: null,
   });
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const campaignReconnectRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingHighlightRef = useRef<HighlightData | null>(null);
 
   // Refresh product data
   const refreshProducts = async () => {
@@ -160,14 +172,30 @@ function TVDisplay() {
     [],
   );
 
-  // Handle video end - reset to idle
+  // Handle video end - check for highlight, otherwise idle
   const handleVideoEnded = useCallback(() => {
-    console.log("📺 Video ended, returning to idle");
-    setCampaignState({
-      status: "idle",
-      campaign: null,
-      countdownRemaining: 0,
-    });
+    const highlight = pendingHighlightRef.current;
+    pendingHighlightRef.current = null;
+    if (highlight) {
+      console.log(
+        "📺 Video ended, showing highlight for",
+        highlight.productName,
+      );
+      setCampaignState({
+        status: "highlight",
+        campaign: null,
+        countdownRemaining: 0,
+        highlight,
+      });
+    } else {
+      console.log("📺 Video ended, returning to idle");
+      setCampaignState({
+        status: "idle",
+        campaign: null,
+        countdownRemaining: 0,
+        highlight: null,
+      });
+    }
   }, []);
 
   // Campaign subscription
@@ -199,6 +227,7 @@ function TVDisplay() {
                 startedAt: new Date(activeCampaign.startedAt),
               },
               countdownRemaining: remaining,
+              highlight: null,
             });
           } else if (activeCampaign.status === "playing") {
             setCampaignState({
@@ -216,6 +245,7 @@ function TVDisplay() {
                   : null,
               },
               countdownRemaining: 0,
+              highlight: null,
             });
           }
         }
@@ -262,6 +292,7 @@ function TVDisplay() {
                       startedAt: new Date(),
                     },
                     countdownRemaining: campaign.countdownSeconds,
+                    highlight: null,
                   });
                 } else if (parsed.type === "VIDEO_PLAY") {
                   const campaign = parsed.campaign;
@@ -278,15 +309,37 @@ function TVDisplay() {
                       startedAt: null,
                     },
                     countdownRemaining: 0,
+                    highlight: null,
                   }));
-                } else if (
-                  parsed.type === "VIDEO_END" ||
-                  parsed.type === "CANCELLED"
-                ) {
+                } else if (parsed.type === "VIDEO_END") {
+                  // Store highlight data in ref for handleVideoEnded to pick up
+                  pendingHighlightRef.current =
+                    parsed.campaign?.highlight || null;
+                  // Don't transition state here — wait for <video> onEnded
+                } else if (parsed.type === "CANCELLED") {
+                  pendingHighlightRef.current = null;
                   setCampaignState({
                     status: "idle",
                     campaign: null,
                     countdownRemaining: 0,
+                    highlight: null,
+                  });
+                } else if (parsed.type === "QUICK_AD_PLAY") {
+                  const qa = parsed.quickAd;
+                  setCampaignState((prev) => {
+                    // Only show if currently idle
+                    if (prev.status !== "idle") return prev;
+                    return {
+                      status: "highlight",
+                      campaign: null,
+                      countdownRemaining: 0,
+                      highlight: {
+                        productName: qa.displayText,
+                        newPrice: qa.price,
+                        oldPrice: qa.oldPrice || null,
+                        durationSeconds: qa.durationSeconds,
+                      },
+                    };
                   });
                 }
               } catch (e) {
@@ -347,6 +400,24 @@ function TVDisplay() {
       };
     }
   }, [campaignState.status, campaignState.countdownRemaining > 0]);
+
+  // Auto-dismiss highlight overlay after duration
+  useEffect(() => {
+    if (campaignState.status === "highlight" && campaignState.highlight) {
+      const timer = setTimeout(() => {
+        console.log("📺 Highlight ended, returning to idle");
+        setCampaignState({
+          status: "idle",
+          campaign: null,
+          countdownRemaining: 0,
+          highlight: null,
+        });
+        refreshProducts();
+      }, campaignState.highlight.durationSeconds * 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [campaignState.status]);
 
   // Group products by category
   const grouped = products.reduce(
@@ -459,6 +530,15 @@ function TVDisplay() {
             onEnded={handleVideoEnded}
           />
         )}
+
+      {campaignState.status === "highlight" && campaignState.highlight && (
+        <CocktailHighlightOverlay
+          productName={campaignState.highlight.productName}
+          newPrice={campaignState.highlight.newPrice}
+          oldPrice={campaignState.highlight.oldPrice}
+          durationSeconds={campaignState.highlight.durationSeconds}
+        />
+      )}
     </div>
   );
 }

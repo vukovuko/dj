@@ -1,10 +1,20 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { sr } from "date-fns/locale/sr";
-import { Calendar, CheckCircle, Clock, Play, Timer } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  Megaphone,
+  Pencil,
+  Play,
+  Timer,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CampaignDialog } from "~/components/campaigns/campaign-dialog";
+import { QuickAdDialog } from "~/components/campaigns/quick-ad-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,28 +39,47 @@ import {
   getCampaigns,
   subscribeToCampaignUpdates,
 } from "~/queries/campaigns.server";
+import {
+  deleteQuickAd,
+  getQuickAds,
+  playQuickAd,
+} from "~/queries/quick-ads.server";
+import { getActiveProducts } from "~/queries/tables.server";
 import { getVideos } from "~/queries/videos.server";
 
 export const Route = createFileRoute("/admin/campaigns")({
   component: CampaignsPage,
   loader: async () => {
-    const [campaigns, videos] = await Promise.all([
+    const [campaigns, videos, products, quickAdsList] = await Promise.all([
       getCampaigns(),
       getVideos(),
+      getActiveProducts({ data: {} }),
+      getQuickAds(),
     ]);
-    return { campaigns, videos };
+    return { campaigns, videos, products, quickAds: quickAdsList };
   },
 });
 
 function CampaignsPage() {
   const router = useRouter();
-  const { campaigns, videos } = Route.useLoaderData();
+  const { campaigns, videos, products, quickAds } = Route.useLoaderData();
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [historyLimit, setHistoryLimit] = useState(10);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Quick ads state
+  const [quickAdDialogOpen, setQuickAdDialogOpen] = useState(false);
+  const [editingQuickAd, setEditingQuickAd] = useState<
+    (typeof quickAds)[number] | null
+  >(null);
+  const [playingAdId, setPlayingAdId] = useState<string | null>(null);
+  const [deleteAdTarget, setDeleteAdTarget] = useState<string | null>(null);
+  const [isDeletingAd, setIsDeletingAd] = useState(false);
+  const [activeAdId, setActiveAdId] = useState<string | null>(null);
+  const activeAdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Subscribe to real-time campaign updates
   useEffect(() => {
@@ -90,9 +119,23 @@ function CampaignsPage() {
                     "VIDEO_PLAY",
                     "VIDEO_END",
                     "CANCELLED",
+                    "QUICK_AD_PLAY",
                   ].includes(parsed.type)
                 ) {
                   router.invalidate();
+                }
+                // Track active quick ad for "now playing" indicator
+                if (parsed.type === "QUICK_AD_PLAY" && parsed.quickAd) {
+                  if (activeAdTimeoutRef.current) {
+                    clearTimeout(activeAdTimeoutRef.current);
+                  }
+                  setActiveAdId(parsed.quickAd.id);
+                  activeAdTimeoutRef.current = setTimeout(
+                    () => {
+                      setActiveAdId(null);
+                    },
+                    (parsed.quickAd.durationSeconds || 5) * 1000,
+                  );
                 }
               } catch {
                 // Ignore parse errors
@@ -115,6 +158,9 @@ function CampaignsPage() {
       aborted = true;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (activeAdTimeoutRef.current) {
+        clearTimeout(activeAdTimeoutRef.current);
       }
     };
   }, [router]);
@@ -145,6 +191,37 @@ function CampaignsPage() {
       toast.error("Greška pri otkazivanju kampanje");
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handlePlayQuickAd = async (id: string) => {
+    setPlayingAdId(id);
+    try {
+      await playQuickAd({ data: { id } });
+      toast.success("Reklama se prikazuje na TV-u!");
+      router.invalidate();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Greška pri puštanju reklame";
+      toast.error(message);
+    } finally {
+      setPlayingAdId(null);
+    }
+  };
+
+  const handleDeleteQuickAd = async () => {
+    if (!deleteAdTarget) return;
+    setIsDeletingAd(true);
+    try {
+      await deleteQuickAd({ data: { id: deleteAdTarget } });
+      toast.success("Reklama je obrisana");
+      setDeleteAdTarget(null);
+      router.invalidate();
+    } catch (error) {
+      console.error("Failed to delete quick ad:", error);
+      toast.error("Greška pri brisanju reklame");
+    } finally {
+      setIsDeletingAd(false);
     }
   };
 
@@ -290,6 +367,13 @@ function CampaignsPage() {
                             <Timer className="h-3.5 w-3.5" />
                             {formatCountdown(campaign.countdownSeconds)}
                           </span>
+                          {campaign.productName && (
+                            <Badge variant="outline" className="text-xs">
+                              {campaign.productName}
+                              {campaign.promotionalPrice &&
+                                ` → ${Math.round(parseFloat(campaign.promotionalPrice))} RSD`}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -306,6 +390,120 @@ function CampaignsPage() {
             ) : (
               <p className="text-muted-foreground text-center py-4">
                 Nema zakazanih kampanja
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Ads */}
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Megaphone className="h-5 w-5 text-sky-500" />
+                  Brze reklame
+                </CardTitle>
+                <CardDescription>
+                  Kreiraj i pusti reklame na TV ekranu
+                </CardDescription>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingQuickAd(null);
+                  setQuickAdDialogOpen(true);
+                }}
+              >
+                Dodaj reklamu
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {quickAds.length > 0 ? (
+              <div className="space-y-3">
+                {quickAds.map((ad) => {
+                  const isActive = ad.id === activeAdId;
+                  return (
+                    <div
+                      key={ad.id}
+                      className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg transition-colors ${isActive ? "border-emerald-500 bg-emerald-500/5" : ""}`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{ad.name}</p>
+                          {isActive && (
+                            <Badge className="bg-emerald-500 animate-pulse text-xs">
+                              Prikazuje se
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {ad.productId ? "Proizvod" : "Tekst"}
+                          </Badge>
+                          <span>{ad.durationSeconds}s</span>
+                          {ad.productName && (
+                            <span>
+                              {ad.productName}
+                              {ad.promotionalPrice &&
+                                ` → ${Math.round(parseFloat(ad.promotionalPrice))} RSD`}
+                            </span>
+                          )}
+                          {!ad.productId && ad.displayText && (
+                            <span className="truncate max-w-[200px]">
+                              &ldquo;{ad.displayText}&rdquo;
+                              {ad.displayPrice && ` — ${ad.displayPrice} RSD`}
+                            </span>
+                          )}
+                          {ad.updatePrice && (
+                            <Badge variant="secondary" className="text-xs">
+                              Menja cenu
+                            </Badge>
+                          )}
+                          <span className="text-xs">
+                            {ad.lastPlayedAt
+                              ? `Poslednji put: ${format(new Date(ad.lastPlayedAt), "dd.MM. HH:mm", { locale: sr })}`
+                              : "Nije puštano"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          onClick={() => handlePlayQuickAd(ad.id)}
+                          disabled={playingAdId === ad.id || isActive}
+                        >
+                          <Play className="h-3.5 w-3.5 mr-1" />
+                          {playingAdId === ad.id ? "Puštanje..." : "Pusti"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setEditingQuickAd(ad);
+                            setQuickAdDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => setDeleteAdTarget(ad.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-4">
+                Nema reklama. Kreirajte prvu!
               </p>
             )}
           </CardContent>
@@ -375,6 +573,7 @@ function CampaignsPage() {
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
           videos={readyVideos}
+          products={products}
           onSuccess={() => {
             setCreateDialogOpen(false);
             router.invalidate();
@@ -405,6 +604,46 @@ function CampaignsPage() {
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {isCancelling ? "Otkazivanje..." : "Otkaži kampanju"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Quick Ad Dialog */}
+        <QuickAdDialog
+          open={quickAdDialogOpen}
+          onOpenChange={setQuickAdDialogOpen}
+          products={products}
+          editingAd={editingQuickAd}
+          onSuccess={() => {
+            setQuickAdDialogOpen(false);
+            setEditingQuickAd(null);
+            router.invalidate();
+          }}
+        />
+
+        {/* Delete Quick Ad Confirmation */}
+        <AlertDialog
+          open={deleteAdTarget !== null}
+          onOpenChange={(open) => !open && setDeleteAdTarget(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Obriši reklamu</AlertDialogTitle>
+              <AlertDialogDescription>
+                Da li ste sigurni da želite da obrišete ovu reklamu?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingAd}>
+                Nazad
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteQuickAd}
+                disabled={isDeletingAd}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeletingAd ? "Brisanje..." : "Obriši"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

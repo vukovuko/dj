@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { and, desc, eq, inArray, lte, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "~/db";
-import { user, videoCampaigns, videos } from "~/db/schema";
+import { products, user, videoCampaigns, videos } from "~/db/schema";
 
 // Get all campaigns with video info, ordered by scheduledAt
 export const getCampaigns = createServerFn({ method: "GET" }).handler(
@@ -27,10 +27,16 @@ export const getCampaigns = createServerFn({ method: "GET" }).handler(
         videoAspectRatio: videos.aspectRatio,
         // Creator info
         creatorName: user.name,
+        // Highlight info
+        productId: videoCampaigns.productId,
+        promotionalPrice: videoCampaigns.promotionalPrice,
+        highlightDurationSeconds: videoCampaigns.highlightDurationSeconds,
+        productName: products.name,
       })
       .from(videoCampaigns)
       .leftJoin(videos, eq(videoCampaigns.videoId, videos.id))
       .leftJoin(user, eq(videoCampaigns.createdBy, user.id))
+      .leftJoin(products, eq(videoCampaigns.productId, products.id))
       .orderBy(desc(videoCampaigns.scheduledAt));
 
     return results;
@@ -104,6 +110,10 @@ const createCampaignSchema = z.object({
     .number()
     .refine((v) => [0, 10, 30, 60, 120, 300].includes(v)),
   createdBy: z.string().min(1),
+  // Optional highlight fields
+  productId: z.string().uuid().optional(),
+  promotionalPrice: z.number().positive().optional(),
+  highlightDurationSeconds: z.number().min(3).max(15).optional(),
 });
 
 export const createCampaign = createServerFn({ method: "POST" })
@@ -116,6 +126,9 @@ export const createCampaign = createServerFn({ method: "POST" })
         scheduledAt: new Date(data.scheduledAt),
         countdownSeconds: data.countdownSeconds,
         createdBy: data.createdBy,
+        productId: data.productId,
+        promotionalPrice: data.promotionalPrice?.toString(),
+        highlightDurationSeconds: data.highlightDurationSeconds,
       })
       .returning();
 

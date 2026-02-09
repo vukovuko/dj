@@ -365,7 +365,10 @@ function TableDetailPage() {
                 id="product-search"
                 placeholder="Pretraži proizvod..."
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  if (selectedProductId) setSelectedProductId("");
+                }}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => {
                   // Delay closing dropdown to allow click on items

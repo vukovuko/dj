@@ -40,6 +40,7 @@ import { VideoGrid } from "~/components/videos/video-grid";
 import { VideoPreviewDialog } from "~/components/videos/video-preview-dialog";
 import { VideosToolbar } from "~/components/videos/videos-toolbar";
 import { authClient } from "~/lib/auth-client";
+import { getActiveProducts } from "~/queries/tables.server";
 import { deleteVideos, getVideos, uploadVideo } from "~/queries/videos.server";
 
 // ========== ROUTE ==========
@@ -47,7 +48,11 @@ import { deleteVideos, getVideos, uploadVideo } from "~/queries/videos.server";
 export const Route = createFileRoute("/admin/videos/")({
   component: VideosPage,
   loader: async () => {
-    return await getVideos();
+    const [videos, products] = await Promise.all([
+      getVideos(),
+      getActiveProducts({ data: {} }),
+    ]);
+    return { videos, products };
   },
 });
 
@@ -56,7 +61,7 @@ export const Route = createFileRoute("/admin/videos/")({
 function VideosPage() {
   const navigate = useNavigate();
   const router = useRouter();
-  const videos = Route.useLoaderData();
+  const { videos, products } = Route.useLoaderData();
   const { data: session } = authClient.useSession();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -510,6 +515,7 @@ function VideosPage() {
               thumbnailUrl: v.thumbnailUrl,
               duration: v.duration,
             }))}
+          products={products}
           preselectedVideoId={campaignVideoId}
           onSuccess={() => {
             setCampaignDialogOpen(false);

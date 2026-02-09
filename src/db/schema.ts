@@ -280,6 +280,36 @@ export const videoCampaigns = pgTable("videoCampaigns", {
   status: videoCampaignStatusEnum("status").notNull().default("scheduled"),
   startedAt: timestamp("startedAt"), // When countdown actually started
   completedAt: timestamp("completedAt"), // When video finished playing
+  // Post-campaign product highlight (optional)
+  productId: uuid("productId").references(() => products.id, {
+    onDelete: "set null",
+  }),
+  promotionalPrice: numeric("promotionalPrice", { precision: 10, scale: 2 }),
+  highlightDurationSeconds: integer("highlightDurationSeconds").default(5),
+  createdBy: text("createdBy")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+// Quick ads - instant promotional overlays on TV (no video)
+export const quickAds = pgTable("quickAds", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  // Product-based mode (when productId is set)
+  productId: uuid("productId").references(() => products.id, {
+    onDelete: "set null",
+  }),
+  promotionalPrice: numeric("promotionalPrice", { precision: 10, scale: 2 }),
+  updatePrice: boolean("updatePrice").notNull().default(false),
+  // Free-text mode (when productId is null)
+  displayText: text("displayText"),
+  displayPrice: text("displayPrice"),
+  // Display settings
+  durationSeconds: integer("durationSeconds").notNull().default(5),
+  // Metadata
+  lastPlayedAt: timestamp("lastPlayedAt"),
   createdBy: text("createdBy")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
