@@ -15,6 +15,7 @@ import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as VideosSplatRouteImport } from './routes/videos/$'
+import { Route as AdsSplatRouteImport } from './routes/ads/$'
 import { Route as AdminVideosRouteImport } from './routes/admin/videos'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminQuickAdsRouteImport } from './routes/admin/quick-ads'
@@ -58,6 +59,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const VideosSplatRoute = VideosSplatRouteImport.update({
   id: '/videos/$',
   path: '/videos/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdsSplatRoute = AdsSplatRouteImport.update({
+  id: '/ads/$',
+  path: '/ads/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminVideosRoute = AdminVideosRouteImport.update({
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/admin/quick-ads': typeof AdminQuickAdsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/videos': typeof AdminVideosRouteWithChildren
+  '/ads/$': typeof AdsSplatRoute
   '/videos/$': typeof VideosSplatRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/quick-ads': typeof AdminQuickAdsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/ads/$': typeof AdsSplatRoute
   '/videos/$': typeof VideosSplatRoute
   '/admin': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/admin/quick-ads': typeof AdminQuickAdsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/videos': typeof AdminVideosRouteWithChildren
+  '/ads/$': typeof AdsSplatRoute
   '/videos/$': typeof VideosSplatRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/admin/quick-ads'
     | '/admin/settings'
     | '/admin/videos'
+    | '/ads/$'
     | '/videos/$'
     | '/admin/'
     | '/admin/products/$id'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin/quick-ads'
     | '/admin/settings'
+    | '/ads/$'
     | '/videos/$'
     | '/admin'
     | '/admin/products/$id'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/admin/quick-ads'
     | '/admin/settings'
     | '/admin/videos'
+    | '/ads/$'
     | '/videos/$'
     | '/admin/'
     | '/admin/products/$id'
@@ -268,6 +280,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
+  AdsSplatRoute: typeof AdsSplatRoute
   VideosSplatRoute: typeof VideosSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -314,6 +327,13 @@ declare module '@tanstack/react-router' {
       path: '/videos/$'
       fullPath: '/videos/$'
       preLoaderRoute: typeof VideosSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ads/$': {
+      id: '/ads/$'
+      path: '/ads/$'
+      fullPath: '/ads/$'
+      preLoaderRoute: typeof AdsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/videos': {
@@ -468,6 +488,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
+  AdsSplatRoute: AdsSplatRoute,
   VideosSplatRoute: VideosSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
