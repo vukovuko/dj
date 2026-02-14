@@ -142,8 +142,10 @@ export function QuickAdDialog({
         setDisplayPrice(editingAd.displayPrice || "");
       }
       setDurationSeconds(editingAd.durationSeconds.toString());
-      // Image
-      setImagePreview(editingAd.imageUrl || null);
+      // Image — cache-bust server URLs so browser doesn't serve stale errors
+      setImagePreview(
+        editingAd.imageUrl ? `${editingAd.imageUrl}?t=${Date.now()}` : null,
+      );
       setImageBase64(null);
       setRemoveImage(false);
       setImageMode(

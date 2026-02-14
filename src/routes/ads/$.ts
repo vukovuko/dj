@@ -8,11 +8,13 @@ export const Route = createFileRoute("/ads/$")({
       GET: async ({ params }: { params: { _splat: string } }) => {
         const path = params._splat || "";
         const filePath = join(process.cwd(), "public", "ads", path);
+        console.log(`[AD_SERVE] Request for /ads/${path} → ${filePath}`);
 
         try {
           const stats = statSync(filePath);
 
           if (!stats.isFile()) {
+            console.log(`[AD_SERVE] Not a file: ${filePath}`);
             return new Response("Not Found", { status: 404 });
           }
 
@@ -39,6 +41,9 @@ export const Route = createFileRoute("/ads/$")({
             },
           });
 
+          console.log(
+            `[AD_SERVE] Serving ${filePath} (${stats.size} bytes, ${contentType})`,
+          );
           return new Response(webStream, {
             status: 200,
             headers: {
@@ -48,6 +53,7 @@ export const Route = createFileRoute("/ads/$")({
             },
           });
         } catch (error) {
+          console.log(`[AD_SERVE] File not found: ${filePath}`, error);
           return new Response("Not Found", { status: 404 });
         }
       },

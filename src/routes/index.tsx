@@ -329,6 +329,10 @@ function TVDisplay() {
                   });
                 } else if (parsed.type === "QUICK_AD_PLAY") {
                   const qa = parsed.quickAd;
+                  // Cache-bust image URL to avoid stale browser cache
+                  const imgUrl = qa.imageUrl
+                    ? `${qa.imageUrl}?t=${Date.now()}`
+                    : null;
                   setCampaignState((prev) => {
                     // Only show if currently idle
                     if (prev.status !== "idle") return prev;
@@ -340,7 +344,7 @@ function TVDisplay() {
                         productName: qa.displayText,
                         newPrice: qa.price,
                         oldPrice: qa.oldPrice || null,
-                        imageUrl: qa.imageUrl || null,
+                        imageUrl: imgUrl,
                         imageMode: qa.imageMode || null,
                         durationSeconds: qa.durationSeconds,
                       },
@@ -457,7 +461,7 @@ function TVDisplay() {
                 productName: qa.displayText,
                 newPrice: qa.price || "",
                 oldPrice: qa.oldPrice || null,
-                imageUrl: qa.imageUrl || null,
+                imageUrl: qa.imageUrl ? `${qa.imageUrl}?t=${Date.now()}` : null,
                 imageMode:
                   (qa.imageMode as "fullscreen" | "background" | null) || null,
                 durationSeconds: qa.durationSeconds,
