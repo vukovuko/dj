@@ -89,7 +89,7 @@ export function QuickAdDialog({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMode, setImageMode] = useState<"fullscreen" | "background">(
-    "fullscreen",
+    "background",
   );
   const [removeImage, setRemoveImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -147,7 +147,7 @@ export function QuickAdDialog({
       setImageBase64(null);
       setRemoveImage(false);
       setImageMode(
-        (editingAd.imageMode as "fullscreen" | "background") || "fullscreen",
+        (editingAd.imageMode as "fullscreen" | "background") || "background",
       );
     } else {
       setName("");
@@ -163,7 +163,7 @@ export function QuickAdDialog({
       setImagePreview(null);
       setImageBase64(null);
       setRemoveImage(false);
-      setImageMode("fullscreen");
+      setImageMode("background");
     }
   }, [open, editingAd]);
 
@@ -548,24 +548,31 @@ export function QuickAdDialog({
               />
             )}
             {imagePreview && (
-              <Select
-                value={imageMode}
-                onValueChange={(v) =>
-                  setImageMode(v as "fullscreen" | "background")
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fullscreen">
-                    Ceo ekran (samo slika)
-                  </SelectItem>
-                  <SelectItem value="background">
-                    Pozadina sa tekstom
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <>
+                <Select
+                  value={imageMode}
+                  onValueChange={(v) =>
+                    setImageMode(v as "fullscreen" | "background")
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="background">
+                      Pozadina sa tekstom
+                    </SelectItem>
+                    <SelectItem value="fullscreen">
+                      Ceo ekran (samo slika)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {imageMode === "fullscreen"
+                    ? "Prikazuje samo sliku na celom ekranu, bez teksta i cene"
+                    : "Slika kao pozadina, tekst i cena se prikazuju preko nje"}
+                </p>
+              </>
             )}
           </div>
 

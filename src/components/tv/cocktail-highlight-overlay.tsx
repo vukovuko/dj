@@ -22,11 +22,13 @@ export function CocktailHighlightOverlay({
   imageMode,
   durationSeconds,
 }: CocktailHighlightOverlayProps) {
-  const newPriceNum = Math.round(parseFloat(newPrice));
+  const newPriceNum = newPrice ? Math.round(parseFloat(newPrice)) : NaN;
   const oldPriceNum = oldPrice ? Math.round(parseFloat(oldPrice)) : null;
-  const isDiscount = oldPriceNum !== null ? newPriceNum < oldPriceNum : true;
+  const hasPrice = !isNaN(newPriceNum) && newPriceNum > 0;
+  const isDiscount =
+    oldPriceNum !== null && hasPrice ? newPriceNum < oldPriceNum : true;
 
-  // Fullscreen image mode — just the image, progress bar, no text
+  // Fullscreen image mode — just the image + progress bar, no text
   if (imageMode === "fullscreen" && imageUrl) {
     return (
       <div className="fixed inset-0 bg-black z-50">
@@ -36,10 +38,10 @@ export function CocktailHighlightOverlay({
           className="absolute inset-0 w-full h-full object-contain"
         />
 
-        {/* Progress bar */}
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-96 h-1 bg-white/10 rounded-full overflow-hidden z-10">
+        {/* Progress bar — thick and visible */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-120 h-2 bg-white/20 rounded-full overflow-hidden z-10">
           <div
-            className="h-full bg-gradient-to-r from-white/60 to-white/40"
+            className="h-full bg-white/70 rounded-full"
             style={{
               animation: `highlight-shrink ${durationSeconds}s linear forwards`,
             }}
@@ -85,57 +87,63 @@ export function CocktailHighlightOverlay({
       {/* Content with entrance animation */}
       <div className="relative z-10 flex flex-col items-center animate-highlight-enter">
         {/* Product name */}
-        <h1
-          className="text-6xl lg:text-[8rem] font-black text-white tracking-wider uppercase text-center leading-tight px-4"
-          style={{
-            textShadow:
-              "0 0 60px rgba(255,255,255,0.4), 0 0 120px rgba(255,255,255,0.2)",
-          }}
-        >
-          {productName}
-        </h1>
+        {productName && (
+          <h1
+            className="text-6xl lg:text-[8rem] font-black text-white tracking-wider uppercase text-center leading-tight px-4"
+            style={{
+              textShadow:
+                "0 0 60px rgba(255,255,255,0.4), 0 0 120px rgba(255,255,255,0.2)",
+            }}
+          >
+            {productName}
+          </h1>
+        )}
 
         {/* Price display */}
-        <div className="mt-6 lg:mt-12 flex items-center gap-4 lg:gap-8">
-          {oldPriceNum !== null && (
-            <>
-              {/* Old price (crossed out) */}
-              <span className="text-3xl lg:text-6xl font-mono text-white/30 line-through">
-                {oldPriceNum}
-              </span>
+        {(hasPrice || oldPriceNum !== null) && (
+          <div className="mt-6 lg:mt-12 flex items-center gap-4 lg:gap-8">
+            {oldPriceNum !== null && (
+              <>
+                {/* Old price (crossed out) */}
+                <span className="text-3xl lg:text-6xl font-mono text-white/30 line-through">
+                  {oldPriceNum}
+                </span>
 
-              {/* Arrow */}
-              <span className="text-3xl lg:text-6xl text-white/50">&rarr;</span>
-            </>
-          )}
+                {/* Arrow */}
+                <span className="text-3xl lg:text-6xl text-white/50">
+                  &rarr;
+                </span>
+              </>
+            )}
 
-          {/* New price (highlighted) */}
-          {!isNaN(newPriceNum) && newPriceNum > 0 && (
-            <>
-              <span
-                className={`text-6xl lg:text-[10rem] font-mono font-black tabular-nums leading-none ${
-                  isDiscount ? "text-emerald-400" : "text-amber-400"
-                }`}
-                style={{
-                  textShadow: isDiscount
-                    ? "0 0 40px rgba(52, 211, 153, 0.5)"
-                    : "0 0 40px rgba(251, 191, 36, 0.5)",
-                }}
-              >
-                {newPriceNum}
-              </span>
-              <span className="text-2xl lg:text-4xl text-white/40 font-mono">
-                RSD
-              </span>
-            </>
-          )}
-        </div>
+            {/* New price (highlighted) */}
+            {hasPrice && (
+              <>
+                <span
+                  className={`text-6xl lg:text-[10rem] font-mono font-black tabular-nums leading-none ${
+                    isDiscount ? "text-emerald-400" : "text-amber-400"
+                  }`}
+                  style={{
+                    textShadow: isDiscount
+                      ? "0 0 40px rgba(52, 211, 153, 0.5)"
+                      : "0 0 40px rgba(251, 191, 36, 0.5)",
+                  }}
+                >
+                  {newPriceNum}
+                </span>
+                <span className="text-2xl lg:text-4xl text-white/40 font-mono">
+                  RSD
+                </span>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Progress bar at bottom */}
-      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-96 h-1 bg-white/10 rounded-full overflow-hidden">
+      {/* Progress bar at bottom — thick and visible */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-120 h-2 bg-white/20 rounded-full overflow-hidden">
         <div
-          className={`h-full ${
+          className={`h-full rounded-full ${
             isDiscount
               ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
               : "bg-gradient-to-r from-amber-500 to-amber-400"

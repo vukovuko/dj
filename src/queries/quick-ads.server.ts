@@ -78,8 +78,8 @@ const createQuickAdSchema = z
     createdBy: z.string().min(1),
   })
   .refine(
-    (data) => data.productId || data.displayText,
-    "Izaberite proizvod ili unesite tekst za prikaz",
+    (data) => data.productId || data.displayText || data.imageBase64,
+    "Izaberite proizvod, unesite tekst, ili dodajte sliku",
   )
   .refine(
     (data) => !data.productId || data.promotionalPrice,
@@ -98,7 +98,7 @@ export const createQuickAd = createServerFn({ method: "POST" })
         updatePrice: data.updatePrice ?? false,
         displayText: data.displayText,
         displayPrice: data.displayPrice,
-        imageMode: data.imageBase64 ? data.imageMode || "fullscreen" : null,
+        imageMode: data.imageBase64 ? data.imageMode || "background" : null,
         durationSeconds: data.durationSeconds,
         createdBy: data.createdBy,
       })
@@ -130,8 +130,9 @@ const updateQuickAdSchema = z
     durationSeconds: z.number().min(3).max(30),
   })
   .refine(
-    (data) => data.productId || data.displayText,
-    "Izaberite proizvod ili unesite tekst za prikaz",
+    (data) =>
+      data.productId || data.displayText || data.imageBase64 || data.imageMode,
+    "Izaberite proizvod, unesite tekst, ili dodajte sliku",
   );
 
 export const updateQuickAd = createServerFn({ method: "POST" })
