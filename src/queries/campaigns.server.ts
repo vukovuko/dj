@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { and, desc, eq, inArray, lte, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "~/db";
-import { products, user, videoCampaigns, videos } from "~/db/schema";
+import { products, quickAds, user, videoCampaigns, videos } from "~/db/schema";
 
 // Get all campaigns with video info, ordered by scheduledAt
 export const getCampaigns = createServerFn({ method: "GET" }).handler(
@@ -72,6 +72,88 @@ export const getActiveCampaign = createServerFn({ method: "GET" }).handler(
       .limit(1);
 
     return active || null;
+  },
+);
+
+// Get current TV state for polling fallback
+// Returns what should currently be showing on TV
+export const getTVState = createServerFn({ method: "GET" }).handler(
+  async () => {
+    // Check for active video campaign
+    const [activeCampaign] = await db
+      .select({
+        id: videoCampaigns.id,
+        videoId: videoCampaigns.videoId,
+        status: videoCampaigns.status,
+        startedAt: videoCampaigns.startedAt,
+        countdownSeconds: videoCampaigns.countdownSeconds,
+        videoName: videos.name,
+        videoUrl: videos.url,
+        videoThumbnailUrl: videos.thumbnailUrl,
+        videoDuration: videos.duration,
+      })
+      .from(videoCampaigns)
+      .leftJoin(videos, eq(videoCampaigns.videoId, videos.id))
+      .where(
+        or(
+          eq(videoCampaigns.status, "countdown"),
+          eq(videoCampaigns.status, "playing"),
+        ),
+      )
+      .limit(1);
+
+    if (activeCampaign) {
+      return {
+        type: activeCampaign.status as "countdown" | "playing",
+        campaign: activeCampaign,
+      };
+    }
+
+    // Check for currently-playing quick ad (lastPlayedAt + duration > now)
+    const [activeQuickAd] = await db
+      .select({
+        id: quickAds.id,
+        displayText: quickAds.displayText,
+        displayPrice: quickAds.displayPrice,
+        productId: quickAds.productId,
+        promotionalPrice: quickAds.promotionalPrice,
+        durationSeconds: quickAds.durationSeconds,
+        lastPlayedAt: quickAds.lastPlayedAt,
+        productName: products.name,
+        currentPrice: products.currentPrice,
+      })
+      .from(quickAds)
+      .leftJoin(products, eq(quickAds.productId, products.id))
+      .where(
+        sql`${quickAds.lastPlayedAt} IS NOT NULL AND ${quickAds.lastPlayedAt} + (${quickAds.durationSeconds} || ' seconds')::interval > NOW()`,
+      )
+      .orderBy(desc(quickAds.lastPlayedAt))
+      .limit(1);
+
+    if (activeQuickAd && activeQuickAd.lastPlayedAt) {
+      const displayText =
+        activeQuickAd.productName || activeQuickAd.displayText || "";
+      const price = activeQuickAd.productId
+        ? activeQuickAd.promotionalPrice
+        : activeQuickAd.displayPrice;
+      const elapsed = Math.floor(
+        (Date.now() - new Date(activeQuickAd.lastPlayedAt).getTime()) / 1000,
+      );
+      const remaining = Math.max(0, activeQuickAd.durationSeconds - elapsed);
+
+      return {
+        type: "quick_ad" as const,
+        quickAd: {
+          id: activeQuickAd.id,
+          displayText,
+          price: price || null,
+          oldPrice: null,
+          durationSeconds: remaining,
+        },
+      };
+    }
+
+    return { type: "idle" as const };
   },
 );
 

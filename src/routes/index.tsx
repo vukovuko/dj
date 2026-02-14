@@ -6,6 +6,7 @@ import { CountdownOverlay } from "~/components/tv/countdown-overlay";
 import { VideoPlayerOverlay } from "~/components/tv/video-player-overlay";
 import {
   getActiveCampaign,
+  getTVState,
   subscribeToCampaignUpdates,
 } from "~/queries/campaigns.server";
 import {
@@ -371,6 +372,100 @@ function TVDisplay() {
         clearInterval(countdownIntervalRef.current);
       }
     };
+  }, [calculateCountdownRemaining]);
+
+  // Polling fallback — catches anything SSE missed
+  useEffect(() => {
+    const pollTVState = async () => {
+      try {
+        const state = await getTVState();
+
+        setCampaignState((prev) => {
+          // Don't interrupt a playing video — the video element controls that
+          if (prev.status === "playing") return prev;
+
+          if (state.type === "idle" && prev.status === "idle") return prev;
+
+          if (state.type === "idle" && prev.status !== "idle") {
+            // Server says idle but we're showing something — let highlights/countdowns finish naturally
+            // Only force-idle if we're stuck (shouldn't happen with auto-dismiss)
+            return prev;
+          }
+
+          if (state.type === "countdown" && prev.status !== "countdown") {
+            const campaign = state.campaign!;
+            const remaining = campaign.startedAt
+              ? calculateCountdownRemaining(
+                  campaign.startedAt,
+                  campaign.countdownSeconds,
+                )
+              : campaign.countdownSeconds;
+            if (remaining <= 0) return prev; // countdown already done, wait for VIDEO_PLAY
+            return {
+              status: "countdown",
+              campaign: {
+                id: campaign.id,
+                videoId: campaign.videoId,
+                videoName: campaign.videoName,
+                videoUrl: campaign.videoUrl,
+                videoThumbnailUrl: campaign.videoThumbnailUrl,
+                videoDuration: campaign.videoDuration,
+                countdownSeconds: campaign.countdownSeconds,
+                startedAt: campaign.startedAt
+                  ? new Date(campaign.startedAt)
+                  : new Date(),
+              },
+              countdownRemaining: remaining,
+              highlight: null,
+            };
+          }
+
+          if (state.type === "playing" && prev.status === "idle") {
+            const campaign = state.campaign!;
+            return {
+              status: "playing",
+              campaign: {
+                id: campaign.id,
+                videoId: campaign.videoId,
+                videoName: campaign.videoName,
+                videoUrl: campaign.videoUrl,
+                videoThumbnailUrl: campaign.videoThumbnailUrl,
+                videoDuration: campaign.videoDuration,
+                countdownSeconds: campaign.countdownSeconds,
+                startedAt: campaign.startedAt
+                  ? new Date(campaign.startedAt)
+                  : null,
+              },
+              countdownRemaining: 0,
+              highlight: null,
+            };
+          }
+
+          if (state.type === "quick_ad" && prev.status === "idle") {
+            const qa = state.quickAd!;
+            if (qa.durationSeconds <= 0 || !qa.price) return prev;
+            return {
+              status: "highlight",
+              campaign: null,
+              countdownRemaining: 0,
+              highlight: {
+                productName: qa.displayText,
+                newPrice: qa.price,
+                oldPrice: qa.oldPrice || null,
+                durationSeconds: qa.durationSeconds,
+              },
+            };
+          }
+
+          return prev;
+        });
+      } catch (error) {
+        // Silent fail — SSE is primary, this is just backup
+      }
+    };
+
+    const pollInterval = setInterval(pollTVState, 5000);
+    return () => clearInterval(pollInterval);
   }, [calculateCountdownRemaining]);
 
   // Countdown timer interval

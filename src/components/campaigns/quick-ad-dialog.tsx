@@ -461,9 +461,102 @@ export function QuickAdDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {/* TV Preview */}
+          {(() => {
+            const previewName =
+              contentType === "product"
+                ? selectedProduct?.name
+                : displayText.trim();
+            const previewNewPrice =
+              contentType === "product"
+                ? promotionalPrice
+                  ? Math.round(parseFloat(promotionalPrice)) || null
+                  : null
+                : displayPrice.trim()
+                  ? Math.round(parseFloat(displayPrice)) || null
+                  : null;
+            const previewOldPrice =
+              contentType === "product" && selectedProduct
+                ? Math.round(parseFloat(selectedProduct.currentPrice))
+                : null;
+            const isDiscount =
+              previewOldPrice !== null && previewNewPrice !== null
+                ? previewNewPrice < previewOldPrice
+                : true;
+
+            if (!previewName) return null;
+
+            return (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  Pregled TV prikaza
+                </Label>
+                <div
+                  className="relative rounded-lg overflow-hidden bg-black/95"
+                  style={{ aspectRatio: "16/9" }}
+                >
+                  {/* Background gradient */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    <div
+                      className={`absolute inset-0 ${
+                        isDiscount
+                          ? "bg-gradient-to-r from-emerald-900/30 via-transparent to-emerald-900/20"
+                          : "bg-gradient-to-r from-amber-900/30 via-transparent to-amber-900/20"
+                      }`}
+                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_70%)]" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative z-10 flex flex-col items-center justify-center h-full px-4">
+                    <h2
+                      className="text-xl font-black text-white tracking-wider uppercase text-center leading-tight"
+                      style={{
+                        textShadow:
+                          "0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.2)",
+                      }}
+                    >
+                      {previewName}
+                    </h2>
+
+                    {previewNewPrice !== null && (
+                      <div className="mt-2 flex items-center gap-2">
+                        {previewOldPrice !== null && (
+                          <>
+                            <span className="text-sm font-mono text-white/30 line-through">
+                              {previewOldPrice}
+                            </span>
+                            <span className="text-sm text-white/50">
+                              &rarr;
+                            </span>
+                          </>
+                        )}
+                        <span
+                          className={`text-3xl font-mono font-black tabular-nums leading-none ${
+                            isDiscount ? "text-emerald-400" : "text-amber-400"
+                          }`}
+                          style={{
+                            textShadow: isDiscount
+                              ? "0 0 20px rgba(52, 211, 153, 0.5)"
+                              : "0 0 20px rgba(251, 191, 36, 0.5)",
+                          }}
+                        >
+                          {previewNewPrice}
+                        </span>
+                        <span className="text-xs text-white/40 font-mono">
+                          RSD
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

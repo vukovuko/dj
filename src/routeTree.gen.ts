@@ -17,6 +17,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as VideosSplatRouteImport } from './routes/videos/$'
 import { Route as AdminVideosRouteImport } from './routes/admin/videos'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminQuickAdsRouteImport } from './routes/admin/quick-ads'
 import { Route as AdminPricingRouteImport } from './routes/admin/pricing'
 import { Route as AdminCampaignsRouteImport } from './routes/admin/campaigns'
 import { Route as AdminVideosIndexRouteImport } from './routes/admin/videos.index'
@@ -67,6 +68,11 @@ const AdminVideosRoute = AdminVideosRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQuickAdsRoute = AdminQuickAdsRouteImport.update({
+  id: '/quick-ads',
+  path: '/quick-ads',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPricingRoute = AdminPricingRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/pricing': typeof AdminPricingRoute
+  '/admin/quick-ads': typeof AdminQuickAdsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/videos': typeof AdminVideosRouteWithChildren
   '/videos/$': typeof VideosSplatRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/pricing': typeof AdminPricingRoute
+  '/admin/quick-ads': typeof AdminQuickAdsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/videos/$': typeof VideosSplatRoute
   '/admin': typeof AdminIndexRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/pricing': typeof AdminPricingRoute
+  '/admin/quick-ads': typeof AdminQuickAdsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/videos': typeof AdminVideosRouteWithChildren
   '/videos/$': typeof VideosSplatRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/campaigns'
     | '/admin/pricing'
+    | '/admin/quick-ads'
     | '/admin/settings'
     | '/admin/videos'
     | '/videos/$'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/campaigns'
     | '/admin/pricing'
+    | '/admin/quick-ads'
     | '/admin/settings'
     | '/videos/$'
     | '/admin'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/campaigns'
     | '/admin/pricing'
+    | '/admin/quick-ads'
     | '/admin/settings'
     | '/admin/videos'
     | '/videos/$'
@@ -316,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/quick-ads': {
+      id: '/admin/quick-ads'
+      path: '/quick-ads'
+      fullPath: '/admin/quick-ads'
+      preLoaderRoute: typeof AdminQuickAdsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/pricing': {
@@ -415,6 +434,7 @@ const AdminVideosRouteWithChildren = AdminVideosRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminCampaignsRoute: typeof AdminCampaignsRoute
   AdminPricingRoute: typeof AdminPricingRoute
+  AdminQuickAdsRoute: typeof AdminQuickAdsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminVideosRoute: typeof AdminVideosRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
@@ -429,6 +449,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCampaignsRoute: AdminCampaignsRoute,
   AdminPricingRoute: AdminPricingRoute,
+  AdminQuickAdsRoute: AdminQuickAdsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminVideosRoute: AdminVideosRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,

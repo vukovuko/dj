@@ -69,11 +69,15 @@ const menuItems: MenuItem[] = [
         title: "Generacija",
         url: "/admin/videos/generacija",
       },
-      {
-        title: "Kampanje",
-        url: "/admin/campaigns",
-      },
     ],
+  },
+  {
+    title: "Kampanje",
+    url: "/admin/campaigns",
+  },
+  {
+    title: "Brze reklame",
+    url: "/admin/quick-ads",
   },
   {
     title: "Podešavanja",
