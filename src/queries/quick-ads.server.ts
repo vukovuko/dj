@@ -10,6 +10,7 @@ import { priceHistory, products, quickAds, videoCampaigns } from "~/db/schema";
 // Save image from base64 data URI, returns public URL path
 async function saveAdImage(adId: string, base64Data: string): Promise<string> {
   const adsDir = path.join(process.cwd(), "public", "ads");
+  console.log(`[AD_IMG] saveAdImage: cwd=${process.cwd()}, adsDir=${adsDir}`);
   await fs.mkdir(adsDir, { recursive: true });
 
   // Extract extension from data URI (data:image/png;base64,... → png)
@@ -18,9 +19,41 @@ async function saveAdImage(adId: string, base64Data: string): Promise<string> {
   const raw = base64Data.replace(/^data:image\/\w+;base64,/, "");
   const buffer = Buffer.from(raw, "base64");
   const filename = `${adId}.${ext}`;
+  const fullPath = path.join(adsDir, filename);
 
-  await fs.writeFile(path.join(adsDir, filename), buffer);
-  return `/ads/${filename}`;
+  console.log(`[AD_IMG] Writing ${buffer.length} bytes to ${fullPath}`);
+  await fs.writeFile(fullPath, buffer);
+
+  // Verify file was written
+  try {
+    const stat = await fs.stat(fullPath);
+    console.log(`[AD_IMG] File verified: ${fullPath} (${stat.size} bytes)`);
+  } catch (e) {
+    console.error(`[AD_IMG] File NOT found after write: ${fullPath}`, e);
+  }
+
+  // Check if Nitro output symlink exists
+  const nitroPath = path.join(
+    process.cwd(),
+    ".output",
+    "public",
+    "ads",
+    filename,
+  );
+  try {
+    const nitroStat = await fs.stat(nitroPath);
+    console.log(
+      `[AD_IMG] Nitro path accessible: ${nitroPath} (${nitroStat.size} bytes)`,
+    );
+  } catch {
+    console.warn(
+      `[AD_IMG] Nitro path NOT accessible: ${nitroPath} — symlink may be missing`,
+    );
+  }
+
+  const url = `/ads/${filename}`;
+  console.log(`[AD_IMG] Returning URL: ${url}`);
+  return url;
 }
 
 async function deleteAdImage(imageUrl: string) {
@@ -93,10 +126,14 @@ export const createQuickAd = createServerFn({ method: "POST" })
     let imageUrl: string | null = null;
     const hasImage = !!data.imageBase64;
 
+    console.log(
+      `[AD_IMG] createQuickAd: hasImage=${hasImage}, imageMode=${data.imageMode}, base64Length=${data.imageBase64?.length || 0}`,
+    );
+
     if (hasImage) {
-      // Use a temp UUID for filename; will be the ad ID after insert
       const tempId = crypto.randomUUID();
       imageUrl = await saveAdImage(tempId, data.imageBase64!);
+      console.log(`[AD_IMG] createQuickAd: imageUrl=${imageUrl}`);
     }
 
     const [ad] = await db
@@ -115,7 +152,9 @@ export const createQuickAd = createServerFn({ method: "POST" })
       })
       .returning();
 
-    console.log(`✅ Quick ad created: ${ad.id}`);
+    console.log(
+      `✅ Quick ad created: ${ad.id}, imageUrl=${ad.imageUrl}, imageMode=${ad.imageMode}`,
+    );
     return ad;
   });
 
@@ -243,6 +282,10 @@ export const playQuickAd = createServerFn({ method: "POST" })
 
     if (!ad) throw new Error("Quick ad not found");
 
+    console.log(
+      `[AD_IMG] playQuickAd: id=${ad.id}, imageUrl=${ad.imageUrl}, imageMode=${ad.imageMode}`,
+    );
+
     const now = new Date();
     let displayText: string;
     let price: string | null = null;
@@ -316,6 +359,9 @@ export const playQuickAd = createServerFn({ method: "POST" })
     }
 
     // Send campaign_update NOTIFY with QUICK_AD_PLAY type
+    console.log(
+      `[AD_IMG] NOTIFY payload: imageUrl=${ad.imageUrl}, imageMode=${ad.imageMode}, displayText=${displayText}, price=${price}`,
+    );
     const payload = JSON.stringify({
       type: "QUICK_AD_PLAY",
       quickAd: {
