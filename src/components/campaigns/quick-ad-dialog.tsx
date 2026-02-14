@@ -44,6 +44,8 @@ interface QuickAd {
   updatePrice: boolean;
   displayText: string | null;
   displayPrice: string | null;
+  imageUrl: string | null;
+  imageMode: string | null;
   durationSeconds: number;
   productName: string | null;
   currentPrice: string | null;
@@ -82,6 +84,15 @@ export function QuickAdDialog({
   // Free text mode state
   const [displayText, setDisplayText] = useState("");
   const [displayPrice, setDisplayPrice] = useState("");
+
+  // Image state
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageMode, setImageMode] = useState<"fullscreen" | "background">(
+    "fullscreen",
+  );
+  const [removeImage, setRemoveImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Shared
   const [durationSeconds, setDurationSeconds] = useState("5");
@@ -131,6 +142,13 @@ export function QuickAdDialog({
         setDisplayPrice(editingAd.displayPrice || "");
       }
       setDurationSeconds(editingAd.durationSeconds.toString());
+      // Image
+      setImagePreview(editingAd.imageUrl || null);
+      setImageBase64(null);
+      setRemoveImage(false);
+      setImageMode(
+        (editingAd.imageMode as "fullscreen" | "background") || "fullscreen",
+      );
     } else {
       setName("");
       setContentType("text");
@@ -142,10 +160,37 @@ export function QuickAdDialog({
       setDisplayText("");
       setDisplayPrice("");
       setDurationSeconds("5");
+      setImagePreview(null);
+      setImageBase64(null);
+      setRemoveImage(false);
+      setImageMode("fullscreen");
     }
   }, [open, editingAd]);
 
   const selectedProduct = products.find((p) => p.id === selectedProductId);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Izaberite sliku (PNG, JPG, WebP...)");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Slika mora biti manja od 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setImagePreview(dataUrl);
+      setImageBase64(dataUrl);
+      setRemoveImage(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (andPlay: boolean) => {
     if (!name.trim()) {
@@ -181,7 +226,11 @@ export function QuickAdDialog({
         }
       }
     } else {
-      if (!displayText.trim()) {
+      // In text mode, require displayText unless we have a fullscreen image
+      if (
+        !displayText.trim() &&
+        !(imagePreview && imageMode === "fullscreen")
+      ) {
         toast.error("Unesite tekst za prikaz");
         return;
       }
@@ -207,6 +256,9 @@ export function QuickAdDialog({
               contentType === "text" && displayPrice.trim()
                 ? displayPrice.trim()
                 : null,
+            ...(imageBase64 && { imageBase64 }),
+            ...(removeImage && { removeImage: true }),
+            imageMode: imagePreview ? imageMode : null,
             durationSeconds: parseInt(durationSeconds),
           },
         });
@@ -226,6 +278,7 @@ export function QuickAdDialog({
                   displayText: displayText.trim(),
                   displayPrice: displayPrice.trim() || undefined,
                 }),
+            ...(imageBase64 && { imageBase64, imageMode }),
             durationSeconds: parseInt(durationSeconds),
             createdBy: session.user.id,
           },
@@ -462,6 +515,60 @@ export function QuickAdDialog({
             </Select>
           </div>
 
+          {/* Image Upload */}
+          <div className="space-y-2">
+            <Label>Slika (opciono)</Label>
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-24 object-cover rounded-md border"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagePreview(null);
+                    setImageBase64(null);
+                    setRemoveImage(true);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="absolute top-1 right-1 bg-black/70 hover:bg-black/90 text-white rounded-full p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="cursor-pointer"
+              />
+            )}
+            {imagePreview && (
+              <Select
+                value={imageMode}
+                onValueChange={(v) =>
+                  setImageMode(v as "fullscreen" | "background")
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fullscreen">
+                    Ceo ekran (samo slika)
+                  </SelectItem>
+                  <SelectItem value="background">
+                    Pozadina sa tekstom
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
           {/* TV Preview */}
           {(() => {
             const previewName =
@@ -484,8 +591,32 @@ export function QuickAdDialog({
               previewOldPrice !== null && previewNewPrice !== null
                 ? previewNewPrice < previewOldPrice
                 : true;
+            const hasImage = !!imagePreview;
 
-            if (!previewName) return null;
+            // Show preview if there's text to show, or a fullscreen image
+            if (!previewName && !(hasImage && imageMode === "fullscreen"))
+              return null;
+
+            // Fullscreen image preview
+            if (hasImage && imageMode === "fullscreen") {
+              return (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Pregled TV prikaza
+                  </Label>
+                  <div
+                    className="relative rounded-lg overflow-hidden bg-black"
+                    style={{ aspectRatio: "16/9" }}
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="absolute inset-0 w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <div className="space-y-2">
@@ -496,17 +627,28 @@ export function QuickAdDialog({
                   className="relative rounded-lg overflow-hidden bg-black/95"
                   style={{ aspectRatio: "16/9" }}
                 >
-                  {/* Background gradient */}
-                  <div className="absolute inset-0 overflow-hidden">
-                    <div
-                      className={`absolute inset-0 ${
-                        isDiscount
-                          ? "bg-gradient-to-r from-emerald-900/30 via-transparent to-emerald-900/20"
-                          : "bg-gradient-to-r from-amber-900/30 via-transparent to-amber-900/20"
-                      }`}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_70%)]" />
-                  </div>
+                  {/* Background — image or gradient */}
+                  {hasImage && imageMode === "background" ? (
+                    <div className="absolute inset-0">
+                      <img
+                        src={imagePreview}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/60" />
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 overflow-hidden">
+                      <div
+                        className={`absolute inset-0 ${
+                          isDiscount
+                            ? "bg-gradient-to-r from-emerald-900/30 via-transparent to-emerald-900/20"
+                            : "bg-gradient-to-r from-amber-900/30 via-transparent to-amber-900/20"
+                        }`}
+                      />
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_70%)]" />
+                    </div>
+                  )}
 
                   {/* Content */}
                   <div className="relative z-10 flex flex-col items-center justify-center h-full px-4">

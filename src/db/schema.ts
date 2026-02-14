@@ -306,6 +306,9 @@ export const quickAds = pgTable("quickAds", {
   // Free-text mode (when productId is null)
   displayText: text("displayText"),
   displayPrice: text("displayPrice"),
+  // Image support
+  imageUrl: text("imageUrl"),
+  imageMode: text("imageMode"), // "fullscreen" | "background"
   // Display settings
   durationSeconds: integer("durationSeconds").notNull().default(5),
   // Metadata

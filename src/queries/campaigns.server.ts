@@ -117,6 +117,8 @@ export const getTVState = createServerFn({ method: "GET" }).handler(
         displayPrice: quickAds.displayPrice,
         productId: quickAds.productId,
         promotionalPrice: quickAds.promotionalPrice,
+        imageUrl: quickAds.imageUrl,
+        imageMode: quickAds.imageMode,
         durationSeconds: quickAds.durationSeconds,
         lastPlayedAt: quickAds.lastPlayedAt,
         productName: products.name,
@@ -148,6 +150,8 @@ export const getTVState = createServerFn({ method: "GET" }).handler(
           displayText,
           price: price || null,
           oldPrice: null,
+          imageUrl: activeQuickAd.imageUrl || null,
+          imageMode: activeQuickAd.imageMode || null,
           durationSeconds: remaining,
         },
       };

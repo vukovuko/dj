@@ -27,6 +27,8 @@ interface HighlightData {
   productName: string;
   newPrice: string;
   oldPrice?: string | null;
+  imageUrl?: string | null;
+  imageMode?: "fullscreen" | "background" | null;
   durationSeconds: number;
 }
 
@@ -338,6 +340,8 @@ function TVDisplay() {
                         productName: qa.displayText,
                         newPrice: qa.price,
                         oldPrice: qa.oldPrice || null,
+                        imageUrl: qa.imageUrl || null,
+                        imageMode: qa.imageMode || null,
                         durationSeconds: qa.durationSeconds,
                       },
                     };
@@ -443,15 +447,19 @@ function TVDisplay() {
 
           if (state.type === "quick_ad" && prev.status === "idle") {
             const qa = state.quickAd!;
-            if (qa.durationSeconds <= 0 || !qa.price) return prev;
+            if (qa.durationSeconds <= 0 || (!qa.price && !qa.imageUrl))
+              return prev;
             return {
               status: "highlight",
               campaign: null,
               countdownRemaining: 0,
               highlight: {
                 productName: qa.displayText,
-                newPrice: qa.price,
+                newPrice: qa.price || "",
                 oldPrice: qa.oldPrice || null,
+                imageUrl: qa.imageUrl || null,
+                imageMode:
+                  (qa.imageMode as "fullscreen" | "background" | null) || null,
                 durationSeconds: qa.durationSeconds,
               },
             };
@@ -631,6 +639,8 @@ function TVDisplay() {
           productName={campaignState.highlight.productName}
           newPrice={campaignState.highlight.newPrice}
           oldPrice={campaignState.highlight.oldPrice}
+          imageUrl={campaignState.highlight.imageUrl}
+          imageMode={campaignState.highlight.imageMode}
           durationSeconds={campaignState.highlight.durationSeconds}
         />
       )}

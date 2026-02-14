@@ -1,9 +1,36 @@
 // Server-only queries for quick ads (instant TV overlays)
 import { createServerFn } from "@tanstack/react-start";
 import { desc, eq, or, sql } from "drizzle-orm";
+import * as fs from "fs/promises";
+import * as path from "path";
 import { z } from "zod";
 import { db, pool } from "~/db";
 import { priceHistory, products, quickAds, videoCampaigns } from "~/db/schema";
+
+// Save image from base64 data URI, returns public URL path
+async function saveAdImage(adId: string, base64Data: string): Promise<string> {
+  const adsDir = path.join(process.cwd(), "public", "ads");
+  await fs.mkdir(adsDir, { recursive: true });
+
+  // Extract extension from data URI (data:image/png;base64,... → png)
+  const mimeMatch = base64Data.match(/^data:image\/(\w+);base64,/);
+  const ext = mimeMatch?.[1] === "jpeg" ? "jpg" : mimeMatch?.[1] || "png";
+  const raw = base64Data.replace(/^data:image\/\w+;base64,/, "");
+  const buffer = Buffer.from(raw, "base64");
+  const filename = `${adId}.${ext}`;
+
+  await fs.writeFile(path.join(adsDir, filename), buffer);
+  return `/ads/${filename}`;
+}
+
+async function deleteAdImage(imageUrl: string) {
+  try {
+    const filePath = path.join(process.cwd(), "public", imageUrl);
+    await fs.unlink(filePath);
+  } catch {
+    // File already gone, ignore
+  }
+}
 
 // Get all quick ads with product info
 export const getQuickAds = createServerFn({ method: "GET" }).handler(
@@ -17,6 +44,8 @@ export const getQuickAds = createServerFn({ method: "GET" }).handler(
         updatePrice: quickAds.updatePrice,
         displayText: quickAds.displayText,
         displayPrice: quickAds.displayPrice,
+        imageUrl: quickAds.imageUrl,
+        imageMode: quickAds.imageMode,
         durationSeconds: quickAds.durationSeconds,
         lastPlayedAt: quickAds.lastPlayedAt,
         createdAt: quickAds.createdAt,
@@ -43,6 +72,8 @@ const createQuickAdSchema = z
     updatePrice: z.boolean().optional(),
     displayText: z.string().optional(),
     displayPrice: z.string().optional(),
+    imageBase64: z.string().optional(),
+    imageMode: z.enum(["fullscreen", "background"]).optional(),
     durationSeconds: z.number().min(3).max(30),
     createdBy: z.string().min(1),
   })
@@ -67,10 +98,17 @@ export const createQuickAd = createServerFn({ method: "POST" })
         updatePrice: data.updatePrice ?? false,
         displayText: data.displayText,
         displayPrice: data.displayPrice,
+        imageMode: data.imageBase64 ? data.imageMode || "fullscreen" : null,
         durationSeconds: data.durationSeconds,
         createdBy: data.createdBy,
       })
       .returning();
+
+    // Save image if provided
+    if (data.imageBase64) {
+      const imageUrl = await saveAdImage(ad.id, data.imageBase64);
+      await db.update(quickAds).set({ imageUrl }).where(eq(quickAds.id, ad.id));
+    }
 
     console.log(`✅ Quick ad created: ${ad.id}`);
     return ad;
@@ -86,6 +124,9 @@ const updateQuickAdSchema = z
     updatePrice: z.boolean().optional(),
     displayText: z.string().nullable(),
     displayPrice: z.string().nullable(),
+    imageBase64: z.string().nullable().optional(),
+    imageMode: z.enum(["fullscreen", "background"]).nullable().optional(),
+    removeImage: z.boolean().optional(),
     durationSeconds: z.number().min(3).max(30),
   })
   .refine(
@@ -96,6 +137,25 @@ const updateQuickAdSchema = z
 export const updateQuickAd = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => updateQuickAdSchema.parse(data))
   .handler(async ({ data }) => {
+    // Handle image removal
+    if (data.removeImage) {
+      const [existing] = await db
+        .select({ imageUrl: quickAds.imageUrl })
+        .from(quickAds)
+        .where(eq(quickAds.id, data.id));
+      if (existing?.imageUrl) {
+        await deleteAdImage(existing.imageUrl);
+      }
+    }
+
+    // Save new image if provided
+    let imageUrl: string | null | undefined;
+    if (data.removeImage) {
+      imageUrl = null;
+    } else if (data.imageBase64) {
+      imageUrl = await saveAdImage(data.id, data.imageBase64);
+    }
+
     const [updated] = await db
       .update(quickAds)
       .set({
@@ -105,6 +165,8 @@ export const updateQuickAd = createServerFn({ method: "POST" })
         updatePrice: data.updatePrice ?? false,
         displayText: data.displayText,
         displayPrice: data.displayPrice,
+        ...(imageUrl !== undefined && { imageUrl }),
+        ...(data.imageMode !== undefined && { imageMode: data.imageMode }),
         durationSeconds: data.durationSeconds,
         updatedAt: new Date(),
       })
@@ -119,6 +181,14 @@ export const updateQuickAd = createServerFn({ method: "POST" })
 export const deleteQuickAd = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
+    // Clean up image file if exists
+    const [existing] = await db
+      .select({ imageUrl: quickAds.imageUrl })
+      .from(quickAds)
+      .where(eq(quickAds.id, data.id));
+    if (existing?.imageUrl) {
+      await deleteAdImage(existing.imageUrl);
+    }
     await db.delete(quickAds).where(eq(quickAds.id, data.id));
     console.log(`🗑️ Quick ad deleted: ${data.id}`);
   });
@@ -153,6 +223,8 @@ export const playQuickAd = createServerFn({ method: "POST" })
         updatePrice: quickAds.updatePrice,
         displayText: quickAds.displayText,
         displayPrice: quickAds.displayPrice,
+        imageUrl: quickAds.imageUrl,
+        imageMode: quickAds.imageMode,
         durationSeconds: quickAds.durationSeconds,
         productName: products.name,
         currentPrice: products.currentPrice,
@@ -245,6 +317,8 @@ export const playQuickAd = createServerFn({ method: "POST" })
         displayText,
         price,
         oldPrice,
+        imageUrl: ad.imageUrl,
+        imageMode: ad.imageMode,
         durationSeconds: ad.durationSeconds,
       },
       timestamp: now.toISOString(),
