@@ -45,6 +45,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const valueRef = useRef<number | undefined>(
       controlledValue ?? defaultValue,
     );
+    const inputRef = useRef<HTMLInputElement | null>(null);
 
     // Keep ref in sync with state
     useEffect(() => {
@@ -75,10 +76,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (
-          document.activeElement ===
-          (ref as React.RefObject<HTMLInputElement>).current
-        ) {
+        if (document.activeElement === inputRef.current) {
           if (e.key === "ArrowUp") {
             handleIncrement();
           } else if (e.key === "ArrowDown") {
@@ -92,7 +90,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       return () => {
         window.removeEventListener("keydown", handleKeyDown);
       };
-    }, [handleIncrement, handleDecrement, ref]);
+    }, [handleIncrement, handleDecrement]);
 
     useEffect(() => {
       if (controlledValue !== undefined) {
@@ -117,12 +115,10 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       if (value !== undefined) {
         if (value < min) {
           setValue(min);
-          (ref as React.RefObject<HTMLInputElement>).current!.value =
-            String(min);
+          if (inputRef.current) inputRef.current.value = String(min);
         } else if (value > max) {
           setValue(max);
-          (ref as React.RefObject<HTMLInputElement>).current!.value =
-            String(max);
+          if (inputRef.current) inputRef.current.value = String(max);
         }
       }
     };
@@ -145,7 +141,13 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           customInput={Input}
           placeholder={placeholder}
           className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative w-24 h-8 text-sm"
-          getInputRef={ref}
+          getInputRef={(el: HTMLInputElement | null) => {
+            inputRef.current = el;
+            if (typeof ref === "function") ref(el);
+            else if (ref)
+              (ref as React.MutableRefObject<HTMLInputElement | null>).current =
+                el;
+          }}
           {...props}
         />
 

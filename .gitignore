@@ -105,6 +105,11 @@ public/videos/thumbnails/*.jpg
 public/videos/thumbnails/*.png
 public/videos/thumbnails/*.webp
 
+# Ad images (uploaded via admin)
+public/ads/*.jpg
+public/ads/*.png
+public/ads/*.webp
+
 # Temporary files
 tmp/
 temp/
