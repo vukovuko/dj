@@ -89,6 +89,16 @@ const createQuickAdSchema = z
 export const createQuickAd = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => createQuickAdSchema.parse(data))
   .handler(async ({ data }) => {
+    // Save image file first so we can include the URL in the DB insert
+    let imageUrl: string | null = null;
+    const hasImage = !!data.imageBase64;
+
+    if (hasImage) {
+      // Use a temp UUID for filename; will be the ad ID after insert
+      const tempId = crypto.randomUUID();
+      imageUrl = await saveAdImage(tempId, data.imageBase64!);
+    }
+
     const [ad] = await db
       .insert(quickAds)
       .values({
@@ -98,17 +108,12 @@ export const createQuickAd = createServerFn({ method: "POST" })
         updatePrice: data.updatePrice ?? false,
         displayText: data.displayText,
         displayPrice: data.displayPrice,
-        imageMode: data.imageBase64 ? data.imageMode || "background" : null,
+        imageUrl,
+        imageMode: hasImage ? data.imageMode || "background" : null,
         durationSeconds: data.durationSeconds,
         createdBy: data.createdBy,
       })
       .returning();
-
-    // Save image if provided
-    if (data.imageBase64) {
-      const imageUrl = await saveAdImage(ad.id, data.imageBase64);
-      await db.update(quickAds).set({ imageUrl }).where(eq(quickAds.id, ad.id));
-    }
 
     console.log(`✅ Quick ad created: ${ad.id}`);
     return ad;
