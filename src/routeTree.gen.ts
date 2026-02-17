@@ -8,462 +8,462 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as SplatRouteImport } from './routes/$'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as VideosSplatRouteImport } from './routes/videos/$'
-import { Route as AdsSplatRouteImport } from './routes/ads/$'
-import { Route as AdminVideosRouteImport } from './routes/admin/videos'
-import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminQuickAdsRouteImport } from './routes/admin/quick-ads'
-import { Route as AdminPricingRouteImport } from './routes/admin/pricing'
-import { Route as AdminCampaignsRouteImport } from './routes/admin/campaigns'
-import { Route as AdminVideosIndexRouteImport } from './routes/admin/videos.index'
-import { Route as AdminTablesIndexRouteImport } from './routes/admin/tables.index'
-import { Route as AdminProductsIndexRouteImport } from './routes/admin/products.index'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as AdminVideosGeneracijaRouteImport } from './routes/admin/videos.generacija'
-import { Route as AdminTablesNewRouteImport } from './routes/admin/tables.new'
-import { Route as AdminTablesIdRouteImport } from './routes/admin/tables.$id'
-import { Route as AdminProductsNewRouteImport } from './routes/admin/products.new'
-import { Route as AdminProductsIdRouteImport } from './routes/admin/products.$id'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as LoginRouteImport } from "./routes/login";
+import { Route as AdminRouteImport } from "./routes/admin";
+import { Route as SplatRouteImport } from "./routes/$";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as AdminIndexRouteImport } from "./routes/admin/index";
+import { Route as VideosSplatRouteImport } from "./routes/videos/$";
+import { Route as AdsSplatRouteImport } from "./routes/ads/$";
+import { Route as AdminVideosRouteImport } from "./routes/admin/videos";
+import { Route as AdminSettingsRouteImport } from "./routes/admin/settings";
+import { Route as AdminQuickAdsRouteImport } from "./routes/admin/quick-ads";
+import { Route as AdminPricingRouteImport } from "./routes/admin/pricing";
+import { Route as AdminCampaignsRouteImport } from "./routes/admin/campaigns";
+import { Route as AdminVideosIndexRouteImport } from "./routes/admin/videos.index";
+import { Route as AdminTablesIndexRouteImport } from "./routes/admin/tables.index";
+import { Route as AdminProductsIndexRouteImport } from "./routes/admin/products.index";
+import { Route as ApiAuthSplatRouteImport } from "./routes/api/auth/$";
+import { Route as AdminVideosGeneracijaRouteImport } from "./routes/admin/videos.generacija";
+import { Route as AdminTablesNewRouteImport } from "./routes/admin/tables.new";
+import { Route as AdminTablesIdRouteImport } from "./routes/admin/tables.$id";
+import { Route as AdminProductsNewRouteImport } from "./routes/admin/products.new";
+import { Route as AdminProductsIdRouteImport } from "./routes/admin/products.$id";
 
 const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+  id: "/login",
+  path: "/login",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+  id: "/admin",
+  path: "/admin",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SplatRoute = SplatRouteImport.update({
-  id: '/$',
-  path: '/$',
+  id: "/$",
+  path: "/$",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const VideosSplatRoute = VideosSplatRouteImport.update({
-  id: '/videos/$',
-  path: '/videos/$',
+  id: "/videos/$",
+  path: "/videos/$",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdsSplatRoute = AdsSplatRouteImport.update({
-  id: '/ads/$',
-  path: '/ads/$',
+  id: "/ads/$",
+  path: "/ads/$",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminVideosRoute = AdminVideosRouteImport.update({
-  id: '/videos',
-  path: '/videos',
+  id: "/videos",
+  path: "/videos",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+  id: "/settings",
+  path: "/settings",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminQuickAdsRoute = AdminQuickAdsRouteImport.update({
-  id: '/quick-ads',
-  path: '/quick-ads',
+  id: "/quick-ads",
+  path: "/quick-ads",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminPricingRoute = AdminPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
+  id: "/pricing",
+  path: "/pricing",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminCampaignsRoute = AdminCampaignsRouteImport.update({
-  id: '/campaigns',
-  path: '/campaigns',
+  id: "/campaigns",
+  path: "/campaigns",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminVideosIndexRoute = AdminVideosIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AdminVideosRoute,
-} as any)
+} as any);
 const AdminTablesIndexRoute = AdminTablesIndexRouteImport.update({
-  id: '/tables/',
-  path: '/tables/',
+  id: "/tables/",
+  path: "/tables/",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
-  id: '/products/',
-  path: '/products/',
+  id: "/products/",
+  path: "/products/",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
+  id: "/api/auth/$",
+  path: "/api/auth/$",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminVideosGeneracijaRoute = AdminVideosGeneracijaRouteImport.update({
-  id: '/generacija',
-  path: '/generacija',
+  id: "/generacija",
+  path: "/generacija",
   getParentRoute: () => AdminVideosRoute,
-} as any)
+} as any);
 const AdminTablesNewRoute = AdminTablesNewRouteImport.update({
-  id: '/tables/new',
-  path: '/tables/new',
+  id: "/tables/new",
+  path: "/tables/new",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminTablesIdRoute = AdminTablesIdRouteImport.update({
-  id: '/tables/$id',
-  path: '/tables/$id',
+  id: "/tables/$id",
+  path: "/tables/$id",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminProductsNewRoute = AdminProductsNewRouteImport.update({
-  id: '/products/new',
-  path: '/products/new',
+  id: "/products/new",
+  path: "/products/new",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminProductsIdRoute = AdminProductsIdRouteImport.update({
-  id: '/products/$id',
-  path: '/products/$id',
+  id: "/products/$id",
+  path: "/products/$id",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/login': typeof LoginRoute
-  '/admin/campaigns': typeof AdminCampaignsRoute
-  '/admin/pricing': typeof AdminPricingRoute
-  '/admin/quick-ads': typeof AdminQuickAdsRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/admin/videos': typeof AdminVideosRouteWithChildren
-  '/ads/$': typeof AdsSplatRoute
-  '/videos/$': typeof VideosSplatRoute
-  '/admin/': typeof AdminIndexRoute
-  '/admin/products/$id': typeof AdminProductsIdRoute
-  '/admin/products/new': typeof AdminProductsNewRoute
-  '/admin/tables/$id': typeof AdminTablesIdRoute
-  '/admin/tables/new': typeof AdminTablesNewRoute
-  '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/admin/products': typeof AdminProductsIndexRoute
-  '/admin/tables': typeof AdminTablesIndexRoute
-  '/admin/videos/': typeof AdminVideosIndexRoute
+  "/": typeof IndexRoute;
+  "/$": typeof SplatRoute;
+  "/admin": typeof AdminRouteWithChildren;
+  "/login": typeof LoginRoute;
+  "/admin/campaigns": typeof AdminCampaignsRoute;
+  "/admin/pricing": typeof AdminPricingRoute;
+  "/admin/quick-ads": typeof AdminQuickAdsRoute;
+  "/admin/settings": typeof AdminSettingsRoute;
+  "/admin/videos": typeof AdminVideosRouteWithChildren;
+  "/ads/$": typeof AdsSplatRoute;
+  "/videos/$": typeof VideosSplatRoute;
+  "/admin/": typeof AdminIndexRoute;
+  "/admin/products/$id": typeof AdminProductsIdRoute;
+  "/admin/products/new": typeof AdminProductsNewRoute;
+  "/admin/tables/$id": typeof AdminTablesIdRoute;
+  "/admin/tables/new": typeof AdminTablesNewRoute;
+  "/admin/videos/generacija": typeof AdminVideosGeneracijaRoute;
+  "/api/auth/$": typeof ApiAuthSplatRoute;
+  "/admin/products": typeof AdminProductsIndexRoute;
+  "/admin/tables": typeof AdminTablesIndexRoute;
+  "/admin/videos/": typeof AdminVideosIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/login': typeof LoginRoute
-  '/admin/campaigns': typeof AdminCampaignsRoute
-  '/admin/pricing': typeof AdminPricingRoute
-  '/admin/quick-ads': typeof AdminQuickAdsRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/ads/$': typeof AdsSplatRoute
-  '/videos/$': typeof VideosSplatRoute
-  '/admin': typeof AdminIndexRoute
-  '/admin/products/$id': typeof AdminProductsIdRoute
-  '/admin/products/new': typeof AdminProductsNewRoute
-  '/admin/tables/$id': typeof AdminTablesIdRoute
-  '/admin/tables/new': typeof AdminTablesNewRoute
-  '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/admin/products': typeof AdminProductsIndexRoute
-  '/admin/tables': typeof AdminTablesIndexRoute
-  '/admin/videos': typeof AdminVideosIndexRoute
+  "/": typeof IndexRoute;
+  "/$": typeof SplatRoute;
+  "/login": typeof LoginRoute;
+  "/admin/campaigns": typeof AdminCampaignsRoute;
+  "/admin/pricing": typeof AdminPricingRoute;
+  "/admin/quick-ads": typeof AdminQuickAdsRoute;
+  "/admin/settings": typeof AdminSettingsRoute;
+  "/ads/$": typeof AdsSplatRoute;
+  "/videos/$": typeof VideosSplatRoute;
+  "/admin": typeof AdminIndexRoute;
+  "/admin/products/$id": typeof AdminProductsIdRoute;
+  "/admin/products/new": typeof AdminProductsNewRoute;
+  "/admin/tables/$id": typeof AdminTablesIdRoute;
+  "/admin/tables/new": typeof AdminTablesNewRoute;
+  "/admin/videos/generacija": typeof AdminVideosGeneracijaRoute;
+  "/api/auth/$": typeof ApiAuthSplatRoute;
+  "/admin/products": typeof AdminProductsIndexRoute;
+  "/admin/tables": typeof AdminTablesIndexRoute;
+  "/admin/videos": typeof AdminVideosIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/login': typeof LoginRoute
-  '/admin/campaigns': typeof AdminCampaignsRoute
-  '/admin/pricing': typeof AdminPricingRoute
-  '/admin/quick-ads': typeof AdminQuickAdsRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/admin/videos': typeof AdminVideosRouteWithChildren
-  '/ads/$': typeof AdsSplatRoute
-  '/videos/$': typeof VideosSplatRoute
-  '/admin/': typeof AdminIndexRoute
-  '/admin/products/$id': typeof AdminProductsIdRoute
-  '/admin/products/new': typeof AdminProductsNewRoute
-  '/admin/tables/$id': typeof AdminTablesIdRoute
-  '/admin/tables/new': typeof AdminTablesNewRoute
-  '/admin/videos/generacija': typeof AdminVideosGeneracijaRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/admin/products/': typeof AdminProductsIndexRoute
-  '/admin/tables/': typeof AdminTablesIndexRoute
-  '/admin/videos/': typeof AdminVideosIndexRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/$": typeof SplatRoute;
+  "/admin": typeof AdminRouteWithChildren;
+  "/login": typeof LoginRoute;
+  "/admin/campaigns": typeof AdminCampaignsRoute;
+  "/admin/pricing": typeof AdminPricingRoute;
+  "/admin/quick-ads": typeof AdminQuickAdsRoute;
+  "/admin/settings": typeof AdminSettingsRoute;
+  "/admin/videos": typeof AdminVideosRouteWithChildren;
+  "/ads/$": typeof AdsSplatRoute;
+  "/videos/$": typeof VideosSplatRoute;
+  "/admin/": typeof AdminIndexRoute;
+  "/admin/products/$id": typeof AdminProductsIdRoute;
+  "/admin/products/new": typeof AdminProductsNewRoute;
+  "/admin/tables/$id": typeof AdminTablesIdRoute;
+  "/admin/tables/new": typeof AdminTablesNewRoute;
+  "/admin/videos/generacija": typeof AdminVideosGeneracijaRoute;
+  "/api/auth/$": typeof ApiAuthSplatRoute;
+  "/admin/products/": typeof AdminProductsIndexRoute;
+  "/admin/tables/": typeof AdminTablesIndexRoute;
+  "/admin/videos/": typeof AdminVideosIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/$'
-    | '/admin'
-    | '/login'
-    | '/admin/campaigns'
-    | '/admin/pricing'
-    | '/admin/quick-ads'
-    | '/admin/settings'
-    | '/admin/videos'
-    | '/ads/$'
-    | '/videos/$'
-    | '/admin/'
-    | '/admin/products/$id'
-    | '/admin/products/new'
-    | '/admin/tables/$id'
-    | '/admin/tables/new'
-    | '/admin/videos/generacija'
-    | '/api/auth/$'
-    | '/admin/products'
-    | '/admin/tables'
-    | '/admin/videos/'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/$"
+    | "/admin"
+    | "/login"
+    | "/admin/campaigns"
+    | "/admin/pricing"
+    | "/admin/quick-ads"
+    | "/admin/settings"
+    | "/admin/videos"
+    | "/ads/$"
+    | "/videos/$"
+    | "/admin/"
+    | "/admin/products/$id"
+    | "/admin/products/new"
+    | "/admin/tables/$id"
+    | "/admin/tables/new"
+    | "/admin/videos/generacija"
+    | "/api/auth/$"
+    | "/admin/products"
+    | "/admin/tables"
+    | "/admin/videos/";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/$'
-    | '/login'
-    | '/admin/campaigns'
-    | '/admin/pricing'
-    | '/admin/quick-ads'
-    | '/admin/settings'
-    | '/ads/$'
-    | '/videos/$'
-    | '/admin'
-    | '/admin/products/$id'
-    | '/admin/products/new'
-    | '/admin/tables/$id'
-    | '/admin/tables/new'
-    | '/admin/videos/generacija'
-    | '/api/auth/$'
-    | '/admin/products'
-    | '/admin/tables'
-    | '/admin/videos'
+    | "/"
+    | "/$"
+    | "/login"
+    | "/admin/campaigns"
+    | "/admin/pricing"
+    | "/admin/quick-ads"
+    | "/admin/settings"
+    | "/ads/$"
+    | "/videos/$"
+    | "/admin"
+    | "/admin/products/$id"
+    | "/admin/products/new"
+    | "/admin/tables/$id"
+    | "/admin/tables/new"
+    | "/admin/videos/generacija"
+    | "/api/auth/$"
+    | "/admin/products"
+    | "/admin/tables"
+    | "/admin/videos";
   id:
-    | '__root__'
-    | '/'
-    | '/$'
-    | '/admin'
-    | '/login'
-    | '/admin/campaigns'
-    | '/admin/pricing'
-    | '/admin/quick-ads'
-    | '/admin/settings'
-    | '/admin/videos'
-    | '/ads/$'
-    | '/videos/$'
-    | '/admin/'
-    | '/admin/products/$id'
-    | '/admin/products/new'
-    | '/admin/tables/$id'
-    | '/admin/tables/new'
-    | '/admin/videos/generacija'
-    | '/api/auth/$'
-    | '/admin/products/'
-    | '/admin/tables/'
-    | '/admin/videos/'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/$"
+    | "/admin"
+    | "/login"
+    | "/admin/campaigns"
+    | "/admin/pricing"
+    | "/admin/quick-ads"
+    | "/admin/settings"
+    | "/admin/videos"
+    | "/ads/$"
+    | "/videos/$"
+    | "/admin/"
+    | "/admin/products/$id"
+    | "/admin/products/new"
+    | "/admin/tables/$id"
+    | "/admin/tables/new"
+    | "/admin/videos/generacija"
+    | "/api/auth/$"
+    | "/admin/products/"
+    | "/admin/tables/"
+    | "/admin/videos/";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SplatRoute: typeof SplatRoute
-  AdminRoute: typeof AdminRouteWithChildren
-  LoginRoute: typeof LoginRoute
-  AdsSplatRoute: typeof AdsSplatRoute
-  VideosSplatRoute: typeof VideosSplatRoute
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  IndexRoute: typeof IndexRoute;
+  SplatRoute: typeof SplatRoute;
+  AdminRoute: typeof AdminRouteWithChildren;
+  LoginRoute: typeof LoginRoute;
+  AdsSplatRoute: typeof AdsSplatRoute;
+  VideosSplatRoute: typeof VideosSplatRoute;
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$': {
-      id: '/$'
-      path: '/$'
-      fullPath: '/$'
-      preLoaderRoute: typeof SplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/videos/$': {
-      id: '/videos/$'
-      path: '/videos/$'
-      fullPath: '/videos/$'
-      preLoaderRoute: typeof VideosSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ads/$': {
-      id: '/ads/$'
-      path: '/ads/$'
-      fullPath: '/ads/$'
-      preLoaderRoute: typeof AdsSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/videos': {
-      id: '/admin/videos'
-      path: '/videos'
-      fullPath: '/admin/videos'
-      preLoaderRoute: typeof AdminVideosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/quick-ads': {
-      id: '/admin/quick-ads'
-      path: '/quick-ads'
-      fullPath: '/admin/quick-ads'
-      preLoaderRoute: typeof AdminQuickAdsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pricing': {
-      id: '/admin/pricing'
-      path: '/pricing'
-      fullPath: '/admin/pricing'
-      preLoaderRoute: typeof AdminPricingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/campaigns': {
-      id: '/admin/campaigns'
-      path: '/campaigns'
-      fullPath: '/admin/campaigns'
-      preLoaderRoute: typeof AdminCampaignsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/videos/': {
-      id: '/admin/videos/'
-      path: '/'
-      fullPath: '/admin/videos/'
-      preLoaderRoute: typeof AdminVideosIndexRouteImport
-      parentRoute: typeof AdminVideosRoute
-    }
-    '/admin/tables/': {
-      id: '/admin/tables/'
-      path: '/tables'
-      fullPath: '/admin/tables'
-      preLoaderRoute: typeof AdminTablesIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/products/': {
-      id: '/admin/products/'
-      path: '/products'
-      fullPath: '/admin/products'
-      preLoaderRoute: typeof AdminProductsIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/videos/generacija': {
-      id: '/admin/videos/generacija'
-      path: '/generacija'
-      fullPath: '/admin/videos/generacija'
-      preLoaderRoute: typeof AdminVideosGeneracijaRouteImport
-      parentRoute: typeof AdminVideosRoute
-    }
-    '/admin/tables/new': {
-      id: '/admin/tables/new'
-      path: '/tables/new'
-      fullPath: '/admin/tables/new'
-      preLoaderRoute: typeof AdminTablesNewRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/tables/$id': {
-      id: '/admin/tables/$id'
-      path: '/tables/$id'
-      fullPath: '/admin/tables/$id'
-      preLoaderRoute: typeof AdminTablesIdRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/products/new': {
-      id: '/admin/products/new'
-      path: '/products/new'
-      fullPath: '/admin/products/new'
-      preLoaderRoute: typeof AdminProductsNewRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/products/$id': {
-      id: '/admin/products/$id'
-      path: '/products/$id'
-      fullPath: '/admin/products/$id'
-      preLoaderRoute: typeof AdminProductsIdRouteImport
-      parentRoute: typeof AdminRoute
-    }
+    "/login": {
+      id: "/login";
+      path: "/login";
+      fullPath: "/login";
+      preLoaderRoute: typeof LoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin": {
+      id: "/admin";
+      path: "/admin";
+      fullPath: "/admin";
+      preLoaderRoute: typeof AdminRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/$": {
+      id: "/$";
+      path: "/$";
+      fullPath: "/$";
+      preLoaderRoute: typeof SplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/": {
+      id: "/admin/";
+      path: "/";
+      fullPath: "/admin/";
+      preLoaderRoute: typeof AdminIndexRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/videos/$": {
+      id: "/videos/$";
+      path: "/videos/$";
+      fullPath: "/videos/$";
+      preLoaderRoute: typeof VideosSplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/ads/$": {
+      id: "/ads/$";
+      path: "/ads/$";
+      fullPath: "/ads/$";
+      preLoaderRoute: typeof AdsSplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/videos": {
+      id: "/admin/videos";
+      path: "/videos";
+      fullPath: "/admin/videos";
+      preLoaderRoute: typeof AdminVideosRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/settings": {
+      id: "/admin/settings";
+      path: "/settings";
+      fullPath: "/admin/settings";
+      preLoaderRoute: typeof AdminSettingsRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/quick-ads": {
+      id: "/admin/quick-ads";
+      path: "/quick-ads";
+      fullPath: "/admin/quick-ads";
+      preLoaderRoute: typeof AdminQuickAdsRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/pricing": {
+      id: "/admin/pricing";
+      path: "/pricing";
+      fullPath: "/admin/pricing";
+      preLoaderRoute: typeof AdminPricingRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/campaigns": {
+      id: "/admin/campaigns";
+      path: "/campaigns";
+      fullPath: "/admin/campaigns";
+      preLoaderRoute: typeof AdminCampaignsRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/videos/": {
+      id: "/admin/videos/";
+      path: "/";
+      fullPath: "/admin/videos/";
+      preLoaderRoute: typeof AdminVideosIndexRouteImport;
+      parentRoute: typeof AdminVideosRoute;
+    };
+    "/admin/tables/": {
+      id: "/admin/tables/";
+      path: "/tables";
+      fullPath: "/admin/tables";
+      preLoaderRoute: typeof AdminTablesIndexRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/products/": {
+      id: "/admin/products/";
+      path: "/products";
+      fullPath: "/admin/products";
+      preLoaderRoute: typeof AdminProductsIndexRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/api/auth/$": {
+      id: "/api/auth/$";
+      path: "/api/auth/$";
+      fullPath: "/api/auth/$";
+      preLoaderRoute: typeof ApiAuthSplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/videos/generacija": {
+      id: "/admin/videos/generacija";
+      path: "/generacija";
+      fullPath: "/admin/videos/generacija";
+      preLoaderRoute: typeof AdminVideosGeneracijaRouteImport;
+      parentRoute: typeof AdminVideosRoute;
+    };
+    "/admin/tables/new": {
+      id: "/admin/tables/new";
+      path: "/tables/new";
+      fullPath: "/admin/tables/new";
+      preLoaderRoute: typeof AdminTablesNewRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/tables/$id": {
+      id: "/admin/tables/$id";
+      path: "/tables/$id";
+      fullPath: "/admin/tables/$id";
+      preLoaderRoute: typeof AdminTablesIdRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/products/new": {
+      id: "/admin/products/new";
+      path: "/products/new";
+      fullPath: "/admin/products/new";
+      preLoaderRoute: typeof AdminProductsNewRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/products/$id": {
+      id: "/admin/products/$id";
+      path: "/products/$id";
+      fullPath: "/admin/products/$id";
+      preLoaderRoute: typeof AdminProductsIdRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
   }
 }
 
 interface AdminVideosRouteChildren {
-  AdminVideosGeneracijaRoute: typeof AdminVideosGeneracijaRoute
-  AdminVideosIndexRoute: typeof AdminVideosIndexRoute
+  AdminVideosGeneracijaRoute: typeof AdminVideosGeneracijaRoute;
+  AdminVideosIndexRoute: typeof AdminVideosIndexRoute;
 }
 
 const AdminVideosRouteChildren: AdminVideosRouteChildren = {
   AdminVideosGeneracijaRoute: AdminVideosGeneracijaRoute,
   AdminVideosIndexRoute: AdminVideosIndexRoute,
-}
+};
 
 const AdminVideosRouteWithChildren = AdminVideosRoute._addFileChildren(
   AdminVideosRouteChildren,
-)
+);
 
 interface AdminRouteChildren {
-  AdminCampaignsRoute: typeof AdminCampaignsRoute
-  AdminPricingRoute: typeof AdminPricingRoute
-  AdminQuickAdsRoute: typeof AdminQuickAdsRoute
-  AdminSettingsRoute: typeof AdminSettingsRoute
-  AdminVideosRoute: typeof AdminVideosRouteWithChildren
-  AdminIndexRoute: typeof AdminIndexRoute
-  AdminProductsIdRoute: typeof AdminProductsIdRoute
-  AdminProductsNewRoute: typeof AdminProductsNewRoute
-  AdminTablesIdRoute: typeof AdminTablesIdRoute
-  AdminTablesNewRoute: typeof AdminTablesNewRoute
-  AdminProductsIndexRoute: typeof AdminProductsIndexRoute
-  AdminTablesIndexRoute: typeof AdminTablesIndexRoute
+  AdminCampaignsRoute: typeof AdminCampaignsRoute;
+  AdminPricingRoute: typeof AdminPricingRoute;
+  AdminQuickAdsRoute: typeof AdminQuickAdsRoute;
+  AdminSettingsRoute: typeof AdminSettingsRoute;
+  AdminVideosRoute: typeof AdminVideosRouteWithChildren;
+  AdminIndexRoute: typeof AdminIndexRoute;
+  AdminProductsIdRoute: typeof AdminProductsIdRoute;
+  AdminProductsNewRoute: typeof AdminProductsNewRoute;
+  AdminTablesIdRoute: typeof AdminTablesIdRoute;
+  AdminTablesNewRoute: typeof AdminTablesNewRoute;
+  AdminProductsIndexRoute: typeof AdminProductsIndexRoute;
+  AdminTablesIndexRoute: typeof AdminTablesIndexRoute;
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -479,9 +479,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminTablesNewRoute: AdminTablesNewRoute,
   AdminProductsIndexRoute: AdminProductsIndexRoute,
   AdminTablesIndexRoute: AdminTablesIndexRoute,
-}
+};
 
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -491,16 +491,16 @@ const rootRouteChildren: RootRouteChildren = {
   AdsSplatRoute: AdsSplatRoute,
   VideosSplatRoute: VideosSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
+import type { getRouter } from "./router.tsx";
+import type { createStart } from "@tanstack/react-start";
+declare module "@tanstack/react-start" {
   interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
+    ssr: true;
+    router: Awaited<ReturnType<typeof getRouter>>;
   }
 }

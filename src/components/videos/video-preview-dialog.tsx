@@ -46,7 +46,7 @@ export function VideoPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-7xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{video.name}</DialogTitle>
           <DialogDescription>
@@ -55,30 +55,34 @@ export function VideoPreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Video Player */}
-        <div className="aspect-video bg-black rounded-lg overflow-hidden">
-          {video.url ? (
-            <video
-              ref={videoRef}
-              src={video.url}
-              controls
-              className="w-full h-full"
-              preload="metadata"
-            >
-              Vaš pretraživač ne podržava video reprodukciju.
-            </video>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              Video nije dostupan
-            </div>
-          )}
-        </div>
+        <div className="overflow-y-auto min-h-0">
+          {/* Video Player */}
+          <div className="aspect-video bg-black rounded-lg overflow-hidden">
+            {video.url ? (
+              <video
+                ref={videoRef}
+                src={video.url}
+                controls
+                className="w-full h-full"
+                preload="metadata"
+              >
+                Vaš pretraživač ne podržava video reprodukciju.
+              </video>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                Video nije dostupan
+              </div>
+            )}
+          </div>
 
-        {/* Metadata */}
-        <div className="mt-4 space-y-2">
-          <div>
-            <span className="text-sm font-medium">Prompt:</span>
-            <p className="text-sm text-muted-foreground mt-1">{video.prompt}</p>
+          {/* Metadata */}
+          <div className="mt-4 space-y-2">
+            <div>
+              <span className="text-sm font-medium">Prompt:</span>
+              <p className="text-sm text-muted-foreground mt-1">
+                {video.prompt}
+              </p>
+            </div>
           </div>
         </div>
       </DialogContent>

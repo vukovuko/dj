@@ -325,7 +325,7 @@ export function QuickAdDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 overflow-y-auto min-h-0">
           {/* Ad Name */}
           <div className="space-y-2">
             <Label htmlFor="ad-name">Naziv reklame</Label>

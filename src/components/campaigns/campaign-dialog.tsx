@@ -228,7 +228,7 @@ export function CampaignDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 overflow-y-auto min-h-0">
           {/* Video Selection */}
           <div className="space-y-2">
             <Label>Video</Label>
