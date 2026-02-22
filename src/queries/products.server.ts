@@ -259,6 +259,7 @@ export const bulkUpdatePrices = createServerFn({ method: "POST" })
     (data: {
       updates: Array<{
         id: string;
+        currentPrice?: number;
         basePrice: number;
         minPrice: number;
         maxPrice: number;
@@ -282,13 +283,21 @@ export const bulkUpdatePrices = createServerFn({ method: "POST" })
       if (update.totalSalesCount < 0) {
         throw new Error("Broj prodatih jedinica ne može biti negativan");
       }
+      if (update.currentPrice !== undefined && update.currentPrice <= 0) {
+        throw new Error("Trenutna cena mora biti veća od 0");
+      }
     }
+
+    let priceChanged = false;
 
     // Update each product
     const updatePromises = data.updates.map(async (update) => {
-      // Fetch current product to get real salesCount
+      // Fetch current product to get real salesCount and currentPrice
       const [currentProduct] = await db
-        .select({ salesCount: products.salesCount })
+        .select({
+          salesCount: products.salesCount,
+          currentPrice: products.currentPrice,
+        })
         .from(products)
         .where(eq(products.id, update.id))
         .limit(1);
@@ -301,20 +310,57 @@ export const bulkUpdatePrices = createServerFn({ method: "POST" })
       const manualSalesAdjustment =
         update.totalSalesCount - currentProduct.salesCount;
 
+      // Build the set object
+      const setData: Record<string, unknown> = {
+        basePrice: Math.round(update.basePrice).toString(),
+        minPrice: Math.round(update.minPrice).toString(),
+        maxPrice: Math.round(update.maxPrice).toString(),
+        manualSalesAdjustment,
+        updatedAt: new Date(),
+      };
+
+      // If currentPrice was edited, update it directly
+      if (update.currentPrice !== undefined) {
+        const oldPrice = parseFloat(currentProduct.currentPrice);
+        const newPrice = Math.round(update.currentPrice);
+        setData.previousPrice = oldPrice.toString();
+        setData.currentPrice = newPrice.toString();
+        setData.trend = newPrice > oldPrice ? "up" : "down";
+        setData.lastPriceUpdate = new Date();
+        priceChanged = true;
+
+        // Record in price history
+        await db.insert(priceHistory).values({
+          productId: update.id,
+          price: newPrice.toString(),
+          timestamp: new Date(),
+        });
+      }
+
       return db
         .update(products)
-        .set({
-          basePrice: Math.round(update.basePrice).toString(),
-          minPrice: Math.round(update.minPrice).toString(),
-          maxPrice: Math.round(update.maxPrice).toString(),
-          manualSalesAdjustment, // Update adjustment, NOT salesCount
-          updatedAt: new Date(),
-        })
+        .set(setData)
         .where(eq(products.id, update.id))
         .returning();
     });
 
     const results = await Promise.all(updatePromises);
+
+    // Notify TV if any current prices changed
+    if (priceChanged) {
+      const payload = JSON.stringify({
+        count: results.length,
+        timestamp: new Date().toISOString(),
+      });
+      const client = await pool.connect();
+      try {
+        const escapedPayload = client.escapeLiteral(payload);
+        await client.query(`NOTIFY price_update, ${escapedPayload}`);
+      } finally {
+        client.release();
+      }
+    }
+
     return { count: results.length };
   });
 
@@ -418,6 +464,65 @@ export const updateAllPrices = createServerFn({ method: "POST" }).handler(
     };
   },
 );
+
+/**
+ * Reset all product prices to 70% of their maxPrice.
+ * Useful for resetting the board to a known starting state.
+ */
+export const resetPricesToDefault = createServerFn({
+  method: "POST",
+}).handler(async () => {
+  const allProducts = await db
+    .select()
+    .from(products)
+    .where(eq(products.status, "active"));
+
+  let resetCount = 0;
+
+  for (const product of allProducts) {
+    const maxPrice = parseFloat(product.maxPrice);
+    const newPrice = Math.round(maxPrice * 0.7);
+    const oldPrice = parseFloat(product.currentPrice);
+
+    if (newPrice === oldPrice) continue;
+
+    await db
+      .update(products)
+      .set({
+        previousPrice: oldPrice.toString(),
+        currentPrice: newPrice.toString(),
+        lastPriceUpdate: new Date(),
+        salesCountAtLastUpdate: product.salesCount,
+        trend: newPrice > oldPrice ? "up" : "down",
+        updatedAt: new Date(),
+      })
+      .where(eq(products.id, product.id));
+
+    await db.insert(priceHistory).values({
+      productId: product.id,
+      price: newPrice.toString(),
+      timestamp: new Date(),
+    });
+
+    resetCount++;
+  }
+
+  if (resetCount > 0) {
+    const payload = JSON.stringify({
+      count: resetCount,
+      timestamp: new Date().toISOString(),
+    });
+    const client = await pool.connect();
+    try {
+      const escapedPayload = client.escapeLiteral(payload);
+      await client.query(`NOTIFY price_update, ${escapedPayload}`);
+    } finally {
+      client.release();
+    }
+  }
+
+  return { success: true, resetCount };
+});
 
 /**
  * Reset session by updating lastPriceUpdate to NOW

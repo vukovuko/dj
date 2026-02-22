@@ -33,6 +33,7 @@ interface PricingProduct {
 
 interface PriceChanges {
   [productId: string]: {
+    currentPrice?: number;
     basePrice: number;
     minPrice: number;
     maxPrice: number;
@@ -55,7 +56,12 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
 
   const handlePriceChange = (
     productId: string,
-    field: "basePrice" | "minPrice" | "maxPrice" | "totalSalesCount",
+    field:
+      | "currentPrice"
+      | "basePrice"
+      | "minPrice"
+      | "maxPrice"
+      | "totalSalesCount",
     value: number | undefined,
   ) => {
     // If value is empty or invalid, remove from changes
@@ -80,6 +86,11 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
     setChanges((prev) => ({
       ...prev,
       [productId]: {
+        ...(field === "currentPrice"
+          ? { currentPrice: value }
+          : prev[productId]?.currentPrice !== undefined
+            ? { currentPrice: prev[productId].currentPrice }
+            : {}),
         basePrice:
           field === "basePrice"
             ? value
@@ -98,6 +109,12 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
             : (prev[productId]?.totalSalesCount ?? currentTotal),
       },
     }));
+  };
+
+  const getCurrentPrice = (product: PricingProduct) => {
+    const changed = changes[product.id]?.currentPrice;
+    if (changed !== undefined) return changed;
+    return Math.round(parseFloat(product.currentPrice));
   };
 
   const getCurrentValue = (
@@ -160,9 +177,15 @@ export function PricingTable({ products, onChangesUpdate }: PricingTableProps) {
               >
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>
-                  <span className="text-sm">
-                    {Math.round(parseFloat(product.currentPrice))} RSD
-                  </span>
+                  <NumberInput
+                    stepper={1}
+                    min={0}
+                    decimalScale={0}
+                    value={getCurrentPrice(product)}
+                    onValueChange={(value: number | undefined) =>
+                      handlePriceChange(product.id, "currentPrice", value)
+                    }
+                  />
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-muted-foreground">

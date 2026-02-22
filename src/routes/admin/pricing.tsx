@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/button";
 import {
   bulkUpdatePrices,
   getPricingStatus,
+  resetPricesToDefault,
   syncSalesCount,
   updateAllPrices,
 } from "~/queries/products.server";
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/admin/pricing")({
 
 interface PriceChanges {
   [productId: string]: {
+    currentPrice?: number;
     basePrice: number;
     minPrice: number;
     maxPrice: number;
@@ -37,6 +39,7 @@ function PricingPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const hasChanges = Object.keys(changes).length > 0;
 
@@ -119,6 +122,22 @@ function PricingPage() {
     }
   };
 
+  const handleResetPrices = async () => {
+    setIsResetting(true);
+    try {
+      const result = await resetPricesToDefault();
+      toast.success(
+        `Cene resetovane: ${result.resetCount} proizvod(a) na 70% max cene`,
+      );
+      router.invalidate();
+    } catch (error) {
+      console.error("Failed to reset prices:", error);
+      toast.error("Greška pri resetovanju cena");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const handleCancel = () => {
     setChanges({});
   };
@@ -134,6 +153,13 @@ function PricingPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={handleResetPrices}
+            disabled={isResetting}
+            variant="outline"
+          >
+            {isResetting ? "Resetovanje..." : "Resetuj cene"}
+          </Button>
           <Button
             onClick={handleSyncSalesCount}
             disabled={isSyncing}
